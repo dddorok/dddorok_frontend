@@ -7,8 +7,11 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { getTest } from "@/services/user";
 
-export default function Home() {
+export default async function Home() {
+  const data = await getTest();
+  console.log("data: ", data);
   return (
     <div className="flex flex-col items-center justify-center h-screen">
       <h1 className="text-3xl font-bold underline">Hello world!</h1>
