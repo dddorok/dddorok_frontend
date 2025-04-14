@@ -1,3 +1,5 @@
+"use client";
+
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -7,15 +9,20 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { getTest } from "@/services/user";
+import { login, LoginProvider } from "@/services/auth";
 
-export default async function Home() {
-  const data = await getTest();
-  console.log("data: ", data);
+export default function Home() {
+  const onLogin = async (provider: LoginProvider) => {
+    const response = await login(provider);
+    console.log("response: ", response);
+  };
+
   return (
     <div className="flex flex-col items-center justify-center h-screen">
       <h1 className="text-3xl font-bold underline">Hello world!</h1>
-      <Button>Click me</Button>
+      <Button onClick={() => onLogin("naver")}>Naver</Button>
+      <Button onClick={() => onLogin("google")}>Google</Button>
+      <Button onClick={() => onLogin("kakao")}>Kakao</Button>
       <Dialog>
         <DialogTrigger>Open</DialogTrigger>
         <DialogContent>
