@@ -4,21 +4,25 @@ import { apiInstance } from "./instance";
 export type LoginProvider = "naver" | "google" | "kakao";
 
 interface LoginResponse {
-  accessToken: string;
-  refreshToken: string;
+  access_token: string;
+  refresh_token: string;
 }
 
-export const login = async (provider: LoginProvider) => {
-  console.log("provider: ", provider);
-  const response = await apiInstance.get(`auth/login/${provider}`);
+interface LoginRequest {
+  provider: LoginProvider;
+  code: string;
+  state: string;
+}
 
-  return response;
-};
+export const login = async (request: LoginRequest): Promise<LoginResponse> => {
+  const response = await apiInstance
+    .get<{ data: LoginResponse }>(`auth/login/${request.provider}`, {
+      searchParams: {
+        code: request.code,
+        // state: request.state,
+      },
+    })
+    .json();
 
-///auth/login/{provider}/callback
-
-export const loginCallback = async (provider: LoginProvider) => {
-  const response = await apiInstance.get(`auth/login/${provider}/callback`);
-  console.log("response: ", response);
-  return response;
+  return response.data;
 };

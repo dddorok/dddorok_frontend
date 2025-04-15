@@ -1,12 +1,37 @@
-export default function OAuthRedirect({
-  searchParams,
-}: {
-  searchParams: { provider: string; code: string; state: string };
-}) {
-  console.log("searchParams: ", searchParams);
-  const provider = searchParams.provider;
-  const code = searchParams.code;
-  const state = searchParams.state;
+// "use client";
 
-  return <div>OAuthRedirect</div>;
+import { redirect } from "next/navigation";
+
+import { LoginButton } from "./LoginButton";
+
+import { login } from "@/services/auth";
+
+export default async function OAuthRedirect(props: {
+  searchParams: Promise<{ provider: string; code: string; state: string }>;
+}) {
+  try {
+    const searchParams = await props.searchParams;
+
+    switch (searchParams.provider) {
+      case "naver": {
+        const data = await login({
+          provider: "naver",
+          code: searchParams.code,
+          state: searchParams.state,
+        });
+        return (
+          <LoginButton
+            accessToken={data.access_token}
+            refreshToken={data.refresh_token}
+          />
+        );
+      }
+      default:
+        throw new Error("Invalid provider");
+    }
+  } catch (error) {
+    console.error(error);
+  }
+
+  redirect("/");
 }
