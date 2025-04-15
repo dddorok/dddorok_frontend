@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
 import "./globals.css";
+import { AdminLayout } from "@/components/layout/admin-layout";
 import { QueryProvider } from "@/lib/react-query";
 
 export const metadata: Metadata = {
@@ -16,7 +17,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <QueryProvider>{children}</QueryProvider>
+        <QueryProvider>
+          <AdminLayout>{children}</AdminLayout>
+        </QueryProvider>
       </body>
     </html>
   );
