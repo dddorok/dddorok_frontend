@@ -1,5 +1,4 @@
 // /auth/login/{provider}
-
 import { apiInstance } from "./instance";
 
 export type LoginProvider = "naver" | "google" | "kakao";
@@ -10,8 +9,9 @@ interface LoginResponse {
 }
 
 export const login = async (provider: LoginProvider) => {
-  const response = await apiInstance.post(`auth/login/${provider}`);
-  console.log("response: ", response);
+  console.log("provider: ", provider);
+  const response = await apiInstance.get(`auth/login/${provider}`);
+
   return response;
 };
 

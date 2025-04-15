@@ -1,7 +1,7 @@
 import ky from "ky";
 
 export const apiInstance = ky.create({
-  prefixUrl: process.env.NEXT_PUBLIC_API_URL,
+  prefixUrl: process.env.NEXT_PUBLIC_API_URL + "/api",
   headers: {},
   hooks: {
     beforeRequest: [() => console.log("before 1")],
