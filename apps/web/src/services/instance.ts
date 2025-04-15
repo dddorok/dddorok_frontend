@@ -1,10 +1,19 @@
 import ky from "ky";
 
+import { verifySession } from "@/lib/dal";
+
 export const apiInstance = ky.create({
   prefixUrl: process.env.NEXT_PUBLIC_API_URL + "/api",
   headers: {},
   hooks: {
-    beforeRequest: [() => console.log("before 1")],
+    beforeRequest: [
+      async (request) => {
+        const session = await verifySession();
+        if (session) {
+          request.headers.set("Authorization", `Bearer ${session.accessToken}`);
+        }
+      },
+    ],
     // afterResponse: [],
   },
 });

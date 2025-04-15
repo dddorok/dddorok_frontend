@@ -12,9 +12,9 @@ const encrypt = async (data: any) => {
 };
 
 // 복호화
-const decrypt = async (jwt: string) => {
+const decrypt = async <T>(jwt: string): Promise<T> => {
   const { payload } = await jose.jwtDecrypt(jwt, secret);
-  return payload.data;
+  return payload.data as T;
 };
 
 export { encrypt, decrypt };
