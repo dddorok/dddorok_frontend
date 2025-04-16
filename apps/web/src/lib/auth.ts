@@ -1,8 +1,6 @@
 "use server";
 
-import { getCookie, setCookie } from "cookies-next";
 import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
 import { cache } from "react";
 
 import { decrypt, encrypt } from "./jose";
@@ -23,7 +21,7 @@ export async function createSession({
 
   cookieStore.set(sessionCookieName, session, {
     httpOnly: false,
-    secure: false,
+    secure: true,
     expires: expiresAt,
     sameSite: "lax",
     path: "/",
