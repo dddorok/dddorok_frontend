@@ -11,7 +11,7 @@ interface LoginResponse {
 interface LoginRequest {
   provider: LoginProvider;
   code: string;
-  state: string;
+  state?: string;
 }
 
 export const login = async (request: LoginRequest): Promise<LoginResponse> => {
@@ -19,7 +19,6 @@ export const login = async (request: LoginRequest): Promise<LoginResponse> => {
     .get<{ data: LoginResponse }>(`auth/login/${request.provider}`, {
       searchParams: {
         code: request.code,
-        // state: request.state,
       },
     })
     .json();

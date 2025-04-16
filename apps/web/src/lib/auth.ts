@@ -1,5 +1,6 @@
 "use server";
 
+import { getCookie, setCookie } from "cookies-next";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { cache } from "react";
@@ -17,11 +18,12 @@ export async function createSession({
 }) {
   const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
   const session = await encrypt({ accessToken, refreshToken, expiresAt });
+  console.log("session: ", session);
   const cookieStore = await cookies();
 
   cookieStore.set(sessionCookieName, session, {
-    httpOnly: true,
-    secure: true,
+    httpOnly: false,
+    secure: false,
     expires: expiresAt,
     sameSite: "lax",
     path: "/",
@@ -38,3 +40,9 @@ export async function deleteSession() {
   const cookieStore = await cookies();
   cookieStore.delete(sessionCookieName);
 }
+
+export const getUser = cache(async () => {
+  // const session = await verifySession();
+  // if (!session) return null;
+  // return session;
+});
