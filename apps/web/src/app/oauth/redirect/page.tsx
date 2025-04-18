@@ -14,9 +14,11 @@ export default async function OAuthRedirect(props: {
     const searchParams = await props.searchParams;
 
     switch (searchParams.provider) {
-      case "naver": {
+      case "naver":
+      case "kakao":
+      case "google": {
         const data = await login({
-          provider: "naver",
+          provider: searchParams.provider,
           code: searchParams.code,
           state: searchParams.state,
         });
@@ -27,19 +29,7 @@ export default async function OAuthRedirect(props: {
           />
         );
       }
-      case "kakao": {
-        const data = await login({
-          provider: "kakao",
-          code: searchParams.code,
-        });
 
-        return (
-          <LoginButton
-            accessToken={data.access_token}
-            refreshToken={data.refresh_token}
-          />
-        );
-      }
       default:
         throw new Error("Invalid provider");
     }

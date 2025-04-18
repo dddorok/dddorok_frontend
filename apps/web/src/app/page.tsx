@@ -89,8 +89,11 @@ function GoogleLogin() {
   const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID; // 발급받은 클라이언트 아이디
   const REDIRECT_URI = `${process.env.NEXT_PUBLIC_OAUTH_REDIRECT_URI}?provider=google`; // Callback URL
 
-  const STATE = "flase";
-  const GOOGLE_AUTH_URL = `https://accounts.google.com/o/oauth2/v2/auth?response_type=code&client_id=${GOOGLE_CLIENT_ID}&state=${STATE}&redirect_uri=${REDIRECT_URI}`;
+  const GOOGLE_AUTH_URL = `https://accounts.google.com/o/oauth2/v2/auth?
+		client_id=${GOOGLE_CLIENT_ID}
+		&redirect_uri=${REDIRECT_URI}
+		&response_type=code
+		&scope=email profile`;
 
   const login = () => {
     window.location.href = GOOGLE_AUTH_URL;

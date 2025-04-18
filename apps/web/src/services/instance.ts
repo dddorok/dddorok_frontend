@@ -1,5 +1,6 @@
 import ky from "ky";
 
+import { updateSession } from "@/lib/auth";
 import { verifySession } from "@/lib/dal";
 
 export const apiInstance = ky.create({
@@ -20,6 +21,20 @@ export const privateInstance = ky.create({
         }
       },
     ],
-    // afterResponse: [],
+    afterResponse: [
+      async (request, options, response) => {
+        if (response.status === 401) {
+          await updateSession();
+          const session = await verifySession();
+          if (session) {
+            request.headers.set(
+              "Authorization",
+              `Bearer ${session.accessToken}`
+            );
+            return ky(request, options);
+          }
+        }
+      },
+    ],
   },
 });

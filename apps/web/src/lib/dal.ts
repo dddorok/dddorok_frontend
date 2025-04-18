@@ -1,29 +1,28 @@
 import { getCookie } from "cookies-next";
+import { redirect } from "next/navigation";
 
+import { createSession, updateSession } from "./auth";
 import { decrypt } from "./jose";
 
 export const verifySession = async () => {
-  // cookies-next
   const sessionCookieName = "@dddorok/session";
   const cookie = await getCookie(sessionCookieName);
-  console.log("cookie: ", cookie);
-  // const cookie = (await cookies()).get("session")?.value;
+
   if (!cookie) {
-    console.log("cookie is null");
-    // redirect("/login");
-    return null;
+    redirect("/login");
   }
   const session = await decrypt<{
     accessToken: string;
     refreshToken: string;
     expiresAt: Date;
   }>(cookie as string);
-  console.log("session: ", session);
 
   if (!session.accessToken) {
-    console.log("session is null");
-    // redirect("/login");
-    return null;
+    redirect("/login");
+  }
+
+  if (session.expiresAt < new Date()) {
+    await updateSession();
   }
 
   return session;
