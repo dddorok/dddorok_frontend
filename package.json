@@ -7,7 +7,10 @@
     "lint": "turbo run lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "check-types": "turbo run check-types",
-    "dev:web": "turbo dev --filter=@dddorok/web"
+    "dev:web": "turbo dev --filter=@dddorok/web",
+    "dev:admin": "turbo dev --filter=@dddorok/admin",
+    "build:web": "turbo run build --filter=@dddorok/web",
+    "build:admin": "turbo run build --filter=@dddorok/admin"
   },
   "devDependencies": {
     "prettier": "^3.5.3",
