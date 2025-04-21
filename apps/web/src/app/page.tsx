@@ -11,7 +11,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { updateSession } from "@/lib/auth";
+import { createTestSession, updateSession } from "@/lib/auth";
 import { userTestLogin } from "@/services/user";
 
 export default function Home() {
@@ -24,6 +24,7 @@ export default function Home() {
       <GoogleLogin />
       <KakaoLogin />
       <RefreshToken />
+      <TestSession />
       <Dialog>
         <DialogTrigger>Open</DialogTrigger>
         <DialogContent>
@@ -108,4 +109,12 @@ function RefreshToken() {
   };
 
   return <button onClick={onRefreshToken}>Refresh Token</button>;
+}
+
+function TestSession() {
+  const onTestSession = async () => {
+    await createTestSession();
+  };
+
+  return <button onClick={onTestSession}>Test Session</button>;
 }

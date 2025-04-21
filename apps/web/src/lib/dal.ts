@@ -1,7 +1,7 @@
 import { getCookie } from "cookies-next";
 import { redirect } from "next/navigation";
 
-import { createSession, updateSession } from "./auth";
+import { updateSession } from "./auth";
 import { decrypt } from "./jose";
 
 export const verifySession = async () => {

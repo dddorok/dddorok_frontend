@@ -6,6 +6,7 @@ import { cache } from "react";
 import { decrypt, encrypt } from "./jose";
 
 import { refreshToken } from "@/services/auth";
+import { apiInstance } from "@/services/instance";
 
 const sessionCookieName = "@dddorok/session" as const;
 const sessionExpiresAt = 60 * 1000; // 1분 (밀리초 단위)
@@ -25,13 +26,14 @@ export async function createSession({
   cookieStore.set(sessionCookieName, session, {
     httpOnly: false,
     secure: true,
-    expires: expiresAt,
+    // expires: expiresAt,
     sameSite: "lax",
     path: "/",
   });
 }
 
 export async function updateSession() {
+  console.log("updateSession: ");
   const cookieStore = await cookies();
   const session = cookieStore.get(sessionCookieName)?.value;
 
@@ -57,11 +59,11 @@ export async function updateSession() {
     refreshToken: data.refresh_token,
     expiresAt: expires,
   });
-
+  console.log("newSession: ", newSession);
   cookieStore.set(sessionCookieName, newSession, {
     httpOnly: false,
     secure: true,
-    expires: expires,
+    // expires: expires,
     sameSite: "lax",
     path: "/",
   });
@@ -76,4 +78,29 @@ export async function getSession() {
 export async function deleteSession() {
   const cookieStore = await cookies();
   cookieStore.delete(sessionCookieName);
+}
+
+export async function createTestSession() {
+  const data = await apiInstance
+    .get<{
+      data: {
+        access_token: string;
+        refresh_token: string;
+      };
+    }>("auth/test-token")
+    .json();
+  const expiresAt = new Date(Date.now() + 60 * 100000000); // 1분 만료
+  const session = await encrypt({
+    accessToken: data.data.access_token,
+    refreshToken: data.data.refresh_token,
+    expiresAt,
+  });
+  const cookieStore = await cookies();
+
+  cookieStore.set(sessionCookieName, session, {
+    httpOnly: false,
+    secure: true,
+    sameSite: "lax",
+    path: "/",
+  });
 }
