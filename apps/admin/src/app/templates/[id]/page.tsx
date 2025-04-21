@@ -14,10 +14,10 @@ export async function generateStaticParams() {
 export default async function TemplatePage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
   // Await the params to fix the error
-  const id = await Promise.resolve(params.id);
+  const { id } = await params;
 
   // Find template by ID
   const template = templates.find((t) => t.id === id);

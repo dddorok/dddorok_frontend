@@ -4,10 +4,12 @@ export const metadata = {
   title: "차트 유형 수정 | 관리자 페이지",
 };
 
-export default function EditChartTypePage({
+export default async function EditChartTypePage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
-  return <EditChartTypeClient id={params.id} />;
+  const { id } = await params;
+
+  return <EditChartTypeClient id={id} />;
 }
