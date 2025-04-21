@@ -1,7 +1,6 @@
 "use client";
 
-import { getCookie } from "cookies-next";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -12,7 +11,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { login, LoginProvider } from "@/services/auth";
+import { updateSession } from "@/lib/auth";
 import { userTestLogin } from "@/services/user";
 
 export default function Home() {
@@ -24,6 +23,7 @@ export default function Home() {
       <NaverLogin />
       <GoogleLogin />
       <KakaoLogin />
+      <RefreshToken />
       <Dialog>
         <DialogTrigger>Open</DialogTrigger>
         <DialogContent>
@@ -100,4 +100,12 @@ function GoogleLogin() {
   };
 
   return <button onClick={login}>구글 로그인</button>;
+}
+
+function RefreshToken() {
+  const onRefreshToken = async () => {
+    await updateSession();
+  };
+
+  return <button onClick={onRefreshToken}>Refresh Token</button>;
 }

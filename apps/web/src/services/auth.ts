@@ -30,7 +30,7 @@ export const refreshToken = async (
   refreshToken: string
 ): Promise<LoginResponse> => {
   const response = await apiInstance
-    .get<{ data: LoginResponse }>("/auth/refresh-token", {
+    .get<{ data: LoginResponse }>("auth/refresh-token", {
       searchParams: { refresh_token: refreshToken },
     })
     .json();
