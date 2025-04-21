@@ -1,4 +1,5 @@
 import ky, { HTTPError, Options } from "ky";
+import { redirect } from "next/navigation";
 
 import { updateSession } from "@/lib/auth";
 import { verifySession } from "@/lib/dal";
@@ -62,6 +63,8 @@ export const privateInstance = ky.create({
                 "인증 세션이 만료되었습니다. 다시 로그인해주세요."
               );
             }
+          } else {
+            redirect("/login");
           }
         }
         return response;
