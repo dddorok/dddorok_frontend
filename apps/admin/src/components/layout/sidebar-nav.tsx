@@ -1,13 +1,14 @@
 "use client";
 
-import type { LucideIcon } from "lucide-react";
 import {
   Ruler,
   BarChart3,
   LayoutTemplate,
   Users,
-  FileText
+  FileText,
 } from "lucide-react";
+
+import type { LucideIcon } from "lucide-react";
 
 export interface SidebarNavItem {
   title: string;
@@ -18,7 +19,7 @@ export interface SidebarNavItem {
 export const navItems: SidebarNavItem[] = [
   {
     title: "개발자 가이드",
-    href: "/developer-guide",
+    href: "/",
     icon: FileText,
   },
   {
