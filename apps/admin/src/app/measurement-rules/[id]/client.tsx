@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { MeasurementRuleForm } from "@/features/measurement-rules/components/measurement-rule-form";
+import { MeasurementRuleForm } from "@/app/measurement-rules/components/measurement-rule-form";
 import { useToast } from "@/hooks/use-toast";
 import { measurementRules, type MeasurementRule } from "@/lib/data";
 
