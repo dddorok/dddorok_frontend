@@ -12,34 +12,34 @@ import type { LucideIcon } from "lucide-react";
 
 export interface SidebarNavItem {
   title: string;
-  href: string;
-  icon: LucideIcon;
+  url: string;
+  Icon: LucideIcon;
 }
 
 export const navItems: SidebarNavItem[] = [
   {
     title: "개발자 가이드",
-    href: "/",
-    icon: FileText,
+    url: "/",
+    Icon: FileText,
   },
   {
     title: "치수 규칙 설정",
-    href: "/measurement-rules",
-    icon: Ruler,
+    url: "/measurement-rules",
+    Icon: Ruler,
   },
   {
     title: "템플릿 관리",
-    href: "/templates",
-    icon: LayoutTemplate,
+    url: "/templates",
+    Icon: LayoutTemplate,
   },
   {
     title: "차트 유형 관리",
-    href: "/chart-types",
-    icon: BarChart3,
+    url: "/chart-types",
+    Icon: BarChart3,
   },
   {
     title: "사용자 관리",
-    href: "/users",
-    icon: Users,
+    url: "/users",
+    Icon: Users,
   },
 ];
