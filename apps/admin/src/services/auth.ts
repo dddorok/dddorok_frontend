@@ -1,24 +1,38 @@
-// /auth/login/{provider}
 import { apiInstance } from "./instance";
 
 export type LoginProvider = "naver" | "google" | "kakao";
 
 interface LoginResponse {
-  accessToken: string;
-  refreshToken: string;
+  access_token: string;
+  refresh_token: string;
 }
 
-export const login = async (provider: LoginProvider) => {
-  console.log("provider: ", provider);
-  const response = await apiInstance.get(`auth/login/${provider}`);
+interface LoginRequest {
+  provider: LoginProvider;
+  code: string;
+  state?: string;
+}
 
-  return response;
+export const login = async (request: LoginRequest): Promise<LoginResponse> => {
+  const response = await apiInstance
+    .get<{ data: LoginResponse }>(`auth/login/${request.provider}`, {
+      searchParams: {
+        code: request.code,
+      },
+    })
+    .json();
+
+  return response.data;
 };
 
-///auth/login/{provider}/callback
+export const refreshToken = async (
+  refreshToken: string
+): Promise<LoginResponse> => {
+  const response = await apiInstance
+    .get<{ data: LoginResponse }>("auth/refresh-token", {
+      searchParams: { refresh_token: refreshToken },
+    })
+    .json();
 
-export const loginCallback = async (provider: LoginProvider) => {
-  const response = await apiInstance.get(`auth/login/${provider}/callback`);
-  console.log("response: ", response);
-  return response;
+  return response.data;
 };

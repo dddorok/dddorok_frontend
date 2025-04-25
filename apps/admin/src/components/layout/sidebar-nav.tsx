@@ -6,15 +6,26 @@ import {
   LayoutTemplate,
   Users,
   FileText,
+  User,
 } from "lucide-react";
 
 import type { LucideIcon } from "lucide-react";
+
+const isDev = process.env.NODE_ENV === "development";
 
 export interface SidebarNavItem {
   title: string;
   url: string;
   Icon: LucideIcon;
 }
+
+const devItems: SidebarNavItem[] = [
+  {
+    title: "로그인 테스트",
+    url: "/oauth/login",
+    Icon: User,
+  },
+];
 
 export const navItems: SidebarNavItem[] = [
   {
@@ -42,4 +53,5 @@ export const navItems: SidebarNavItem[] = [
     url: "/users",
     Icon: Users,
   },
+  ...(isDev ? devItems : []),
 ];
