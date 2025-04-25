@@ -39,9 +39,9 @@ export function MeasurementRuleList() {
     originalMeasurementRules
   );
   const [deleteRuleId, setDeleteRuleId] = useState<string | null>(null);
-  const [viewItemsRule, setViewItemsRule] = useState<MeasurementRule | null>(
-    null
-  );
+  // const [viewItemsRule, setViewItemsRule] = useState<MeasurementRule | null>(
+  //   null
+  // );
   const [viewTemplatesRule, setViewTemplatesRule] =
     useState<MeasurementRule | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -156,7 +156,7 @@ export function MeasurementRuleList() {
                       <Button
                         variant="ghost"
                         className="p-0 h-auto font-normal text-blue-600 hover:text-blue-800 hover:bg-blue-50 flex items-center gap-1"
-                        onClick={() => setViewItemsRule(rule)}
+                        // onClick={() => setViewItemsRule(rule)}
                       >
                         <List className="h-3 w-3" />
                         {rule.items.length}개
@@ -224,7 +224,7 @@ export function MeasurementRuleList() {
       </Alert>
 
       {/* 측정 항목 목록 다이얼로그 */}
-      {viewItemsRule && (
+      {/* {viewItemsRule && (
         <Dialog
           open={!!viewItemsRule}
           onOpenChange={(open) => !open && setViewItemsRule(null)}
@@ -280,7 +280,7 @@ export function MeasurementRuleList() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
-      )}
+      )} */}
 
       {/* 연결된 템플릿 목록 다이얼로그 */}
       {viewTemplatesRule && (

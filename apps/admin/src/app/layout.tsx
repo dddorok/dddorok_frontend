@@ -1,4 +1,4 @@
-import { ClientProvider } from "./provider";
+import { ClientProvider } from "../components/provider";
 
 import type { Metadata } from "next";
 
