@@ -5,7 +5,10 @@ import { List, Layers } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 
-import { DeleteNotAllowDialog } from "./delete-not-allow-dialog";
+import {
+  DeleteNotAllowDialog,
+  ViewTemplatesRuleDialog,
+} from "./delete-not-allow-dialog";
 import { RuleDialog } from "./rule-dialog";
 
 import { ConfirmDialog } from "@/components/Dialog/ConfirmDialog";
@@ -68,9 +71,6 @@ export function MeasurementRuleTable() {
 
 function TableItem({ rule }: { rule: any }) {
   const overlay = useOverlay();
-
-  const [viewTemplatesRule, setViewTemplatesRule] =
-    useState<MeasurementRule | null>(null);
 
   // 해당 규칙을 사용하는 템플릿 개수 계산
   const getTemplateCount = (ruleId: string) => {
@@ -158,7 +158,19 @@ function TableItem({ rule }: { rule: any }) {
         <Button
           variant="ghost"
           className="p-0 h-auto font-normal text-blue-600 hover:text-blue-800 hover:bg-blue-50 flex items-center gap-1"
-          onClick={() => setViewTemplatesRule(rule)}
+          onClick={() => {
+            overlay.open(({ isOpen, close }) => (
+              <ViewTemplatesRuleDialog
+                open={isOpen}
+                onOpenChange={close}
+                viewTemplatesRule={rule}
+                onDelete={() => {
+                  close();
+                  // TODO: 삭제 처리
+                }}
+              />
+            ));
+          }}
           disabled={templateCount === 0}
         >
           <Layers className="h-3 w-3" />

@@ -78,7 +78,7 @@ export function DeleteNotAllowDialog({
 }
 
 // 연결된 템플릿 목록 다이얼로그
-function ViewTemplatesRuleDialog({
+export function ViewTemplatesRuleDialog({
   open,
   onOpenChange,
   viewTemplatesRule,
