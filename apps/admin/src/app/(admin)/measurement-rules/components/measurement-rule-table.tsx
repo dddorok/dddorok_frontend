@@ -4,8 +4,10 @@ import { useOverlay } from "@toss/use-overlay";
 import { List, Layers, Link } from "lucide-react";
 import { useState } from "react";
 
+import { DeleteNotAllowDialog } from "./delete-not-allow-dialog";
 import { RuleDialog } from "./rule-dialog";
 
+import { ConfirmDialog } from "@/components/Dialog/ConfirmDialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -108,9 +110,32 @@ function TableItem({ rule }: { rule: any }) {
 
     // 삭제 가능 여부 확인 후 적절한 다이얼로그 표시
     if (canDeleteRule(ruleId)) {
-      setIsDeleteDialogOpen(true);
+      // setIsDeleteDialogOpen(true);
+      overlay.open(({ isOpen, close }) => (
+        <ConfirmDialog
+          open={isOpen}
+          onOpenChange={close}
+          onAction={() => console.log("delete")}
+          title="치수 규칙 삭제"
+          description={
+            <>
+              {/* '{ruleToDelete?.name}'  */}
+              치수 규칙을 정말 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.
+            </>
+          }
+        />
+      ));
     } else {
-      setIsErrorDialogOpen(true);
+      overlay.open(({ isOpen, close }) => (
+        <DeleteNotAllowDialog
+          open={isOpen}
+          onOpenChange={close}
+          ruleToDelete={rule}
+          onConfirm={() => console.log("delete")}
+          onViewTemplatesRule={() => console.log("view templates")}
+          ruleName={rule.name}
+        />
+      ));
     }
   };
 

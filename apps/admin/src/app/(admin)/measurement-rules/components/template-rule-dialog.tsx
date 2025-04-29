@@ -1,4 +1,3 @@
-import { DialogProps } from "@radix-ui/react-dialog";
 import { useOverlay } from "@toss/use-overlay";
 import { Layers } from "lucide-react";
 import Link from "next/link";
@@ -10,7 +9,6 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogDescription,
   DialogFooter,
   DialogDefaultProps,
 } from "@/components/ui/dialog";
@@ -133,34 +131,5 @@ export function TemplateRuleDialog({
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  );
-}
-
-function DeleteConfirmDialog({
-  open,
-  onOpenChange,
-  onAction,
-}: DialogDefaultProps & { onAction: () => void }) {
-  return (
-    <ConfirmDialog />
-    // <Dialog open={open} onOpenChange={onOpenChange}>
-    //   <DialogContent>
-    //     <DialogHeader>
-    //       <DialogTitle>치수 규칙 삭제</DialogTitle>
-    //       <DialogDescription>
-    //         '{ruleToDelete?.name}' 치수 규칙을 정말 삭제하시겠습니까? 이 작업은
-    //         되돌릴 수 없습니다.
-    //       </DialogDescription>
-    //     </DialogHeader>
-    //     <DialogFooter>
-    //       <Button variant="outline" onClick={() => onOpenChange(false)}>
-    //         취소
-    //       </Button>
-    //       <Button variant="destructive" onClick={onAction}>
-    //         삭제
-    //       </Button>
-    //     </DialogFooter>
-    //   </DialogContent>
-    // </Dialog>
   );
 }
