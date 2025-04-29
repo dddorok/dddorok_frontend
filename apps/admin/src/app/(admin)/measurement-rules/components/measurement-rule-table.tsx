@@ -1,7 +1,8 @@
 "use client";
 
 import { useOverlay } from "@toss/use-overlay";
-import { List, Layers, Link } from "lucide-react";
+import { List, Layers } from "lucide-react";
+import Link from "next/link";
 import { useState } from "react";
 
 import { DeleteNotAllowDialog } from "./delete-not-allow-dialog";
@@ -115,7 +116,10 @@ function TableItem({ rule }: { rule: any }) {
         <ConfirmDialog
           open={isOpen}
           onOpenChange={close}
-          onAction={() => console.log("delete")}
+          onAction={() => {
+            console.log("delete");
+            close();
+          }}
           title="치수 규칙 삭제"
           description={
             <>
@@ -131,9 +135,10 @@ function TableItem({ rule }: { rule: any }) {
           open={isOpen}
           onOpenChange={close}
           ruleToDelete={rule}
-          onConfirm={() => console.log("delete")}
-          onViewTemplatesRule={() => console.log("view templates")}
-          ruleName={rule.name}
+          onConfirm={() => {
+            console.log("delete");
+            close();
+          }}
         />
       ));
     }
