@@ -69,14 +69,8 @@ export function MeasurementRuleTable() {
 function TableItem({ rule }: { rule: any }) {
   const overlay = useOverlay();
 
-  const [deleteRuleId, setDeleteRuleId] = useState<string | null>(null);
-  const [viewItemsRule, setViewItemsRule] = useState<MeasurementRule | null>(
-    null
-  );
   const [viewTemplatesRule, setViewTemplatesRule] =
     useState<MeasurementRule | null>(null);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [isErrorDialogOpen, setIsErrorDialogOpen] = useState(false);
 
   // 해당 규칙을 사용하는 템플릿 개수 계산
   const getTemplateCount = (ruleId: string) => {
@@ -93,13 +87,6 @@ function TableItem({ rule }: { rule: any }) {
     return category ? category.name : "알 수 없음";
   };
 
-  // 해당 규칙을 사용하는 템플릿 목록 가져오기
-  const getTemplatesByRuleId = (ruleId: string) => {
-    return templates.filter(
-      (template) => template.measurementRuleId === ruleId
-    );
-  };
-
   // 삭제 가능 여부 확인
   const canDeleteRule = (ruleId: string) => {
     return getTemplateCount(ruleId) === 0;
@@ -107,8 +94,6 @@ function TableItem({ rule }: { rule: any }) {
 
   // 삭제 버튼 클릭 핸들러
   const handleDeleteClick = (ruleId: string) => {
-    setDeleteRuleId(ruleId);
-
     // 삭제 가능 여부 확인 후 적절한 다이얼로그 표시
     if (canDeleteRule(ruleId)) {
       // setIsDeleteDialogOpen(true);
@@ -145,7 +130,6 @@ function TableItem({ rule }: { rule: any }) {
   };
 
   const onViewItemsRule = (rule: MeasurementRule) => {
-    console.log("rule: ", rule);
     overlay.open(({ isOpen, close }) => (
       <RuleDialog viewItemsRule={rule} isOpen={isOpen} close={close} />
     ));
