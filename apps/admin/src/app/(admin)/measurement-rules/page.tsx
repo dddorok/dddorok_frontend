@@ -1,8 +1,8 @@
 import Link from "next/link";
 
-import { GuideCard } from "./components/GuideCard";
-import { MeasurementRuleList } from "./components/measurement-rule-list";
-import { MeasurementRuleTable } from "./components/measurement-rule-table";
+import { GuideCard } from "./_components/GuideCard";
+import { MeasurementRuleList } from "./_components/measurement-rule-list";
+import { MeasurementRuleTable } from "./_components/measurement-rule-table";
 
 import { Button } from "@/components/ui/button";
 
