@@ -49,6 +49,8 @@ import {
   type SleeveType,
   isDuplicateMeasurementRule,
   CATEGORY_ID,
+  NECKLINE_TYPES,
+  NecklineType,
 } from "@/lib/data";
 import { QueryDevTools } from "@/lib/react-query";
 import { measurementRuleQueries } from "@/queries/measurement-rule";
@@ -64,7 +66,8 @@ interface MeasurementRuleFormData extends MeasurementRule {
   level1: string;
   level2: string;
   level3: string;
-  sleeveType: SleeveType;
+  sleeveType?: SleeveType;
+  necklineType?: NecklineType;
   name: string;
   duplicateError: boolean;
 }
@@ -139,6 +142,9 @@ export function MeasurementRuleForm({
       sleeveType: needField?.includes("sleeveType")
         ? data.sleeveType
         : undefined,
+      necklineType: needField?.includes("necklineType")
+        ? data.necklineType
+        : undefined,
     };
 
     // 중복 체크
@@ -190,7 +196,7 @@ export function MeasurementRuleForm({
               <CategorySelect />
             </div>
 
-            <SloeeveTypeForm />
+            <TopNeedFieldForm />
             <MeasurementRuleName />
           </CardContent>
         </Card>
@@ -527,34 +533,33 @@ function RuleCheckItem({
  */
 function MeasurementRuleName() {
   const form = useFormContext();
+
   const categoryLevel3 = useWatch({ name: "level3" });
   const category = getCategoryById(categoryLevel3);
 
   const categoryLevel2 = useWatch({ name: "level2" });
-  const requiresSleeveType = categoryLevel2 === CATEGORY_ID.상의;
   const selectedSleeveType = useWatch({ name: "sleeveType" });
+  const selectedNecklineType = useWatch({ name: "necklineType" });
+
+  const getAuthName = () => {
+    // 자동 생성되며 수동 수정 불가
+    const category3Name = category?.name ?? "";
+    switch (categoryLevel2) {
+      // - 상의: `넥라인 + 소매 유형 + 소분류`
+      case CATEGORY_ID.상의: {
+        return `${selectedNecklineType} ${selectedSleeveType} ${category3Name}`;
+      }
+      // - 그 외: `소분류명`
+      default:
+        return category3Name;
+    }
+  };
+
+  const authName = getAuthName();
 
   useEffect(() => {
-    const getAuthName = () => {
-      // TODO 규칙이름 생성 방식 변경
-      // - 자동 생성되며 수동 수정 불가
-      // - 상의: `넥라인 + 소매 유형 + 소분류`
-      // - 그 외: `소분류명`
-      let autoName = "";
-
-      // 소매 유형이 먼저 오고, 카테고리 소분류가 뒤에 오도록 변경
-      if (requiresSleeveType && selectedSleeveType) {
-        autoName = `${selectedSleeveType} ${category?.name}`;
-      } else {
-        autoName = category?.name || "";
-      }
-
-      return autoName;
-    };
-
-    form.setValue("name", getAuthName());
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [category?.name, requiresSleeveType, selectedSleeveType]);
+    form.setValue("name", authName);
+  }, [authName]);
 
   return (
     <FormField
@@ -575,49 +580,36 @@ function MeasurementRuleName() {
   );
 }
 
-function SloeeveTypeForm() {
+function TopNeedFieldForm() {
   const form = useFormContext();
-  const { field: requiresSleeveTypeField } = useController({
-    name: "requiresSleeveType",
-  });
-
   const categoryLevel2 = useWatch({ name: "level2" });
-  const requiresSleeveType = categoryLevel2 === CATEGORY_ID.상의;
-  // const requiresSleeveType = useWatch({ name: "requiresSleeveType" });
-  // const selectedSleeveType = useWatch({ name: "sleeveType" });
+
+  if (categoryLevel2 !== CATEGORY_ID.상의) return null;
 
   return (
     <>
-      {/* <div className="flex items-center space-x-2">
-        <Checkbox
-          id="requireSleeveType"
-          checked={requiresSleeveTypeField.value}
-          onCheckedChange={(checked) => {
-            requiresSleeveTypeField.onChange(checked === true);
-            form.clearErrors("duplicateError");
-          }}
-        />
-        <label
-          htmlFor="requireSleeveType"
-          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-        >
-          소매 유형 필요
-        </label>
-      </div> */}
-
-      {requiresSleeveType && (
-        <FormSelect
-          label="소매 유형"
-          name="sleeveType"
-          options={SLEEVE_TYPES.map((type) => ({
-            id: type,
-            name: type,
-          }))}
-          onChange={() => {
-            form.clearErrors("duplicateError");
-          }}
-        />
-      )}
+      <FormSelect
+        label="소매 유형"
+        name="sleeveType"
+        options={SLEEVE_TYPES.map((type) => ({
+          id: type,
+          name: type,
+        }))}
+        onChange={() => {
+          form.clearErrors("duplicateError");
+        }}
+      />
+      <FormSelect
+        label="넥라인"
+        name="necklineType"
+        options={NECKLINE_TYPES.map((type) => ({
+          id: type,
+          name: type,
+        }))}
+        onChange={() => {
+          form.clearErrors("duplicateError");
+        }}
+      />
     </>
   );
 }
