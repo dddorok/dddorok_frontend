@@ -1,11 +1,11 @@
 "use client";
 
-import { AlertCircle, Info, CheckSquare } from "lucide-react";
+import { Info, CheckSquare } from "lucide-react";
 import { PlusCircle } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, ComponentProps } from "react";
 import { useForm, useFormContext } from "react-hook-form";
 
-import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import { BasicAlert } from "@/components/Alert";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -244,14 +244,10 @@ export function MeasurementRuleForm({
           <CardContent className="space-y-6">
             {/* 에러 메시지 표시 */}
             {duplicateError && (
-              <Alert variant="destructive">
-                <AlertCircle className="h-4 w-4" />
-                <AlertTitle>중복 오류</AlertTitle>
-                <AlertDescription>
-                  선택한 카테고리와 소매 유형의 조합으로 이미 치수 규칙이
-                  존재합니다. 다른 조합을 선택해주세요.
-                </AlertDescription>
-              </Alert>
+              <BasicAlert title="중복 오류" variant="destructive">
+                선택한 카테고리와 소매 유형의 조합으로 이미 치수 규칙이
+                존재합니다. 다른 조합을 선택해주세요.
+              </BasicAlert>
             )}
 
             {/* 카테고리 선택 */}
@@ -264,35 +260,9 @@ export function MeasurementRuleForm({
               </div>
 
               <div className="grid grid-cols-3 gap-4">
-                <div>
-                  <BasicSelect
-                    value={selectedCategory.level1?.toString() || ""}
-                    onValueChange={(value) =>
-                      handleCategoryChange("level1", value)
-                    }
-                    options={level1Categories}
-                  />
-                </div>
-
-                <div>
-                  <BasicSelect
-                    value={selectedCategory.level2?.toString() || ""}
-                    onValueChange={(value) =>
-                      handleCategoryChange("level2", value)
-                    }
-                    options={level2Categories}
-                  />
-                </div>
-
-                <div>
-                  <BasicSelect
-                    value={selectedCategory.level3?.toString() || ""}
-                    onValueChange={(value) =>
-                      handleCategoryChange("level3", value)
-                    }
-                    options={level3Categories}
-                  />
-                </div>
+                <FormSelect name="level1" options={level1Categories} />
+                <FormSelect name="level2" options={level2Categories} />
+                <FormSelect name="level3" options={level3Categories} />
               </div>
             </div>
 
@@ -313,32 +283,17 @@ export function MeasurementRuleForm({
             </div>
 
             {requiresSleeveType && (
-              <FormField
-                control={form.control}
+              <FormSelect
+                label="소매 유형"
                 name="sleeveType"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>소매 유형</FormLabel>
-                    <BasicSelect
-                      value={field.value}
-                      onValueChange={(value) => {
-                        field.onChange(value as SleeveType);
-                        setSelectedSleeveType(value as SleeveType);
-                      }}
-                      options={SLEEVE_TYPES.map((type) => ({
-                        id: type,
-                        name: type,
-                      }))}
-                    />
-
-                    <FormMessage />
-                  </FormItem>
-                )}
+                options={SLEEVE_TYPES.map((type) => ({
+                  id: type,
+                  name: type,
+                }))}
               />
             )}
 
             <FormField
-              control={form.control}
               name="name"
               render={({ field }) => (
                 <FormItem>
@@ -378,16 +333,13 @@ export function MeasurementRuleForm({
             </div>
           </CardHeader>
           <CardContent>
-            <Alert
+            <BasicAlert
               variant="default"
-              className="mb-4 bg-blue-50 border-blue-200 text-blue-800"
+              iconElement={<Info className="h-4 w-4" />}
             >
-              <Info className="h-4 w-4" />
-              <AlertDescription>
-                실제 구현 시 측정 항목은 API에서 동적으로 로드됩니다. 카테고리
-                및 섹션별로 항목이 분류되어 있습니다.
-              </AlertDescription>
-            </Alert>
+              선택한 카테고리와 소매 유형의 조합으로 이미 치수 규칙이
+              존재합니다. 다른 조합을 선택해주세요.
+            </BasicAlert>
 
             <MeasurementRuleSelectForm />
           </CardContent>
@@ -427,27 +379,41 @@ export function MeasurementRuleForm({
   );
 }
 
-function BasicSelect(props: {
-  value: string | undefined;
-  onValueChange: (value: string) => void;
+function FormSelect({
+  options,
+  label,
+  ...props
+}: {
   options: { id: number | string; name: string }[];
+  label?: string;
+  name: ComponentProps<typeof FormField>["name"];
 }) {
   return (
-    <Select
-      value={props.value}
-      onValueChange={(value) => props.onValueChange(value)}
-    >
-      <SelectTrigger>
-        <SelectValue placeholder="대분류" />
-      </SelectTrigger>
-      <SelectContent>
-        {props.options.map((option) => (
-          <SelectItem key={option.id} value={option.id.toString()}>
-            {option.name}
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
+    <FormField
+      {...props}
+      render={({ field }) => (
+        <FormItem>
+          {label && <FormLabel>{label}</FormLabel>}
+          <FormControl>
+            <Select
+              value={field.value}
+              onValueChange={(value) => field.onChange(value)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="대분류" />
+              </SelectTrigger>
+              <SelectContent>
+                {options.map((option) => (
+                  <SelectItem key={option.id} value={option.id.toString()}>
+                    {option.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </FormControl>
+        </FormItem>
+      )}
+    />
   );
 }
 
