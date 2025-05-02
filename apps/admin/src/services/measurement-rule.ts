@@ -7,11 +7,11 @@ export const getMeasurementRules = async () => {
   return response.json();
 };
 
-interface GetMeasurementRuleItemCodeRequest {
-  category: string;
-}
+// interface GetMeasurementRuleItemCodeRequest {
+//   category: string;
+// }
 
-interface GetMeasurementRuleItemCodeResponse {
+export interface GetMeasurementRuleItemCodeResponse {
   id: string;
   category: string;
   section: string;
@@ -19,9 +19,7 @@ interface GetMeasurementRuleItemCodeResponse {
   code: string;
 }
 
-export const getMeasurementRuleItemCode = async ({
-  category,
-}: GetMeasurementRuleItemCodeRequest) => {
+export const getMeasurementRuleItemCode = async () => {
   const response = await privateInstance<{
     data: GetMeasurementRuleItemCodeResponse[];
   }>(`measurement-rule-item/code`);

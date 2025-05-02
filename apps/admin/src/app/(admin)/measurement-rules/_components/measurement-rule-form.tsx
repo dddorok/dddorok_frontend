@@ -51,7 +51,11 @@ import {
   measurementItemsByCategory,
   measurementItemsBySection,
 } from "@/lib/data";
-import { getMeasurementRuleItemCode } from "@/services/measurement-rule";
+import { measurementRuleQueries } from "@/queries/measurement-rule";
+import {
+  getMeasurementRuleItemCode,
+  GetMeasurementRuleItemCodeResponse,
+} from "@/services/measurement-rule";
 
 interface MeasurementRuleFormProps {
   rule?: MeasurementRule;
@@ -90,12 +94,6 @@ export function MeasurementRuleForm({
       duplicateError: false, // TODO: 중복 체크 오류 표시 위해 추가
     },
   });
-
-  const { data: itemCodes } = useQuery({
-    queryKey: ["measurement-rule-item-code"],
-    queryFn: () => getMeasurementRuleItemCode({ category: "상의" }),
-  });
-  console.log("itemCodes: ", itemCodes);
 
   // TODO
   // Edit mode일 경우 초기 카테고리 설정
@@ -372,66 +370,65 @@ function CategorySelect() {
 }
 
 function MeasurementRuleSelectForm() {
-  const form = useFormContext();
+  const { data: itemCodes } = useQuery(
+    measurementRuleQueries.getMeasurementRuleItemCodeQueryOptions()
+  );
+
+  const groupedItems = transformMeasurementItems(itemCodes ?? []);
   const [activeTab, setActiveTab] = useState<string>("상의");
 
   // 측정 항목을 카테고리별로 그룹화
-  const groupedItems = measurementItemsByCategory();
   const itemCategories = Object.keys(groupedItems);
+  return (
+    <FormItem>
+      <Tabs
+        defaultValue="상의"
+        value={activeTab}
+        onValueChange={setActiveTab}
+        className="w-full"
+      >
+        <TabsList className="mb-6 w-full justify-start gap-1 bg-muted/50 p-1 my-4">
+          {itemCategories.map((category) => (
+            <TabsTrigger
+              key={category}
+              value={category}
+              className="px-4 py-1.5"
+            >
+              {category}
+            </TabsTrigger>
+          ))}
+        </TabsList>
 
-  const sectionedItems = measurementItemsBySection();
+        {itemCategories.map((category) => (
+          <TabsContent key={category} value={category} className="mt-0">
+            <div className="space-y-6">
+              {Object.keys(groupedItems[category] ?? {}).map((section) => {
+                return (
+                  <RuleCheckList
+                    key={section}
+                    sectionName={section}
+                    sectionItems={groupedItems[category]?.[section] as any}
+                  />
+                );
+              })}
+            </div>
+          </TabsContent>
+        ))}
+      </Tabs>
+      <FormMessage />
+    </FormItem>
+  );
+}
 
-  // 섹션 항목들이 모두 선택되었는지 확인
-  const isSectionFullySelected = (category: string, section: string) => {
-    const sectionItems = sectionedItems[category]?.[section];
-    if (!sectionItems) return false;
-    const currentItems = form.getValues().items || [];
-
-    return sectionItems.every((item) => currentItems.includes(item.id));
-  };
-
-  // 섹션 항목들이 일부 선택되었는지 확인
-  const isSectionPartiallySelected = (category: string, section: string) => {
-    const sectionItems = sectionedItems[category]?.[section];
-    if (!sectionItems) return false;
-    const currentItems = form.getValues().items || [];
-
-    const selectedCount = sectionItems.filter((item) =>
-      currentItems.includes(item.id)
-    ).length;
-    return selectedCount > 0 && selectedCount < sectionItems.length;
-  };
-
-  // 섹션의 모든 항목 선택/해제
-  const handleSectionSelectAll = (
-    category: string,
-    section: string,
-    selected: boolean
-  ) => {
-    const sectionItems = sectionedItems[category]?.[section];
-    if (!sectionItems) return;
-    const currentItems = form.getValues().items || [];
-    let newItems: string[];
-
-    if (selected) {
-      // 섹션 항목 모두 추가 (중복 제거)
-      const sectionItemIds = sectionItems.map((item) => item.id);
-      newItems = [...new Set([...currentItems, ...sectionItemIds])];
-    } else {
-      // 섹션 항목 모두 제거
-      const sectionItemIds = sectionItems.map((item) => item.id);
-      newItems = currentItems.filter(
-        (id: string) => !sectionItemIds.includes(id)
-      );
-    }
-
-    form.setValue("items", newItems);
-  };
-
-  // 측정 항목이 선택되어 있는지 확인
-  const isItemSelected = (itemId: string) => {
-    return form.getValues().items?.includes(itemId) || false;
-  };
+function RuleCheckList({
+  sectionItems,
+  sectionName,
+}: {
+  sectionItems: GetMeasurementRuleItemCodeResponse[];
+  sectionName: string;
+}) {
+  const form = useFormContext();
+  const selectedItems = useWatch({ name: "items" });
 
   // 아이템 선택 처리
   const handleItemChange = (itemId: string, checked: boolean) => {
@@ -446,93 +443,100 @@ function MeasurementRuleSelectForm() {
     }
   };
 
+  // 섹션 항목들이 모두 선택되었는지 확인
+  const isSectionFullySelected = () => {
+    const currentItems = form.getValues().items || [];
+    return sectionItems.every((item) => currentItems.includes(item.id));
+  };
+
+  // 섹션 항목들이 일부 선택되었는지 확인
+  const isSectionPartiallySelected = () => {
+    const currentItems = form.getValues().items || [];
+    const selectedCount = sectionItems.filter((item) =>
+      currentItems.includes(item.id)
+    ).length;
+    return selectedCount > 0 && selectedCount < sectionItems.length;
+  };
+
+  // 섹션의 모든 항목 선택/해제
+  const handleSectionSelectAll = (selected: boolean) => {
+    const currentItems = form.getValues().items || [];
+    if (selected) {
+      // 섹션 항목 모두 추가 (중복 제거)
+      const sectionItemIds = sectionItems.map((item) => item.id);
+      form.setValue("items", [
+        ...new Set([...currentItems, ...sectionItemIds]),
+      ]);
+    } else {
+      // 섹션 항목 모두 제거
+      const sectionItemIds = sectionItems.map((item) => item.id);
+      form.setValue(
+        "items",
+        currentItems.filter((id: string) => !sectionItemIds.includes(id))
+      );
+    }
+  };
+
+  const isFullySelected = isSectionFullySelected();
+  const isPartiallySelected = isSectionPartiallySelected();
+
   return (
-    <FormItem>
-      <Tabs
-        defaultValue="상의"
-        value={activeTab}
-        onValueChange={setActiveTab}
-        className="w-full"
-      >
-        <TabsList className="mb-6 w-full justify-start gap-1 bg-muted/50 p-1">
-          {itemCategories.map((category) => (
-            <TabsTrigger
-              key={category}
-              value={category}
-              className="px-4 py-1.5"
-            >
-              {category}
-            </TabsTrigger>
-          ))}
-        </TabsList>
-
-        {Object.keys(sectionedItems).map((category) => (
-          <TabsContent key={category} value={category} className="mt-0">
-            <div className="space-y-6">
-              {Object.keys(sectionedItems[category] ?? {}).map((section) => {
-                const isFullySelected = isSectionFullySelected(
-                  category,
-                  section
-                );
-                const isPartiallySelected = isSectionPartiallySelected(
-                  category,
-                  section
-                );
-
-                return (
-                  <div key={section} className="space-y-3">
-                    <div className="flex items-center gap-2">
-                      <Checkbox
-                        id={`section-${category}-${section}`}
-                        checked={isFullySelected}
-                        className={isPartiallySelected ? "opacity-70" : ""}
-                        onCheckedChange={(checked) =>
-                          handleSectionSelectAll(category, section, !!checked)
-                        }
-                      />
-                      <label
-                        htmlFor={`section-${category}-${section}`}
-                        className="font-semibold text-gray-700"
-                      >
-                        {section}
-                      </label>
-                    </div>
-                    <Separator className="my-2" />
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-3 pl-4">
-                      {sectionedItems[category]?.[section]?.map((item) => (
-                        <div
-                          key={item.id}
-                          className={`flex items-start space-x-2 p-2 rounded-lg hover:bg-gray-50 ${isItemSelected(item.id) ? "bg-blue-50/60" : ""}`}
-                        >
-                          <Checkbox
-                            id={`item-${item.id}`}
-                            checked={isItemSelected(item.id)}
-                            onCheckedChange={(checked) =>
-                              handleItemChange(item.id, !!checked)
-                            }
-                            className="mt-0.5"
-                          />
-                          <div>
-                            <label
-                              htmlFor={`item-${item.id}`}
-                              className="font-medium leading-none cursor-pointer"
-                            >
-                              {item.name}
-                            </label>
-                            {/* 단위 표시 부분 제거 */}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </TabsContent>
+    <div className="space-y-3">
+      <div className="flex items-center gap-2">
+        <Checkbox
+          id={`section-${sectionName}`}
+          checked={isFullySelected}
+          className={isPartiallySelected ? "opacity-70" : ""}
+          onCheckedChange={(checked) => handleSectionSelectAll(!!checked)}
+        />
+        <label
+          htmlFor={`section-${sectionName}`}
+          className="font-semibold text-gray-700"
+        >
+          {sectionName}
+        </label>
+      </div>
+      <Separator className="my-2" />
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-3 pl-4">
+        {sectionItems?.map((item) => (
+          <RuleCheckItem
+            key={item.id}
+            checked={selectedItems.includes(item.id)}
+            item={item}
+            onClick={(checked) => handleItemChange(item.id, checked)}
+          />
         ))}
-      </Tabs>
-      <FormMessage />
-    </FormItem>
+      </div>
+    </div>
+  );
+}
+
+function RuleCheckItem({
+  checked,
+  item,
+  onClick,
+}: {
+  checked: boolean;
+  item: GetMeasurementRuleItemCodeResponse;
+  onClick: (checked: boolean) => void;
+}) {
+  return (
+    <div className="flex items-center space-x-2 ">
+      <Checkbox
+        id={`item-${item.id}`}
+        checked={checked}
+        onCheckedChange={(checked) => onClick(!!checked)}
+        className="mt-0.5"
+      />
+      <div>
+        <label
+          htmlFor={`item-${item.id}`}
+          className="font-medium leading-none cursor-pointer"
+        >
+          {item.label}
+        </label>
+      </div>
+    </div>
   );
 }
 
@@ -627,4 +631,30 @@ function SloeeveTypeForm() {
       )}
     </>
   );
+}
+
+interface TransformedMeasurementItems {
+  [category: string]: {
+    [section: string]: GetMeasurementRuleItemCodeResponse[];
+  };
+}
+
+function transformMeasurementItems(
+  items: GetMeasurementRuleItemCodeResponse[]
+): TransformedMeasurementItems {
+  return items.reduce<TransformedMeasurementItems>((acc, item) => {
+    const { category, section } = item;
+
+    if (!acc[category]) {
+      acc[category] = {};
+    }
+
+    if (!acc[category][section]) {
+      acc[category][section] = [];
+    }
+
+    acc[category][section].push(item);
+
+    return acc;
+  }, {});
 }
