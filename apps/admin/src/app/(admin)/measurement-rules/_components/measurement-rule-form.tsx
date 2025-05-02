@@ -48,14 +48,10 @@ import {
   getCategoryById,
   type SleeveType,
   isDuplicateMeasurementRule,
-  measurementItemsByCategory,
-  measurementItemsBySection,
 } from "@/lib/data";
+import { QueryDevTools } from "@/lib/react-query";
 import { measurementRuleQueries } from "@/queries/measurement-rule";
-import {
-  getMeasurementRuleItemCode,
-  GetMeasurementRuleItemCodeResponse,
-} from "@/services/measurement-rule";
+import { GetMeasurementRuleItemCodeResponse } from "@/services/measurement-rule";
 
 interface MeasurementRuleFormProps {
   rule?: MeasurementRule;
@@ -68,21 +64,9 @@ export function MeasurementRuleForm({
   isEdit = false,
   onSubmit,
 }: MeasurementRuleFormProps) {
-  const [selectedCategory, setSelectedCategory] = useState<{
-    level1: string | null;
-    level2: string | null;
-    level3: string | null;
-  }>({
-    level1: null,
-    level2: null,
-    level3: null,
-  });
   const [requiresSleeveType, setRequiresSleeveType] = useState<boolean>(
     !!rule?.sleeveType
   );
-
-  // const [duplicateError, setDuplicateError] = useState<boolean>(false);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
 
   // Setup form
   const form = useForm<MeasurementRule & { duplicateError: boolean }>({
@@ -135,16 +119,6 @@ export function MeasurementRuleForm({
     data: MeasurementRule,
     createTemplate: boolean = false
   ) => {
-    // Add unique ID if it's a new rule
-    // if (!data.id) {
-    //   data.id = `rule_${Date.now()}`;
-    // }
-
-    // Remove sleeve type if not required
-    // if (!requiresSleeveType) {
-    //   data.sleeveType = undefined;
-    // }
-
     const requestData = {
       ...data,
       id: data.id ?? `rule_${Date.now()}`,
@@ -167,16 +141,16 @@ export function MeasurementRuleForm({
 
   // 선택된 항목 개수 확인
   const getSelectedItemCount = () => {
-    return form.getValues().items?.length || 0;
+    return form.watch("items")?.length || 0;
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center p-8">
-        측정 항목 로딩 중...
-      </div>
-    );
-  }
+  // if (isLoading) {
+  //   return (
+  //     <div className="flex items-center justify-center p-8">
+  //       측정 항목 로딩 중...
+  //     </div>
+  //   );
+  // }
 
   return (
     <Form {...form}>
@@ -275,8 +249,8 @@ export function MeasurementRuleForm({
             </Button>
           )}
         </div>
-        {/* <DevTool control={form.control} /> */}
       </form>
+      <QueryDevTools control={form.control} />
     </Form>
   );
 }
