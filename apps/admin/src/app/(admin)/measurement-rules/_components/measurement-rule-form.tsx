@@ -5,7 +5,12 @@ import { useQuery } from "@tanstack/react-query";
 import { Info, CheckSquare } from "lucide-react";
 import { PlusCircle } from "lucide-react";
 import { useState, useEffect, ComponentProps } from "react";
-import { useForm, useFormContext, useWatch } from "react-hook-form";
+import {
+  useController,
+  useForm,
+  useFormContext,
+  useWatch,
+} from "react-hook-form";
 
 import { BasicAlert } from "@/components/Alert";
 import { Button } from "@/components/ui/button";
@@ -71,19 +76,18 @@ export function MeasurementRuleForm({
   const [requiresSleeveType, setRequiresSleeveType] = useState<boolean>(
     !!rule?.sleeveType
   );
-  const [selectedSleeveType, setSelectedSleeveType] = useState<
-    SleeveType | undefined
-  >(rule?.sleeveType);
-  const [duplicateError, setDuplicateError] = useState<boolean>(false);
+
+  // const [duplicateError, setDuplicateError] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   // Setup form
-  const form = useForm<MeasurementRule>({
+  const form = useForm<MeasurementRule & { duplicateError: boolean }>({
     defaultValues: rule || {
       id: "",
       categoryId: "",
       name: "",
       items: [],
+      duplicateError: false, // TODO: 중복 체크 오류 표시 위해 추가
     },
   });
 
@@ -92,15 +96,6 @@ export function MeasurementRuleForm({
     queryFn: () => getMeasurementRuleItemCode({ category: "상의" }),
   });
   console.log("itemCodes: ", itemCodes);
-
-  // API 데이터 로딩 시뮬레이션
-  useEffect(() => {
-    setIsLoading(true);
-    // API 호출 시뮬레이션
-    setTimeout(() => {
-      setIsLoading(false);
-    }, 500);
-  }, []);
 
   // TODO
   // Edit mode일 경우 초기 카테고리 설정
@@ -124,36 +119,6 @@ export function MeasurementRuleForm({
   //   }
   // }, [rule]);
 
-  // 카테고리와 소매 유형에 따라 이름 자동 생성
-  useEffect(() => {
-    if (selectedCategory.level3) {
-      const category = getCategoryById(selectedCategory.level3);
-      if (category) {
-        let autoName = "";
-
-        // 소매 유형이 먼저 오고, 카테고리 소분류가 뒤에 오도록 변경
-        if (requiresSleeveType && selectedSleeveType) {
-          autoName = `${selectedSleeveType} ${category.name}`;
-        } else {
-          autoName = category.name;
-        }
-
-        // 이름 필드 자동 설정
-        form.setValue("name", autoName);
-        // 카테고리 ID 필드 설정
-        form.setValue("categoryId", category.id);
-
-        // 카테고리가 변경되면 중복 오류 초기화
-        setDuplicateError(false);
-      }
-    }
-  }, [selectedCategory.level3, requiresSleeveType, selectedSleeveType, form]);
-
-  // 소매 유형이 변경될 때도 중복 체크 초기화
-  useEffect(() => {
-    setDuplicateError(false);
-  }, [selectedSleeveType, requiresSleeveType]);
-
   // 중복 체크
   const checkForDuplicates = (
     categoryId: string,
@@ -173,23 +138,33 @@ export function MeasurementRuleForm({
     createTemplate: boolean = false
   ) => {
     // Add unique ID if it's a new rule
-    if (!data.id) {
-      data.id = `rule_${Date.now()}`;
-    }
+    // if (!data.id) {
+    //   data.id = `rule_${Date.now()}`;
+    // }
 
     // Remove sleeve type if not required
-    if (!requiresSleeveType) {
-      data.sleeveType = undefined;
-    }
+    // if (!requiresSleeveType) {
+    //   data.sleeveType = undefined;
+    // }
+
+    const requestData = {
+      ...data,
+      id: data.id ?? `rule_${Date.now()}`,
+      sleeveType: requiresSleeveType ? data.sleeveType : undefined,
+    };
 
     // 중복 체크
-    const isDuplicate = checkForDuplicates(data.categoryId, data.sleeveType);
+    const isDuplicate = checkForDuplicates(
+      requestData.categoryId,
+      requestData.sleeveType
+    );
     if (isDuplicate) {
-      setDuplicateError(true);
+      form.setValue("duplicateError", true);
+      // setDuplicateError(true);
       return;
     }
 
-    onSubmit(data, createTemplate);
+    onSubmit(requestData, createTemplate);
   };
 
   // 선택된 항목 개수 확인
@@ -217,7 +192,7 @@ export function MeasurementRuleForm({
           </CardHeader>
           <CardContent className="space-y-6">
             {/* 에러 메시지 표시 */}
-            {duplicateError && (
+            {form.getValues().duplicateError && (
               <BasicAlert title="중복 오류" variant="destructive">
                 선택한 카테고리와 소매 유형의 조합으로 이미 치수 규칙이
                 존재합니다. 다른 조합을 선택해주세요.
@@ -235,53 +210,8 @@ export function MeasurementRuleForm({
               <CategorySelect />
             </div>
 
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="requireSleeveType"
-                checked={requiresSleeveType}
-                onCheckedChange={(checked) =>
-                  setRequiresSleeveType(checked === true)
-                }
-              />
-              <label
-                htmlFor="requireSleeveType"
-                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-              >
-                소매 유형 필요
-              </label>
-            </div>
-
-            {requiresSleeveType && (
-              <FormSelect
-                label="소매 유형"
-                name="sleeveType"
-                options={SLEEVE_TYPES.map((type) => ({
-                  id: type,
-                  name: type,
-                }))}
-              />
-            )}
-
+            <SloeeveTypeForm />
             <MeasurementRuleName />
-            {/* <FormField
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>규칙 이름</FormLabel>
-                  <FormControl>
-                    <Input
-                      {...field}
-                      readOnly
-                      placeholder="자동으로 생성됩니다"
-                    />
-                  </FormControl>
-                  <FormDescription>
-                    소매 유형과 카테고리를 선택하면 자동으로 설정됩니다.
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            /> */}
           </CardContent>
         </Card>
 
@@ -319,7 +249,10 @@ export function MeasurementRuleForm({
           <Button
             variant="outline"
             type="button"
-            onClick={() => window.history.back()}
+            onClick={() => {
+              form.reset();
+              window.history.back();
+            }}
           >
             취소
           </Button>
@@ -429,6 +362,10 @@ function CategorySelect() {
         name="level3"
         options={level3Categories}
         placeholder="소분류"
+        onChange={(value) => {
+          form.setValue("categoryId", value);
+          form.clearErrors("duplicateError");
+        }}
       />
     </div>
   );
@@ -644,5 +581,50 @@ function MeasurementRuleName() {
         </FormItem>
       )}
     />
+  );
+}
+
+function SloeeveTypeForm() {
+  const form = useFormContext();
+  const { field: requiresSleeveTypeField } = useController({
+    name: "requiresSleeveType",
+  });
+
+  const requiresSleeveType = useWatch({ name: "requiresSleeveType" });
+  // const selectedSleeveType = useWatch({ name: "sleeveType" });
+
+  return (
+    <>
+      <div className="flex items-center space-x-2">
+        <Checkbox
+          id="requireSleeveType"
+          checked={requiresSleeveTypeField.value}
+          onCheckedChange={(checked) => {
+            requiresSleeveTypeField.onChange(checked === true);
+            form.clearErrors("duplicateError");
+          }}
+        />
+        <label
+          htmlFor="requireSleeveType"
+          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+        >
+          소매 유형 필요
+        </label>
+      </div>
+
+      {requiresSleeveType && (
+        <FormSelect
+          label="소매 유형"
+          name="sleeveType"
+          options={SLEEVE_TYPES.map((type) => ({
+            id: type,
+            name: type,
+          }))}
+          onChange={() => {
+            form.clearErrors("duplicateError");
+          }}
+        />
+      )}
+    </>
   );
 }
