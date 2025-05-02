@@ -1,7 +1,6 @@
 import Link from "next/link";
 
 import { GuideCard } from "./_components/GuideCard";
-import { MeasurementRuleList } from "./_components/measurement-rule-list";
 import { MeasurementRuleTable } from "./_components/measurement-rule-table";
 
 import { Button } from "@/components/ui/button";
@@ -40,5 +39,4 @@ export default function MeasurementRulesPage() {
       </div>
     </div>
   );
-  // return <MeasurementRuleList />;
 }
