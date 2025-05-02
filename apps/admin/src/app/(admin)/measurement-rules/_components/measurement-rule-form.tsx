@@ -102,12 +102,6 @@ export function MeasurementRuleForm({
     }, 500);
   }, []);
 
-  useEffect(() => {
-    getMeasurementRuleItemCode({ category: "상의" }).then((res) => {
-      console.log("res: ", res);
-    });
-  }, []);
-
   // TODO
   // Edit mode일 경우 초기 카테고리 설정
   // useEffect(() => {
@@ -268,7 +262,8 @@ export function MeasurementRuleForm({
               />
             )}
 
-            <FormField
+            <MeasurementRuleName />
+            {/* <FormField
               name="name"
               render={({ field }) => (
                 <FormItem>
@@ -286,7 +281,7 @@ export function MeasurementRuleForm({
                   <FormMessage />
                 </FormItem>
               )}
-            />
+            /> */}
           </CardContent>
         </Card>
 
@@ -601,5 +596,53 @@ function MeasurementRuleSelectForm() {
       </Tabs>
       <FormMessage />
     </FormItem>
+  );
+}
+
+/**
+ * 자동 생성되는 규칙 이름 표시
+ */
+function MeasurementRuleName() {
+  const form = useFormContext();
+  const categoryLevel3 = useWatch({ name: "level3" });
+  const category = getCategoryById(categoryLevel3);
+
+  const requiresSleeveType = useWatch({ name: "requiresSleeveType" });
+  const selectedSleeveType = useWatch({ name: "sleeveType" });
+
+  useEffect(() => {
+    const getAuthName = () => {
+      let autoName = "";
+
+      // 소매 유형이 먼저 오고, 카테고리 소분류가 뒤에 오도록 변경
+      if (requiresSleeveType && selectedSleeveType) {
+        autoName = `${selectedSleeveType} ${category?.name}`;
+      } else {
+        autoName = category?.name || "";
+      }
+
+      return autoName;
+    };
+
+    form.setValue("name", getAuthName());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [category?.name, requiresSleeveType, selectedSleeveType]);
+
+  return (
+    <FormField
+      name="name"
+      render={({ field }) => (
+        <FormItem>
+          <FormLabel>규칙 이름</FormLabel>
+          <FormControl>
+            <Input {...field} readOnly placeholder="자동으로 생성됩니다" />
+          </FormControl>
+          <FormDescription>
+            소매 유형과 카테고리를 선택하면 자동으로 설정됩니다.
+          </FormDescription>
+          <FormMessage />
+        </FormItem>
+      )}
+    />
   );
 }
