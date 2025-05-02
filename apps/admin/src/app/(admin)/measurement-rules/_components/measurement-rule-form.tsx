@@ -48,6 +48,7 @@ import {
   getCategoryById,
   type SleeveType,
   isDuplicateMeasurementRule,
+  CATEGORY_ID,
 } from "@/lib/data";
 import { QueryDevTools } from "@/lib/react-query";
 import { measurementRuleQueries } from "@/queries/measurement-rule";
@@ -59,23 +60,29 @@ interface MeasurementRuleFormProps {
   onSubmit: (data: MeasurementRule, createTemplate: boolean) => void;
 }
 
+interface MeasurementRuleFormData extends MeasurementRule {
+  level1: string;
+  level2: string;
+  level3: string;
+  sleeveType: SleeveType;
+  name: string;
+  duplicateError: boolean;
+}
+
 export function MeasurementRuleForm({
   rule,
   isEdit = false,
   onSubmit,
 }: MeasurementRuleFormProps) {
-  const [requiresSleeveType, setRequiresSleeveType] = useState<boolean>(
-    !!rule?.sleeveType
-  );
-
-  // Setup form
-  const form = useForm<MeasurementRule & { duplicateError: boolean }>({
+  const form = useForm<MeasurementRuleFormData>({
     defaultValues: rule || {
       id: "",
       categoryId: "",
       name: "",
       items: [],
       duplicateError: false, // TODO: 중복 체크 오류 표시 위해 추가
+      level1: categories[0]?.id || "",
+      level2: categories[0]?.children?.[0]?.id || "",
     },
   });
 
@@ -116,13 +123,22 @@ export function MeasurementRuleForm({
 
   // Handle form submission
   const handleSubmit = (
-    data: MeasurementRule,
+    data: MeasurementRuleFormData,
     createTemplate: boolean = false
   ) => {
+    // 카테고리 소분류, 중분류, 대분류 선택에 따른 필요 항목 조회
+    const needField = [
+      ...(getCategoryById(data.level3)?.needFields || []),
+      ...(getCategoryById(data.level2)?.needFields || []),
+      ...(getCategoryById(data.level1)?.needFields || []),
+    ];
+
     const requestData = {
       ...data,
       id: data.id ?? `rule_${Date.now()}`,
-      sleeveType: requiresSleeveType ? data.sleeveType : undefined,
+      sleeveType: needField?.includes("sleeveType")
+        ? data.sleeveType
+        : undefined,
     };
 
     // 중복 체크
@@ -143,14 +159,6 @@ export function MeasurementRuleForm({
   const getSelectedItemCount = () => {
     return form.watch("items")?.length || 0;
   };
-
-  // if (isLoading) {
-  //   return (
-  //     <div className="flex items-center justify-center p-8">
-  //       측정 항목 로딩 중...
-  //     </div>
-  //   );
-  // }
 
   return (
     <Form {...form}>
@@ -522,11 +530,16 @@ function MeasurementRuleName() {
   const categoryLevel3 = useWatch({ name: "level3" });
   const category = getCategoryById(categoryLevel3);
 
-  const requiresSleeveType = useWatch({ name: "requiresSleeveType" });
+  const categoryLevel2 = useWatch({ name: "level2" });
+  const requiresSleeveType = categoryLevel2 === CATEGORY_ID.상의;
   const selectedSleeveType = useWatch({ name: "sleeveType" });
 
   useEffect(() => {
     const getAuthName = () => {
+      // TODO 규칙이름 생성 방식 변경
+      // - 자동 생성되며 수동 수정 불가
+      // - 상의: `넥라인 + 소매 유형 + 소분류`
+      // - 그 외: `소분류명`
       let autoName = "";
 
       // 소매 유형이 먼저 오고, 카테고리 소분류가 뒤에 오도록 변경
@@ -568,12 +581,14 @@ function SloeeveTypeForm() {
     name: "requiresSleeveType",
   });
 
-  const requiresSleeveType = useWatch({ name: "requiresSleeveType" });
+  const categoryLevel2 = useWatch({ name: "level2" });
+  const requiresSleeveType = categoryLevel2 === CATEGORY_ID.상의;
+  // const requiresSleeveType = useWatch({ name: "requiresSleeveType" });
   // const selectedSleeveType = useWatch({ name: "sleeveType" });
 
   return (
     <>
-      <div className="flex items-center space-x-2">
+      {/* <div className="flex items-center space-x-2">
         <Checkbox
           id="requireSleeveType"
           checked={requiresSleeveTypeField.value}
@@ -588,7 +603,7 @@ function SloeeveTypeForm() {
         >
           소매 유형 필요
         </label>
-      </div>
+      </div> */}
 
       {requiresSleeveType && (
         <FormSelect
