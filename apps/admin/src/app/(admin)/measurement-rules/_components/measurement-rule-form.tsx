@@ -1,5 +1,6 @@
 "use client";
 
+import { DevTool } from "@hookform/devtools";
 import { Info, CheckSquare } from "lucide-react";
 import { PlusCircle } from "lucide-react";
 import { useState, useEffect, ComponentProps } from "react";
@@ -374,6 +375,7 @@ export function MeasurementRuleForm({
             </Button>
           )}
         </div>
+        <DevTool control={form.control} />
       </form>
     </Form>
   );
