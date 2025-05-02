@@ -4,7 +4,7 @@ import { Info } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-import { MeasurementRuleForm } from "../_components/measurement-rule-form";
+import { MeasurementRuleForm } from "../_components/measurement-rule-form/measurement-rule-form";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";

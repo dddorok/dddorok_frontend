@@ -27,3 +27,22 @@ export const getMeasurementRuleItemCode = async () => {
   const data = await response.json();
   return data.data;
 };
+
+interface GetMeasurementRuleListItemType {
+  id: string;
+  rule_name: string;
+  category_large: string;
+  category_medium: string;
+  category_small: string;
+}
+
+export interface GetMeasurementRuleListResponse {
+  data: GetMeasurementRuleListItemType[];
+}
+
+export const getMeasurementRuleList = async () => {
+  const response = await privateInstance<GetMeasurementRuleListResponse>(
+    "measurement-rule/list"
+  );
+  return response.json();
+};
