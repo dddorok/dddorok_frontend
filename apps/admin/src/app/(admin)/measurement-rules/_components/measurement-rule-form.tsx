@@ -1,10 +1,11 @@
 "use client";
 
 import { DevTool } from "@hookform/devtools";
+import { useQuery } from "@tanstack/react-query";
 import { Info, CheckSquare } from "lucide-react";
 import { PlusCircle } from "lucide-react";
 import { useState, useEffect, ComponentProps } from "react";
-import { useForm, useFormContext } from "react-hook-form";
+import { useForm, useFormContext, useWatch } from "react-hook-form";
 
 import { BasicAlert } from "@/components/Alert";
 import { Button } from "@/components/ui/button";
@@ -45,6 +46,7 @@ import {
   measurementItemsByCategory,
   measurementItemsBySection,
 } from "@/lib/data";
+import { getMeasurementRuleItemCode } from "@/services/measurement-rule";
 
 interface MeasurementRuleFormProps {
   rule?: MeasurementRule;
@@ -58,9 +60,9 @@ export function MeasurementRuleForm({
   onSubmit,
 }: MeasurementRuleFormProps) {
   const [selectedCategory, setSelectedCategory] = useState<{
-    level1: number | null;
-    level2: number | null;
-    level3: number | null;
+    level1: string | null;
+    level2: string | null;
+    level3: string | null;
   }>({
     level1: null,
     level2: null,
@@ -88,12 +90,22 @@ export function MeasurementRuleForm({
   const form = useForm<MeasurementRule>({
     defaultValues: rule || {
       id: "",
-      categoryId: 0,
+      categoryId: "",
       name: "",
       items: [],
     },
   });
 
+  const { data: itemCodes } = useQuery({
+    enabled: !!selectedCategory.level1,
+    queryKey: ["measurement-rule-item-code", selectedCategory.level1],
+    queryFn: () =>
+      getMeasurementRuleItemCode({
+        category: selectedCategory.level1?.toString() || "",
+      }),
+  });
+
+  console.log("itemCodes: ", itemCodes);
   // API 데이터 로딩 시뮬레이션
   useEffect(() => {
     setIsLoading(true);
@@ -155,35 +167,35 @@ export function MeasurementRuleForm({
   }, [selectedSleeveType, requiresSleeveType]);
 
   // 카테고리 선택 변경 처리
-  const handleCategoryChange = (
-    level: "level1" | "level2" | "level3",
-    value: string
-  ) => {
-    const numValue = Number.parseInt(value);
+  // const handleCategoryChange = (
+  //   level: "level1" | "level2" | "level3",
+  //   value: string
+  // ) => {
+  //   const numValue = Number.parseInt(value);
 
-    if (level === "level1") {
-      setSelectedCategory({
-        level1: numValue,
-        level2: null,
-        level3: null,
-      });
-    } else if (level === "level2") {
-      setSelectedCategory({
-        ...selectedCategory,
-        level2: numValue,
-        level3: null,
-      });
-    } else {
-      setSelectedCategory({
-        ...selectedCategory,
-        level3: numValue,
-      });
-    }
-  };
+  //   if (level === "level1") {
+  //     setSelectedCategory({
+  //       level1: numValue,
+  //       level2: null,
+  //       level3: null,
+  //     });
+  //   } else if (level === "level2") {
+  //     setSelectedCategory({
+  //       ...selectedCategory,
+  //       level2: numValue,
+  //       level3: null,
+  //     });
+  //   } else {
+  //     setSelectedCategory({
+  //       ...selectedCategory,
+  //       level3: numValue,
+  //     });
+  //   }
+  // };
 
   // 중복 체크
   const checkForDuplicates = (
-    categoryId: number,
+    categoryId: string,
     sleeveType?: SleeveType
   ): boolean => {
     // 수정 모드에서는 자기 자신을 제외하고 중복 체크
@@ -259,12 +271,13 @@ export function MeasurementRuleForm({
                   대분류, 중분류, 소분류를 순서대로 선택해주세요.
                 </FormDescription>
               </div>
+              <CategorySelect />
 
-              <div className="grid grid-cols-3 gap-4">
+              {/* <div className="grid grid-cols-3 gap-4">
                 <FormSelect name="level1" options={level1Categories} />
                 <FormSelect name="level2" options={level2Categories} />
                 <FormSelect name="level3" options={level3Categories} />
-              </div>
+              </div> */}
             </div>
 
             <div className="flex items-center space-x-2">
@@ -384,11 +397,15 @@ export function MeasurementRuleForm({
 function FormSelect({
   options,
   label,
+  placeholder,
+  onChange,
   ...props
 }: {
-  options: { id: number | string; name: string }[];
+  options: { id: string; name: string }[];
   label?: string;
+  placeholder?: string;
   name: ComponentProps<typeof FormField>["name"];
+  onChange?: (value: string) => void;
 }) {
   return (
     <FormField
@@ -399,10 +416,13 @@ function FormSelect({
           <FormControl>
             <Select
               value={field.value}
-              onValueChange={(value) => field.onChange(value)}
+              onValueChange={(value) => {
+                field.onChange(value);
+                onChange?.(value);
+              }}
             >
               <SelectTrigger>
-                <SelectValue placeholder="대분류" />
+                <SelectValue placeholder={placeholder} />
               </SelectTrigger>
               <SelectContent>
                 {options.map((option) => (
@@ -416,6 +436,45 @@ function FormSelect({
         </FormItem>
       )}
     />
+  );
+}
+
+function CategorySelect() {
+  const form = useFormContext();
+
+  const level1 = useWatch({ name: "level1" });
+  const level2 = useWatch({ name: "level2" });
+
+  // 대-중-소 카테고리 리스트
+  const level1Categories = categories.filter((cat) => cat.parent_id === null);
+  const level2Categories =
+    level1Categories.find((cat) => cat.id == level1)?.children || [];
+  const level3Categories =
+    level2Categories.find((cat) => cat.id === level2)?.children || [];
+
+  return (
+    <div className="grid grid-cols-3 gap-4">
+      <FormSelect
+        name="level1"
+        options={level1Categories}
+        placeholder="대분류"
+        onChange={() => {
+          form.setValue("level2", null);
+          form.setValue("level3", null);
+        }}
+      />
+      <FormSelect
+        name="level2"
+        options={level2Categories}
+        placeholder="중분류"
+        onChange={() => form.setValue("level3", null)}
+      />
+      <FormSelect
+        name="level3"
+        options={level3Categories}
+        placeholder="소분류"
+      />
+    </div>
   );
 }
 

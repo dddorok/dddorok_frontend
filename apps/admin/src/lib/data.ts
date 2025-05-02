@@ -1,83 +1,83 @@
 export type Category = {
-  id: number;
-  parent_id: number | null;
+  id: string;
+  parent_id: string | null;
   name: string;
   children?: Category[];
 };
 
 export const categories: Category[] = [
   {
-    id: 1,
+    id: "1",
     parent_id: null,
     name: "의류",
     children: [
       {
-        id: 10,
-        parent_id: 1,
+        id: "10",
+        parent_id: "1",
         name: "상의",
         children: [
-          { id: 103, parent_id: 10, name: "스웨터" },
-          { id: 104, parent_id: 10, name: "가디건" },
+          { id: "103", parent_id: "10", name: "스웨터" },
+          { id: "104", parent_id: "10", name: "가디건" },
         ],
       },
       {
-        id: 11,
-        parent_id: 1,
+        id: "11",
+        parent_id: "1",
         name: "하의",
         children: [
-          { id: 201, parent_id: 11, name: "바지" },
-          { id: 202, parent_id: 11, name: "스커트" },
+          { id: "201", parent_id: "11", name: "바지" },
+          { id: "202", parent_id: "11", name: "스커트" },
         ],
       },
     ],
   },
   {
-    id: 2,
+    id: "2",
     parent_id: null,
     name: "소품류",
     children: [
       {
-        id: 20,
-        parent_id: 2,
+        id: "20",
+        parent_id: "2",
         name: "모자류",
         children: [
-          { id: 301, parent_id: 20, name: "비니" },
-          { id: 302, parent_id: 20, name: "바라클라바" },
+          { id: "301", parent_id: "20", name: "비니" },
+          { id: "302", parent_id: "20", name: "바라클라바" },
         ],
       },
       {
-        id: 21,
-        parent_id: 2,
+        id: "21",
+        parent_id: "2",
         name: "가방류",
         children: [
-          { id: 311, parent_id: 21, name: "숄더백" },
-          { id: 312, parent_id: 21, name: "크로스백" },
-          { id: 313, parent_id: 21, name: "파우치" },
+          { id: "311", parent_id: "21", name: "숄더백" },
+          { id: "312", parent_id: "21", name: "크로스백" },
+          { id: "313", parent_id: "21", name: "파우치" },
         ],
       },
       {
-        id: 22,
-        parent_id: 2,
+        id: "22",
+        parent_id: "2",
         name: "손/발 ACC",
         children: [
-          { id: 321, parent_id: 22, name: "장갑" },
-          { id: 322, parent_id: 22, name: "양말" },
+          { id: "321", parent_id: "22", name: "장갑" },
+          { id: "322", parent_id: "22", name: "양말" },
         ],
       },
       {
-        id: 23,
-        parent_id: 2,
+        id: "23",
+        parent_id: "2",
         name: "목/몸 ACC",
         children: [
-          { id: 331, parent_id: 23, name: "목도리" },
-          { id: 332, parent_id: 23, name: "숄" },
+          { id: "331", parent_id: "23", name: "목도리" },
+          { id: "332", parent_id: "23", name: "숄" },
         ],
       },
       {
-        id: 24,
-        parent_id: 2,
+        id: "24",
+        parent_id: "2",
         name: "기타",
-        children: [{ id: 341, parent_id: 24, name: "인형" }],
+        children: [{ id: "341", parent_id: "24", name: "인형" }],
       },
     ],
   },
@@ -99,11 +99,11 @@ export const flattenedCategories = (): Category[] => {
   return flattened;
 };
 
-export const getCategoryById = (id: number): Category | undefined => {
+export const getCategoryById = (id: string): Category | undefined => {
   return flattenedCategories().find((c) => c.id === id);
 };
 
-export const getParentCategories = (id: number): Category[] => {
+export const getParentCategories = (id: string): Category[] => {
   const result: Category[] = [];
   let category = getCategoryById(id);
 
@@ -931,7 +931,7 @@ export const chartTypes: ChartType[] = [
 // Updated measurement rule type to use both id and name for compatibility
 export type MeasurementRule = {
   id: string;
-  categoryId: number;
+  categoryId: string;
   sleeveType?: SleeveType;
   name: string;
   items: string[]; // 측정 항목 ID 배열로 변경
@@ -941,7 +941,7 @@ export type MeasurementRule = {
 export const measurementRules: MeasurementRule[] = [
   {
     id: "rule1",
-    categoryId: 103, // 스웨터
+    categoryId: "103", // 스웨터
     sleeveType: "래글런형",
     name: "래글런형 스웨터",
     items: [
@@ -955,7 +955,7 @@ export const measurementRules: MeasurementRule[] = [
   },
   {
     id: "rule2",
-    categoryId: 103, // 스웨터
+    categoryId: "103", // 스웨터
     sleeveType: "셋인형",
     name: "셋인형 스웨터",
     items: [
@@ -970,7 +970,7 @@ export const measurementRules: MeasurementRule[] = [
 
 // Function to check if a rule exists for a category and sleeve type
 export function findMeasurementRule(
-  categoryId: number,
+  categoryId: string,
   sleeveType?: SleeveType
 ): MeasurementRule | undefined {
   // 디버그용 로그 추가
@@ -1046,7 +1046,7 @@ export function getMeasurementRuleById(
 
 // Function to check if a rule would be a duplicate (excluding own ID when editing)
 export function isDuplicateMeasurementRule(
-  categoryId: number,
+  categoryId: string,
   sleeveType?: SleeveType,
   excludeId?: string
 ): boolean {
