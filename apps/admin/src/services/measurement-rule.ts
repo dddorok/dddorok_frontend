@@ -1,21 +1,31 @@
 // /api/measurement-rule/list
 
-import { apiInstance } from "./instance";
+import { apiInstance, privateInstance } from "./instance";
 
 export const getMeasurementRules = async () => {
   const response = await apiInstance("measurement-rule/list");
   return response.json();
 };
 
-///api/measurement-rule-item/code
+interface GetMeasurementRuleItemCodeRequest {
+  category: string;
+}
+
+interface GetMeasurementRuleItemCodeResponse {
+  id: string;
+  category: string;
+  section: string;
+  label: string;
+  code: string;
+}
 
 export const getMeasurementRuleItemCode = async ({
   category,
-}: {
-  category: string;
-}) => {
-  const response = await apiInstance(
-    `measurement-rule-item/code?category=${category}`
-  );
-  return response.json();
+}: GetMeasurementRuleItemCodeRequest) => {
+  const response = await privateInstance<{
+    data: GetMeasurementRuleItemCodeResponse[];
+  }>(`measurement-rule-item/code`);
+
+  const data = await response.json();
+  return data.data;
 };

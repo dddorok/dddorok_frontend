@@ -77,15 +77,6 @@ export function MeasurementRuleForm({
   const [duplicateError, setDuplicateError] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
-  // 대-중-소 카테고리 리스트
-  const level1Categories = categories.filter((cat) => cat.parent_id === null);
-  const level2Categories =
-    level1Categories.find((cat) => cat.id === selectedCategory.level1)
-      ?.children || [];
-  const level3Categories =
-    level2Categories.find((cat) => cat.id === selectedCategory.level2)
-      ?.children || [];
-
   // Setup form
   const form = useForm<MeasurementRule>({
     defaultValues: rule || {
@@ -97,15 +88,11 @@ export function MeasurementRuleForm({
   });
 
   const { data: itemCodes } = useQuery({
-    enabled: !!selectedCategory.level1,
-    queryKey: ["measurement-rule-item-code", selectedCategory.level1],
-    queryFn: () =>
-      getMeasurementRuleItemCode({
-        category: selectedCategory.level1?.toString() || "",
-      }),
+    queryKey: ["measurement-rule-item-code"],
+    queryFn: () => getMeasurementRuleItemCode({ category: "상의" }),
   });
-
   console.log("itemCodes: ", itemCodes);
+
   // API 데이터 로딩 시뮬레이션
   useEffect(() => {
     setIsLoading(true);
@@ -115,26 +102,33 @@ export function MeasurementRuleForm({
     }, 500);
   }, []);
 
-  // Edit mode일 경우 초기 카테고리 설정
   useEffect(() => {
-    if (rule?.categoryId) {
-      const category = getCategoryById(rule.categoryId);
-      if (category) {
-        const parentCategory = category.parent_id
-          ? getCategoryById(category.parent_id)
-          : null;
-        const grandParentCategory = parentCategory?.parent_id
-          ? getCategoryById(parentCategory.parent_id)
-          : null;
+    getMeasurementRuleItemCode({ category: "상의" }).then((res) => {
+      console.log("res: ", res);
+    });
+  }, []);
 
-        setSelectedCategory({
-          level1: grandParentCategory?.id || null,
-          level2: parentCategory?.id || null,
-          level3: category.id,
-        });
-      }
-    }
-  }, [rule]);
+  // TODO
+  // Edit mode일 경우 초기 카테고리 설정
+  // useEffect(() => {
+  //   if (rule?.categoryId) {
+  //     const category = getCategoryById(rule.categoryId);
+  //     if (category) {
+  //       const parentCategory = category.parent_id
+  //         ? getCategoryById(category.parent_id)
+  //         : null;
+  //       const grandParentCategory = parentCategory?.parent_id
+  //         ? getCategoryById(parentCategory.parent_id)
+  //         : null;
+
+  //       setSelectedCategory({
+  //         level1: grandParentCategory?.id || null,
+  //         level2: parentCategory?.id || null,
+  //         level3: category.id,
+  //       });
+  //     }
+  //   }
+  // }, [rule]);
 
   // 카테고리와 소매 유형에 따라 이름 자동 생성
   useEffect(() => {
@@ -165,33 +159,6 @@ export function MeasurementRuleForm({
   useEffect(() => {
     setDuplicateError(false);
   }, [selectedSleeveType, requiresSleeveType]);
-
-  // 카테고리 선택 변경 처리
-  // const handleCategoryChange = (
-  //   level: "level1" | "level2" | "level3",
-  //   value: string
-  // ) => {
-  //   const numValue = Number.parseInt(value);
-
-  //   if (level === "level1") {
-  //     setSelectedCategory({
-  //       level1: numValue,
-  //       level2: null,
-  //       level3: null,
-  //     });
-  //   } else if (level === "level2") {
-  //     setSelectedCategory({
-  //       ...selectedCategory,
-  //       level2: numValue,
-  //       level3: null,
-  //     });
-  //   } else {
-  //     setSelectedCategory({
-  //       ...selectedCategory,
-  //       level3: numValue,
-  //     });
-  //   }
-  // };
 
   // 중복 체크
   const checkForDuplicates = (
@@ -272,12 +239,6 @@ export function MeasurementRuleForm({
                 </FormDescription>
               </div>
               <CategorySelect />
-
-              {/* <div className="grid grid-cols-3 gap-4">
-                <FormSelect name="level1" options={level1Categories} />
-                <FormSelect name="level2" options={level2Categories} />
-                <FormSelect name="level3" options={level3Categories} />
-              </div> */}
             </div>
 
             <div className="flex items-center space-x-2">
@@ -388,7 +349,7 @@ export function MeasurementRuleForm({
             </Button>
           )}
         </div>
-        <DevTool control={form.control} />
+        {/* <DevTool control={form.control} /> */}
       </form>
     </Form>
   );
