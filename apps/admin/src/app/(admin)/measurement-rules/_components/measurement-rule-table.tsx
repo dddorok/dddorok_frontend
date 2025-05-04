@@ -24,6 +24,7 @@ import {
   Table,
 } from "@/components/ui/table";
 import { getCategoryById } from "@/constants/category";
+import { SLEEVE } from "@/constants/top";
 import { toast } from "@/hooks/use-toast";
 import {
   type MeasurementRule,
@@ -151,7 +152,9 @@ function TableItem({ rule }: { rule: GetMeasurementRuleListItemType }) {
     <TableRow key={rule.id}>
       <TableCell className="font-medium">{rule.rule_name}</TableCell>
       <TableCell>{getCategoryName(rule.category_large)}</TableCell>
-      <TableCell>{rule.sleeve_type || "-"}</TableCell>
+      <TableCell>
+        {rule.sleeve_type ? SLEEVE[rule.sleeve_type].label : "-"}
+      </TableCell>
 
       {/* 측정 항목 수 클릭 가능 */}
       <TableCell>
