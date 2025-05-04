@@ -107,7 +107,6 @@ export function MeasurementRuleForm({
 
     const requestData = {
       ...data,
-      id: data.id ?? `rule_${Date.now()}`,
       sleeveType: needField?.includes("sleeveType")
         ? data.sleeveType
         : undefined,
@@ -115,20 +114,6 @@ export function MeasurementRuleForm({
         ? data.necklineType
         : undefined,
     };
-
-    // 중복 체크
-    // const isDuplicate = checkForDuplicates(
-    //   requestData.categoryId,
-    //   requestData.sleeveType
-    // );
-    // if (isDuplicate) {
-    //   form.setError("name", {
-    //     message: "중복된 규칙입니다.",
-    //   });
-    //   // form.setValue("duplicateError", true);
-    //   // setDuplicateError(true);
-    //   return;
-    // }
 
     onSubmit(requestData, createTemplate);
   };

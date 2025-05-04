@@ -1,5 +1,6 @@
 "use client";
 
+import { useQueryClient } from "@tanstack/react-query";
 import { Info } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -14,36 +15,49 @@ import { useToast } from "@/hooks/use-toast";
 import { createMeasurementRule } from "@/services/measurement-rule";
 
 export default function NewMeasurementRulePage() {
+  const queryClient = useQueryClient();
   const { toast } = useToast();
   const router = useRouter();
-  const handleSubmit = (data: MeasurementRuleFormData) => {
-    console.log("data: ", data);
 
-    createMeasurementRule({
-      category_large: data.level1,
-      category_medium: data.level2,
-      category_small: data.level3,
-      sleeve_type: data.sleeveType,
-      neck_line_type: data.necklineType,
-      rule_name: data.name,
-      measurement_codes: data.items,
-    })
-      .then((res) => {
-        console.log("res: ", res);
-        toast({
-          title: "치수 규칙 생성 완료",
-          description: `"${data.name}" 치수 규칙이 성공적으로 저장되었습니다.`,
-        });
-        router.push(`/measurement-rules`);
-        // TODO: 저장 후 템플릿으로 이동
-        // router.push(`/templates/new?ruleId=${encodeURIComponent(data.id)}`);
-        // window.location.href = `/templates/new?ruleId=${encodeURIComponent(data.id)}`;
-      })
-      .catch((err) => {
-        console.error("Error creating measurement rule:", err);
-        alert("치수 규칙 ID가 생성되지 않았습니다. 다시 시도해 주세요.");
-        // router.push("/measurement-rules");
+  const handleSubmit = async (
+    data: MeasurementRuleFormData,
+    redirectTo: "LIST" | "TEMPLATE_NEW"
+  ) => {
+    try {
+      await createMeasurementRule({
+        category_large: data.level1,
+        category_medium: data.level2,
+        category_small: data.level3,
+        sleeve_type: data.sleeveType,
+        neck_line_type: data.necklineType,
+        rule_name: data.name,
+        measurement_codes: data.items,
       });
+
+      toast({
+        title: "치수 규칙 생성 완료",
+        description: `"${data.name}" 치수 규칙이 성공적으로 저장되었습니다.`,
+      });
+
+      queryClient.invalidateQueries();
+
+      switch (redirectTo) {
+        case "LIST":
+          router.push(`/measurement-rules`);
+          router.refresh();
+          break;
+        case "TEMPLATE_NEW":
+          router.push(`/templates/new?ruleId=${encodeURIComponent(data.id)}`);
+          break;
+      }
+    } catch (err) {
+      console.error("Error creating measurement rule:", err);
+      toast({
+        title: "치수 규칙 생성 실패",
+        description: "치수 규칙 생성 중 오류가 발생했습니다.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -67,7 +81,11 @@ export default function NewMeasurementRulePage() {
         </AlertDescription>
       </Alert>
 
-      <MeasurementRuleForm onSubmit={handleSubmit} />
+      <MeasurementRuleForm
+        onSubmit={(data, createTemplate) =>
+          handleSubmit(data, createTemplate ? "TEMPLATE_NEW" : "LIST")
+        }
+      />
     </div>
   );
 }

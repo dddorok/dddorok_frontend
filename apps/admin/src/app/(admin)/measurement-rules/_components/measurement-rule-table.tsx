@@ -87,12 +87,6 @@ function TableItem({ rule }: { rule: GetMeasurementRuleListItemType }) {
   const queryClient = useQueryClient();
   const overlay = useOverlay();
 
-  // 해당 규칙을 사용하는 템플릿 개수 계산
-  const getTemplateCount = (ruleId: string) => {
-    return templates.filter((template) => template.measurementRuleId === ruleId)
-      .length;
-  };
-
   const templateCount = rule.template_count;
   const isDeletable = templateCount === 0;
 
@@ -105,9 +99,7 @@ function TableItem({ rule }: { rule: GetMeasurementRuleListItemType }) {
   // 삭제 버튼 클릭 핸들러
   const handleDeleteClick = () => {
     // 삭제 가능 여부 확인 후 적절한 다이얼로그 표시
-    const isDeletable = rule.template_count === 0;
     if (isDeletable) {
-      // setIsDeleteDialogOpen(true);
       overlay.open(({ isOpen, close }) => (
         <ConfirmDialog
           open={isOpen}
@@ -213,11 +205,9 @@ function TableItem({ rule }: { rule: GetMeasurementRuleListItemType }) {
 
       <TableCell className="text-center">
         <div className="flex flex-wrap justify-center gap-2">
-          <Link href={`/measurement-rules/${rule.id}`}>
-            <Button variant="outline" size="sm">
-              규칙 수정
-            </Button>
-          </Link>
+          <Button variant="outline" size="sm" asChild>
+            <Link href={`/measurement-rules/${rule.id}`}>규칙 수정</Link>
+          </Button>
           <Button
             variant="outline"
             size="sm"

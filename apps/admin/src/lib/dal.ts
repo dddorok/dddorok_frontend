@@ -7,7 +7,6 @@ import { decrypt } from "./jose";
 export const verifySession = async () => {
   const sessionCookieName = "@dddorok-admin/session";
   const cookie = await getCookie(sessionCookieName);
-  console.log("cookie: ", cookie);
 
   if (!cookie) {
     redirect("/oauth/login");
