@@ -71,14 +71,14 @@ function RuleCheckList({
   const selectedItems = useWatch({ name: "items" });
 
   // 아이템 선택 처리
-  const handleItemChange = (itemId: string, checked: boolean) => {
+  const handleItemChange = (itemCode: string, checked: boolean) => {
     const currentItems = form.getValues().items || [];
     if (checked) {
-      form.setValue("items", [...currentItems, itemId]);
+      form.setValue("items", [...currentItems, itemCode]);
     } else {
       form.setValue(
         "items",
-        currentItems.filter((id: string) => id !== itemId)
+        currentItems.filter((code: string) => code !== itemCode)
       );
     }
   };
@@ -86,14 +86,14 @@ function RuleCheckList({
   // 섹션 항목들이 모두 선택되었는지 확인
   const isSectionFullySelected = () => {
     const currentItems = form.getValues().items || [];
-    return sectionItems.every((item) => currentItems.includes(item.id));
+    return sectionItems.every((item) => currentItems.includes(item.code));
   };
 
   // 섹션 항목들이 일부 선택되었는지 확인
   const isSectionPartiallySelected = () => {
     const currentItems = form.getValues().items || [];
     const selectedCount = sectionItems.filter((item) =>
-      currentItems.includes(item.id)
+      currentItems.includes(item.code)
     ).length;
     return selectedCount > 0 && selectedCount < sectionItems.length;
   };
@@ -103,16 +103,16 @@ function RuleCheckList({
     const currentItems = form.getValues().items || [];
     if (selected) {
       // 섹션 항목 모두 추가 (중복 제거)
-      const sectionItemIds = sectionItems.map((item) => item.id);
+      const sectionItemIds = sectionItems.map((item) => item.code);
       form.setValue("items", [
         ...new Set([...currentItems, ...sectionItemIds]),
       ]);
     } else {
       // 섹션 항목 모두 제거
-      const sectionItemIds = sectionItems.map((item) => item.id);
+      const sectionItemIds = sectionItems.map((item) => item.code);
       form.setValue(
         "items",
-        currentItems.filter((id: string) => !sectionItemIds.includes(id))
+        currentItems.filter((code: string) => !sectionItemIds.includes(code))
       );
     }
   };
@@ -140,10 +140,10 @@ function RuleCheckList({
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-3 pl-4">
         {sectionItems?.map((item) => (
           <RuleCheckItem
-            key={item.id}
-            checked={selectedItems.includes(item.id)}
+            key={item.code}
+            checked={selectedItems.includes(item.code)}
             item={item}
-            onClick={(checked) => handleItemChange(item.id, checked)}
+            onClick={(checked) => handleItemChange(item.code, checked)}
           />
         ))}
       </div>
@@ -163,14 +163,14 @@ function RuleCheckItem({
   return (
     <div className="flex items-center space-x-2 ">
       <Checkbox
-        id={`item-${item.id}`}
+        id={`item-${item.code}`}
         checked={checked}
         onCheckedChange={(checked) => onClick(!!checked)}
         className="mt-0.5"
       />
       <div>
         <label
-          htmlFor={`item-${item.id}`}
+          htmlFor={`item-${item.code}`}
           className="font-medium leading-none cursor-pointer"
         >
           {item.label}

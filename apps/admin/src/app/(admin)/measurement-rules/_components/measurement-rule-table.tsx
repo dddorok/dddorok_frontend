@@ -1,5 +1,6 @@
 "use client";
 
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useOverlay } from "@toss/use-overlay";
 import { List, Layers } from "lucide-react";
 import Link from "next/link";
@@ -23,18 +24,35 @@ import {
   Table,
 } from "@/components/ui/table";
 import { getCategoryById } from "@/constants/category";
+import { toast } from "@/hooks/use-toast";
 import {
   type MeasurementRule,
   measurementRules as originalMeasurementRules,
   templates,
 } from "@/lib/data";
+import {
+  measurementRuleQueries,
+  measurementRuleQueryKeys,
+} from "@/queries/measurement-rule";
+import {
+  deleteMeasurementRule,
+  GetMeasurementRuleListItemType,
+} from "@/services/measurement-rule";
 
 export function MeasurementRuleTable() {
   const overlay = useOverlay();
 
-  const [measurementRules, setMeasurementRules] = useState<MeasurementRule[]>(
-    originalMeasurementRules
-  );
+  const { data } = useQuery({
+    ...measurementRuleQueries.getMeasurementRuleListQueryOptions(),
+  });
+  console.log("data: ", data);
+
+  const measurementRules = data?.data || [];
+  console.log("measurementRules: ", measurementRules);
+
+  // const [measurementRules, setMeasurementRules] = useState<MeasurementRule[]>(
+  //   originalMeasurementRules
+  // );
 
   return (
     <Table>
@@ -57,10 +75,6 @@ export function MeasurementRuleTable() {
           </TableRow>
         ) : (
           measurementRules.map((rule) => {
-            const templateCount = 0;
-            // const templateCount = getTemplateCount(rule.id);
-            const isDeletable = templateCount === 0;
-
             return <TableItem rule={rule} />;
           })
         )}
@@ -69,16 +83,11 @@ export function MeasurementRuleTable() {
   );
 }
 
-function TableItem({ rule }: { rule: any }) {
+function TableItem({ rule }: { rule: GetMeasurementRuleListItemType }) {
+  const queryClient = useQueryClient();
   const overlay = useOverlay();
 
-  // 해당 규칙을 사용하는 템플릿 개수 계산
-  const getTemplateCount = (ruleId: string) => {
-    return templates.filter((template) => template.measurementRuleId === ruleId)
-      .length;
-  };
-
-  const templateCount = getTemplateCount(rule.id);
+  const templateCount = rule.template_count;
   const isDeletable = templateCount === 0;
 
   // Function to get category name by ID
@@ -87,23 +96,34 @@ function TableItem({ rule }: { rule: any }) {
     return category ? category.name : "알 수 없음";
   };
 
-  // 삭제 가능 여부 확인
-  const canDeleteRule = (ruleId: string) => {
-    return getTemplateCount(ruleId) === 0;
-  };
-
   // 삭제 버튼 클릭 핸들러
-  const handleDeleteClick = (ruleId: string) => {
+  const handleDeleteClick = () => {
     // 삭제 가능 여부 확인 후 적절한 다이얼로그 표시
-    if (canDeleteRule(ruleId)) {
-      // setIsDeleteDialogOpen(true);
+    if (isDeletable) {
       overlay.open(({ isOpen, close }) => (
         <ConfirmDialog
           open={isOpen}
           onOpenChange={close}
           onAction={() => {
             console.log("delete");
-            close();
+            deleteMeasurementRule(rule.id)
+              .then(() => {
+                toast({
+                  title: "치수 규칙 삭제 완료",
+                  description: "치수 규칙이 성공적으로 삭제되었습니다.",
+                });
+                close();
+                queryClient.invalidateQueries({
+                  queryKey: measurementRuleQueryKeys.all(),
+                });
+              })
+              .catch((error) => {
+                console.error("치수 규칙 삭제 실패", error);
+                toast({
+                  title: "치수 규칙 삭제 실패",
+                  description: "치수 규칙 삭제 중 오류가 발생했습니다.",
+                });
+              });
           }}
           title="치수 규칙 삭제"
           description={
@@ -129,17 +149,17 @@ function TableItem({ rule }: { rule: any }) {
     }
   };
 
-  const onViewItemsRule = (rule: MeasurementRule) => {
+  const onViewItemsRule = (rule: GetMeasurementRuleListItemType) => {
     overlay.open(({ isOpen, close }) => (
-      <RuleDialog viewItemsRule={rule} isOpen={isOpen} close={close} />
+      <RuleDialog ruleId={rule.id} isOpen={isOpen} close={close} />
     ));
   };
 
   return (
     <TableRow key={rule.id}>
-      <TableCell className="font-medium">{rule.name}</TableCell>
-      <TableCell>{getCategoryName(rule.categoryId)}</TableCell>
-      <TableCell>{rule.sleeveType || "-"}</TableCell>
+      <TableCell className="font-medium">{rule.rule_name}</TableCell>
+      <TableCell>{getCategoryName(rule.category_large)}</TableCell>
+      <TableCell>{rule.sleeve_type || "-"}</TableCell>
 
       {/* 측정 항목 수 클릭 가능 */}
       <TableCell>
@@ -149,7 +169,7 @@ function TableItem({ rule }: { rule: any }) {
           onClick={() => onViewItemsRule(rule)}
         >
           <List className="h-3 w-3" />
-          {rule.items.length}개
+          {rule.measurement_item_count}개
         </Button>
       </TableCell>
 
@@ -185,16 +205,14 @@ function TableItem({ rule }: { rule: any }) {
 
       <TableCell className="text-center">
         <div className="flex flex-wrap justify-center gap-2">
-          <Link href={`/measurement-rules/${rule.id}`}>
-            <Button variant="outline" size="sm">
-              규칙 수정
-            </Button>
-          </Link>
+          <Button variant="outline" size="sm" asChild>
+            <Link href={`/measurement-rules/${rule.id}`}>규칙 수정</Link>
+          </Button>
           <Button
             variant="outline"
             size="sm"
             className={`${isDeletable ? "text-red-500 hover:text-red-700 hover:bg-red-50" : "text-gray-400"}`}
-            onClick={() => handleDeleteClick(rule.id)}
+            onClick={() => handleDeleteClick()}
           >
             삭제
           </Button>

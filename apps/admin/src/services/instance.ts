@@ -34,6 +34,7 @@ export const privateInstance = ky.create({
     afterResponse: [
       async (request, options, response) => {
         if (response.status === 401) {
+          console.log("401");
           const data = (await response.json()) as ErrorResponse;
 
           if (data.code === 40101) {
@@ -63,9 +64,11 @@ export const privateInstance = ky.create({
                 "인증 세션이 만료되었습니다. 다시 로그인해주세요."
               );
             }
-          } else {
-            redirect("/oauth/login");
           }
+          // else {
+          //   console.log("redirect to login");
+          //   redirect("/oauth/login");
+          // }
         }
         return response;
       },

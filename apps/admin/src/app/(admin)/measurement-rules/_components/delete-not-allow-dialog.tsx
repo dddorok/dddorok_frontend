@@ -12,6 +12,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { MeasurementRule, templates } from "@/lib/data";
+import { GetMeasurementRuleListItemType } from "@/services/measurement-rule";
 
 export function DeleteNotAllowDialog({
   open,
@@ -21,7 +22,7 @@ export function DeleteNotAllowDialog({
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  ruleToDelete: MeasurementRule;
+  ruleToDelete: GetMeasurementRuleListItemType;
   onConfirm: () => void;
 }) {
   const overlay = useOverlay();
@@ -34,7 +35,7 @@ export function DeleteNotAllowDialog({
             <span>삭제 불가</span>
           </DialogTitle>
           <DialogDescription>
-            "{ruleToDelete.name}" 치수 규칙은 현재 템플릿에서 사용 중이므로
+            "{ruleToDelete.rule_name}" 치수 규칙은 현재 템플릿에서 사용 중이므로
             삭제할 수 없습니다.
           </DialogDescription>
         </DialogHeader>
@@ -86,7 +87,7 @@ export function ViewTemplatesRuleDialog({
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  viewTemplatesRule: MeasurementRule;
+  viewTemplatesRule: GetMeasurementRuleListItemType;
   onDelete: () => void;
 }) {
   // 해당 규칙을 사용하는 템플릿 목록 가져오기
@@ -103,7 +104,7 @@ export function ViewTemplatesRuleDialog({
           <DialogTitle>
             <div className="flex items-center gap-2">
               <Layers className="h-5 w-5 text-blue-600" />
-              <span>"{viewTemplatesRule.name}" 연결 템플릿</span>
+              <span>"{viewTemplatesRule.rule_name}" 연결 템플릿</span>
             </div>
           </DialogTitle>
         </DialogHeader>

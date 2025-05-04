@@ -37,9 +37,6 @@ export function MeasurementRuleList() {
     originalMeasurementRules
   );
   const [deleteRuleId, setDeleteRuleId] = useState<string | null>(null);
-  // const [viewItemsRule, setViewItemsRule] = useState<MeasurementRule | null>(
-  //   null
-  // );
   const [viewTemplatesRule, setViewTemplatesRule] =
     useState<MeasurementRule | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);

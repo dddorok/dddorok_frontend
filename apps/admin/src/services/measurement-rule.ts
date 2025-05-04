@@ -7,10 +7,6 @@ export const getMeasurementRules = async () => {
   return response.json();
 };
 
-// interface GetMeasurementRuleItemCodeRequest {
-//   category: string;
-// }
-
 export interface GetMeasurementRuleItemCodeResponse {
   id: string;
   category: string;
@@ -28,21 +24,115 @@ export const getMeasurementRuleItemCode = async () => {
   return data.data;
 };
 
-interface GetMeasurementRuleListItemType {
-  id: string;
-  rule_name: string;
+export interface GetMeasurementRuleListItemType {
   category_large: string;
   category_medium: string;
   category_small: string;
+  id: string;
+  measurement_item_count: number;
+  neck_line_type?: string;
+  rule_name: string;
+  sleeve_type?: string;
+  template_count: number;
 }
 
 export interface GetMeasurementRuleListResponse {
   data: GetMeasurementRuleListItemType[];
 }
 
+// 치수 규칙 목록 조회
 export const getMeasurementRuleList = async () => {
   const response = await privateInstance<GetMeasurementRuleListResponse>(
     "measurement-rule/list"
   );
+  return response.json();
+};
+
+interface CreateMeasurementRuleRequest {
+  category_large: string;
+  category_medium: string;
+  category_small: string;
+  sleeve_type?: string;
+  neck_line_type?: string;
+  rule_name: string;
+  measurement_codes: string[];
+}
+
+interface CreateMeasurementRuleResponse {
+  id: string;
+  category_large: string;
+  category_medium: string;
+  category_small: string;
+  sleeve_type: string;
+  neck_line_type: string;
+  rule_name: string;
+  created_date: string;
+  updated_date: string;
+  items: {
+    id: string;
+    category: string;
+    section: string;
+    label: string;
+    code: string;
+  }[];
+}
+
+// 치수 규칙 및 항목 생성
+export const createMeasurementRule = async (
+  request: CreateMeasurementRuleRequest
+) => {
+  const response = await privateInstance<CreateMeasurementRuleResponse>(
+    "measurement-rule",
+    { json: request, method: "POST" }
+  );
+  return response.json();
+};
+
+export interface GetMeasurementRuleByIdResponse {
+  id: string;
+  category_large: string;
+  category_medium: string;
+  category_small: string;
+  sleeve_type: string;
+  neck_line_type: string;
+  rule_name: string;
+  created_date: string;
+  updated_date: string;
+  items: {
+    id: string;
+    ruleId: string;
+    category: string;
+    section: string;
+    label: string;
+    code: string;
+  }[];
+}
+// 치수 규칙 단일 조회
+export const getMeasurementRuleById = async (id: string) => {
+  const response = await privateInstance<{
+    data: GetMeasurementRuleByIdResponse;
+  }>(`measurement-rule/${id}`);
+
+  const data = await response.json();
+  return data.data;
+};
+
+// 치수 규칙 삭제
+export const deleteMeasurementRule = async (id: string) => {
+  const response = await privateInstance(`measurement-rule/${id}`, {
+    method: "DELETE",
+  });
+  return response.json();
+};
+
+// 치수 규칙 수정
+export const updateMeasurementRule = async (
+  id: string,
+  request: CreateMeasurementRuleRequest
+) => {
+  const response = await privateInstance(`measurement-rule/${id}`, {
+    json: request,
+    method: "PATCH",
+  });
   return response.json();
 };
