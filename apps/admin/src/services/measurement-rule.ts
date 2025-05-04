@@ -2,6 +2,8 @@
 
 import { apiInstance, privateInstance } from "./instance";
 
+import { NecklineType, SleeveType } from "@/constants/top";
+
 export const getMeasurementRules = async () => {
   const response = await apiInstance("measurement-rule/list");
   return response.json();
@@ -30,9 +32,9 @@ export interface GetMeasurementRuleListItemType {
   category_small: string;
   id: string;
   measurement_item_count: number;
-  neck_line_type?: string;
+  neck_line_type?: NecklineType;
   rule_name: string;
-  sleeve_type?: string;
+  sleeve_type?: SleeveType;
   template_count: number;
 }
 
@@ -52,8 +54,8 @@ interface CreateMeasurementRuleRequest {
   category_large: string;
   category_medium: string;
   category_small: string;
-  sleeve_type?: string;
-  neck_line_type?: string;
+  sleeve_type?: SleeveType;
+  neck_line_type?: NecklineType;
   rule_name: string;
   measurement_codes: string[];
 }
