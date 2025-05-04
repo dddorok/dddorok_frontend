@@ -9,7 +9,7 @@ import type { Template, MeasurementRule } from "@/lib/data";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { TemplateForm } from "@/features/templates/components/template-form";
+import { TemplateForm } from "@/app/(admin)/templates/_components/template-form";
 import { useToast } from "@/hooks/use-toast";
 import { measurementRules } from "@/lib/data";
 

@@ -2,8 +2,8 @@
 
 import { useRouter } from "next/navigation";
 
+import { SizeDetailForm } from "@/app/(admin)/templates/_components/size-detail-form"; // Updated import path
 import { getCategoryById } from "@/constants/category";
-import { SizeDetailForm } from "@/features/templates/components/size-detail-form"; // Updated import path
 import { templates, type Template } from "@/lib/data";
 
 interface TemplateDetailClientProps {

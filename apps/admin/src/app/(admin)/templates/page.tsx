@@ -1,10 +1,10 @@
 import { AlertCircle, Info } from "lucide-react";
 import Link from "next/link";
 
+import { GuideCard } from "@/app/(admin)/templates/_components/GuideCard";
+import { TemplateList } from "@/app/(admin)/templates/_components/template-list";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { GuideCard } from "@/features/templates/components/GuideCard";
-import { TemplateList } from "@/features/templates/components/template-list";
 
 export default function TemplatesPage() {
   return (
