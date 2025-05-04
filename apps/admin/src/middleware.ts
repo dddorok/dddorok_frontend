@@ -21,6 +21,7 @@ export async function middleware(request: NextRequest) {
 
   // 로그인되지 않았으면 로그인 페이지로 리디렉션
   if (!session) {
+    console.log("no session");
     const url = new URL("/oauth/login", request.url);
     return NextResponse.redirect(url);
   }

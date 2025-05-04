@@ -1,3 +1,5 @@
+import { Suspense } from "react";
+
 import EditMeasurementRuleClient from "./client";
 
 import { measurementRules } from "@/lib/data";

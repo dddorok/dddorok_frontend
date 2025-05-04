@@ -29,11 +29,12 @@ import { QueryDevTools } from "@/lib/react-query";
 
 interface MeasurementRuleFormProps {
   rule?: MeasurementRule;
+  initialValues?: MeasurementRuleFormData;
   isEdit?: boolean;
-  onSubmit: (data: MeasurementRule, createTemplate: boolean) => void;
+  onSubmit: (data: MeasurementRuleFormData, createTemplate: boolean) => void;
 }
 
-interface MeasurementRuleFormData extends MeasurementRule {
+export interface MeasurementRuleFormData extends MeasurementRule {
   level1: string;
   level2: string;
   level3: string;
@@ -44,11 +45,13 @@ interface MeasurementRuleFormData extends MeasurementRule {
 
 export function MeasurementRuleForm({
   rule,
+  initialValues,
   isEdit = false,
   onSubmit,
 }: MeasurementRuleFormProps) {
+  console.log("initialValues: ", initialValues);
   const form = useForm<MeasurementRuleFormData>({
-    defaultValues: rule || {
+    defaultValues: initialValues || {
       id: "",
       categoryId: "",
       name: "",
@@ -107,7 +110,6 @@ export function MeasurementRuleForm({
 
     const requestData = {
       ...data,
-      id: data.id ?? `rule_${Date.now()}`,
       sleeveType: needField?.includes("sleeveType")
         ? data.sleeveType
         : undefined,
@@ -115,20 +117,6 @@ export function MeasurementRuleForm({
         ? data.necklineType
         : undefined,
     };
-
-    // 중복 체크
-    const isDuplicate = checkForDuplicates(
-      requestData.categoryId,
-      requestData.sleeveType
-    );
-    if (isDuplicate) {
-      form.setError("name", {
-        message: "중복된 규칙입니다.",
-      });
-      // form.setValue("duplicateError", true);
-      // setDuplicateError(true);
-      return;
-    }
 
     onSubmit(requestData, createTemplate);
   };

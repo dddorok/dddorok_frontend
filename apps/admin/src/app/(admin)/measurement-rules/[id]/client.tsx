@@ -1,14 +1,25 @@
 "use client";
 
+import {
+  useQuery,
+  useQueryClient,
+  useSuspenseQuery,
+} from "@tanstack/react-query";
 import { AlertCircle, Info } from "lucide-react";
+import { data } from "motion/react-client";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 
-import { MeasurementRuleForm } from "../_components/measurement-rule-form/measurement-rule-form";
+import {
+  MeasurementRuleForm,
+  MeasurementRuleFormData,
+} from "../_components/measurement-rule-form/measurement-rule-form";
 
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
-import { measurementRules, type MeasurementRule } from "@/lib/data";
+import { NecklineType, SleeveType } from "@/lib/data";
+import { measurementRuleQueries } from "@/queries/measurement-rule";
+import { updateMeasurementRule } from "@/services/measurement-rule";
 
 interface EditMeasurementRuleClientProps {
   id: string;
@@ -17,102 +28,53 @@ interface EditMeasurementRuleClientProps {
 export default function EditMeasurementRuleClient({
   id,
 }: EditMeasurementRuleClientProps) {
+  const queryClient = useQueryClient();
   const router = useRouter();
   const { toast } = useToast();
-  const [rule, setRule] = useState<MeasurementRule | undefined>();
-  const [isLoading, setIsLoading] = useState(true);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [notFound, setNotFound] = useState(false);
 
-  useEffect(() => {
-    if (id) {
-      // 데이터에서 해당 ID에 맞는 측정 규칙 찾기
-      const foundRule = measurementRules.find((r) => r.id === id);
+  const { data: rule } = useQuery(
+    measurementRuleQueries.getMeasurementRuleByIdQueryOptions(id)
+  );
 
-      if (foundRule) {
-        setRule(foundRule);
-      } else {
-        setNotFound(true);
-      }
-
-      setIsLoading(false);
-    }
-  }, [id]);
-
-  const handleSubmit = (data: MeasurementRule, createTemplate: boolean) => {
-    setIsSubmitting(true);
-
-    // 실제로 데이터 업데이트 (실제 구현에서는 API 호출)
-    const index = measurementRules.findIndex((r) => r.id === data.id);
-    if (index !== -1) {
-      measurementRules[index] = data;
-    } else {
-      // 만약 ID가 없는 경우 (이상 케이스) 새로 추가
-      measurementRules.push(data);
-    }
-
-    console.log("Updated measurement rule:", data);
-    console.log("Current rules:", measurementRules);
-    console.log("Rule ID to redirect to:", data.id);
-
-    // 저장 시뮬레이션
-    setTimeout(() => {
-      setIsSubmitting(false);
-
+  const handleSubmit = async (data: MeasurementRuleFormData) => {
+    try {
+      await updateMeasurementRule(id, {
+        category_large: data.level1,
+        category_medium: data.level2,
+        category_small: data.level3,
+        rule_name: data.name,
+        measurement_codes: data.items,
+        sleeve_type: data.sleeveType,
+        neck_line_type: data.necklineType,
+      });
       toast({
         title: "치수 규칙 수정 완료",
         description: `"${data.name}" 치수 규칙이 성공적으로 업데이트되었습니다.`,
       });
+      queryClient.invalidateQueries();
+      router.push(`/measurement-rules`);
+    } catch (error) {
+      console.error("Error updating measurement rule:", error);
+    }
 
-      if (createTemplate) {
-        // createTemplate이 true인 경우 템플릿 생성 페이지로 리다이렉트
-        console.log(`Redirecting to template creation with ruleId: ${data.id}`);
-
-        try {
-          // 규칙이 있는지 확인
-          const savedRule = measurementRules.find((r) => r.id === data.id);
-          if (!savedRule) {
-            throw new Error("저장된 규칙을 찾을 수 없습니다");
-          }
-
-          // 저장 시간을 두어 데이터가 반영될 시간 확보
-          setTimeout(() => {
-            if (data.id) {
-              window.location.href = `/templates/new?ruleId=${encodeURIComponent(data.id)}`;
-            } else {
-              console.error("Rule ID is undefined, cannot redirect");
-              alert("치수 규칙 ID가 생성되지 않았습니다. 다시 시도해 주세요.");
-              router.push("/measurement-rules");
-            }
-          }, 500);
-        } catch (error) {
-          console.error("Error redirecting to template page:", error);
-          alert(
-            "치수 규칙은 저장되었으나 템플릿 생성 페이지로 이동 중 오류가 발생했습니다."
-          );
-          router.push("/measurement-rules");
-        }
-      } else {
-        // 일반 저장인 경우 목록 페이지로 리다이렉트
-        router.push("/measurement-rules");
-      }
-    }, 500);
+    console.log("data: ", data);
   };
 
-  if (isLoading) {
-    return <div>로딩 중...</div>;
-  }
+  // TODO: Error boundary 추가
+  // if (notFound) {
+  //   return (
+  //     <Alert variant="destructive">
+  //       <AlertCircle className="h-4 w-4" />
+  //       <AlertTitle>오류</AlertTitle>
+  //       <AlertDescription>
+  //         해당 ID의 측정 규칙을 찾을 수 없습니다.
+  //       </AlertDescription>
+  //     </Alert>
+  //   );
+  // }
 
-  if (notFound) {
-    return (
-      <Alert variant="destructive">
-        <AlertCircle className="h-4 w-4" />
-        <AlertTitle>오류</AlertTitle>
-        <AlertDescription>
-          해당 ID의 측정 규칙을 찾을 수 없습니다.
-        </AlertDescription>
-      </Alert>
-    );
+  if (rule === undefined) {
+    return <div>Loading...</div>;
   }
 
   return (
@@ -135,7 +97,17 @@ export default function EditMeasurementRuleClient({
 
       {rule && (
         <MeasurementRuleForm
-          rule={rule}
+          initialValues={{
+            id: rule.id,
+            categoryId: rule.category_large,
+            name: rule.rule_name,
+            level1: rule.category_large,
+            level2: rule.category_medium,
+            level3: rule.category_small,
+            items: rule.items.map((item) => item.code),
+            sleeveType: rule.sleeve_type as SleeveType,
+            necklineType: rule.neck_line_type as NecklineType,
+          }}
           onSubmit={handleSubmit}
           isEdit={true}
         />
