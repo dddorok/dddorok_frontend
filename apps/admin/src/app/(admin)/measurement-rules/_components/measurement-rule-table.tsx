@@ -138,7 +138,7 @@ function TableItem({ rule }: { rule: GetMeasurementRuleListItemType }) {
 
   const onViewItemsRule = (rule: GetMeasurementRuleListItemType) => {
     overlay.open(({ isOpen, close }) => (
-      <RuleDialog viewItemsRule={rule} isOpen={isOpen} close={close} />
+      <RuleDialog ruleId={rule.id} isOpen={isOpen} close={close} />
     ));
   };
 
