@@ -102,6 +102,7 @@ export default function NewTemplateClient() {
               level2: rule.category_medium,
               level3: rule.category_small,
             }}
+            mode="CREATE"
           />
         </div>
       )}

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import { useForm, useFormContext, useWatch } from "react-hook-form";
 
+import { CommonSelect } from "@/components/CommonUI";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -31,7 +32,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { type Template, CONSTRUCTION_METHODS, chartTypes } from "@/lib/data";
+import {
+  type Template,
+  CONSTRUCTION_METHOD_OPTIONS,
+  chartTypes,
+} from "@/lib/data";
 import { GetMeasurementRuleByIdResponse } from "@/services/measurement-rule";
 
 interface TemplateFormProps {
@@ -44,6 +49,7 @@ interface TemplateFormProps {
     level2: string;
     level3: string;
   };
+  mode: "CREATE" | "EDIT";
 }
 
 type NeedleType = "KNITTING" | "CROCHET";
@@ -61,11 +67,9 @@ interface FormData {
 }
 
 export function TemplateForm({
-  template,
-  initialRuleData,
-  onSubmit,
   measurementRuleId,
   category,
+  mode,
 }: TemplateFormProps) {
   // Form setup - initialRuleData 처리
   const form = useForm<FormData>({
@@ -110,31 +114,6 @@ export function TemplateForm({
     console.log(
       `[TemplateForm] Using normalized measurementRuleId: "${data.measurementRuleId}"`
     );
-
-    // 카테고리 IDs 구성
-    // const categoryIds = [
-    //   selectedCategory.level1,
-    //   selectedCategory.level2,
-    //   selectedCategory.level3,
-    // ].filter((id): id is number => id !== null);
-
-    // 최종 템플릿 데이터 생성
-    // const updatedTemplate: any = {
-    //   // const updatedTemplate: Template = {
-    //   ...data,
-    //   categoryIds,
-    //   chartTypeId:
-    //     (data as any).chartTypeId === "none"
-    //       ? undefined
-    //       : ((data as any).chartTypeId as string),
-    //   lastModified: new Date().toISOString().split("T")[0] as string, // 현재 날짜 문자열로 변환
-    // };
-
-    // console.log(
-    //   "[TemplateForm] Submitting final template data:",
-    //   updatedTemplate
-    // );
-    // onSubmit(updatedTemplate);
   };
 
   return (
@@ -168,20 +147,14 @@ export function TemplateForm({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>도구 유형</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value ?? undefined}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="도구 유형을 선택하세요" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="KNITTING">대바늘</SelectItem>
-                      <SelectItem value="CROCHET">코바늘</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <CommonSelect
+                    options={[
+                      { label: "대바늘", value: "KNITTING" },
+                      { label: "코바늘", value: "CROCHET" },
+                    ]}
+                    value={field.value ?? ""}
+                    onChange={field.onChange}
+                  />
                   <FormMessage />
                 </FormItem>
               )}
@@ -193,7 +166,25 @@ export function TemplateForm({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>도안 유형</FormLabel>
-                  <Select
+                  <CommonSelect<ChartType>
+                    options={[
+                      { label: "서술형", value: "NARRATIVE" },
+                      { label: "차트형", value: "GRID" },
+                      { label: "혼합형", value: "MIXED" },
+                    ]}
+                    onChange={(value: ChartType) => {
+                      field.onChange(value);
+                      // 차트 관련 필드 표시 로직 실행
+                      const chartBasedPattern = getIsChartBasedPattern(value);
+                      // 차트 유형이 선택되지 않았을 때 값 초기화
+                      if (!chartBasedPattern) {
+                        form.setValue("chartTypeIds", []);
+                      }
+                    }}
+                    defaultValue={field.value ?? undefined}
+                    value={field.value as ChartType}
+                  />
+                  {/* <Select
                     onValueChange={(value: ChartType) => {
                       field.onChange(value);
                       // 차트 관련 필드 표시 로직 실행
@@ -215,39 +206,14 @@ export function TemplateForm({
                       <SelectItem value="GRID">차트형</SelectItem>
                       <SelectItem value="MIXED">혼합형</SelectItem>
                     </SelectContent>
-                  </Select>
+                  </Select> */}
                   <FormMessage />
                 </FormItem>
               )}
             />
 
             {/* TODO: 공개 여부 */}
-            {/* <FormField
-              control={form.control}
-              name="publishStatus"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>게시 상태</FormLabel>
-                  <Select
-                    onValueChange={(value) =>
-                      field.onChange(value as PublishStatus)
-                    }
-                    defaultValue={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="게시 상태를 선택하세요" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="공개">공개</SelectItem>
-                      <SelectItem value="비공개">비공개</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            /> */}
+            {mode === "EDIT" && <PublishStatusSelect />}
 
             <div>
               <FormLabel>카테고리</FormLabel>
@@ -351,6 +317,7 @@ const getIsChartBasedPattern = (chartType: ChartType) => {
   return chartType === "GRID" || chartType === "MIXED";
 };
 
+// TODO: 이건 일단 빈배열로가기, 지금은 서버 준비가 안됨
 function ChartTypeSelect() {
   const form = useFormContext<FormData>();
 
@@ -532,32 +499,31 @@ function ConstructionMethodSelect({
             적용 가능한 제작 방식을 모두 선택해주세요.
           </FormDescription>
           <div className="grid grid-cols-2 gap-4 mt-2">
-            {CONSTRUCTION_METHODS.map((method) => (
+            {Object.values(CONSTRUCTION_METHOD_OPTIONS).map((option) => (
               <FormField
-                key={method}
+                key={option.value}
                 name="constructionMethods"
                 render={({ field }) => {
                   return (
-                    <FormItem
-                      key={method}
-                      className="flex flex-row items-start space-x-3 space-y-0"
-                    >
+                    <FormItem className="flex flex-row items-start space-x-3 space-y-0">
                       <FormControl>
                         <Checkbox
-                          checked={field.value?.includes(method)}
+                          checked={field.value?.includes(option.value)}
                           onCheckedChange={(checked) => {
                             const currentValues = field.value || [];
                             return checked
-                              ? field.onChange([...currentValues, method])
+                              ? field.onChange([...currentValues, option.value])
                               : field.onChange(
                                   currentValues.filter(
-                                    (value: string) => value !== method
+                                    (value: string) => value !== option.value
                                   )
                                 );
                           }}
                         />
                       </FormControl>
-                      <FormLabel className="font-normal">{method}</FormLabel>
+                      <FormLabel className="font-normal">
+                        {option.label}
+                      </FormLabel>
                     </FormItem>
                   );
                 }}
@@ -567,5 +533,34 @@ function ConstructionMethodSelect({
         </div>
       </CardContent>
     </Card>
+  );
+}
+
+function PublishStatusSelect() {
+  // TODO: 게시 상태 선택 (edit)
+  return (
+    <FormField
+      name="publishStatus"
+      render={({ field }) => (
+        <FormItem>
+          <FormLabel>게시 상태</FormLabel>
+          <Select
+            onValueChange={(value) => field.onChange(value)}
+            defaultValue={field.value}
+          >
+            <FormControl>
+              <SelectTrigger>
+                <SelectValue placeholder="게시 상태를 선택하세요" />
+              </SelectTrigger>
+            </FormControl>
+            <SelectContent>
+              <SelectItem value="공개">공개</SelectItem>
+              <SelectItem value="비공개">비공개</SelectItem>
+            </SelectContent>
+          </Select>
+          <FormMessage />
+        </FormItem>
+      )}
+    />
   );
 }
