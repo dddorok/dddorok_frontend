@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import { useState } from "react";
 
@@ -24,30 +24,15 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { getCategoryById } from "@/constants/category";
-import { templates, chartTypes as chartTypesList, Template } from "@/lib/data";
+import { CHART_TYPE, NEEDLE } from "@/constants/template";
+import { toast } from "@/hooks/use-toast";
 import { templateQueries } from "@/queries/template";
+import { deleteTemplate, TemplateType } from "@/services/template";
 
 export function TemplateList() {
-  const { data } = useQuery(templateQueries.getTemplatesQueryOptions());
-  console.log("templates: ", data);
-
-  const [deleteTemplateId, setDeleteTemplateId] = useState<string | null>(null);
-  const templateToDelete = templates.find((t) => t.id === deleteTemplateId);
-
-  // 템플릿 삭제 처리
-  const handleDeleteTemplate = () => {
-    if (!deleteTemplateId) return;
-
-    // 실제 구현에서는 API 호출로 서버에서 삭제
-    const index = templates.findIndex((t) => t.id === deleteTemplateId);
-    if (index !== -1) {
-      templates.splice(index, 1);
-      setDeleteTemplateId(null);
-      // 서버 업데이트를 위해 페이지 새로고침 (실제 구현 시 SWR 또는 React Query로 대체)
-      window.location.reload();
-    }
-  };
+  const { data: templates } = useQuery(
+    templateQueries.getTemplatesQueryOptions()
+  );
 
   return (
     <div className="border rounded-md">
@@ -62,7 +47,7 @@ export function TemplateList() {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {templates.length === 0 ? (
+          {templates?.length === 0 ? (
             <TableRow>
               <TableCell colSpan={5} className="text-center py-10">
                 템플릿이 없습니다. 새 템플릿 추가 버튼을 클릭하여 템플릿을
@@ -70,7 +55,7 @@ export function TemplateList() {
               </TableCell>
             </TableRow>
           ) : (
-            templates.map((template) => {
+            templates?.map((template) => {
               // 템플릿명 자동 생성 (도구유형 제외)
               return <TemplateItem key={template.id} template={template} />;
             })
@@ -81,58 +66,15 @@ export function TemplateList() {
   );
 }
 
-function TemplateItem({ template }: { template: Template }) {
-  // 완성된 템플릿명
-  const formattedName = (() => {
-    const category = getCategoryById(String(template.categoryIds[2]));
-    const formatOptions = [];
-
-    // 제작 방식 (있는 경우만)
-    if (
-      template.constructionMethods &&
-      template.constructionMethods.length > 0
-    ) {
-      formatOptions.push(template.constructionMethods[0]);
-    }
-
-    // 넥라인 (있는 경우만)
-    if (template.necklineType) {
-      formatOptions.push(template.necklineType);
-    }
-
-    // 소매 유형 (있는 경우만)
-    if (template.sleeveType) {
-      formatOptions.push(template.sleeveType);
-    }
-
-    // 카테고리 소분류
-    if (category) {
-      formatOptions.push(category.name);
-    }
-
-    return formatOptions.join(" ");
-  })();
-
-  // 차트 유형 문자열
-  const templateChartTypes =
-    template.chartTypeIds
-      ?.map((id) => {
-        const chart = chartTypesList.find((c) => c.id === id);
-        return chart ? chart.name : "";
-      })
-      .filter(Boolean)
-      .join(", ") || "-";
-
+function TemplateItem({ template }: { template: TemplateType }) {
   return (
     <TableRow key={template.id}>
-      <TableCell className="font-medium">{formattedName}</TableCell>
-      <TableCell>{template.toolType}</TableCell>
-      <TableCell>{templateChartTypes}</TableCell>
+      <TableCell className="font-medium">{template.name}</TableCell>
+      <TableCell>{NEEDLE[template.needle_type].label ?? "-"}</TableCell>
+      <TableCell>{CHART_TYPE[template.chart_type]?.label ?? "-"}</TableCell>
       <TableCell>
-        <Badge
-          variant={template.publishStatus === "공개" ? "default" : "secondary"}
-        >
-          {template.publishStatus}
+        <Badge variant={template.is_published ? "default" : "secondary"}>
+          {template.is_published ? "공개" : "비공개"}
         </Badge>
       </TableCell>
       <TableCell className="text-center">
@@ -150,11 +92,20 @@ function TemplateItem({ template }: { template: Template }) {
   );
 }
 
-function DeleteTemplateButton({ template }: { template: Template }) {
-  const handleDeleteTemplate = () => {
-    // TODO: 삭제 처리
-    // overlay.close();
-    // setOpen(false);
+function DeleteTemplateButton({ template }: { template: TemplateType }) {
+  const queryClient = useQueryClient();
+
+  const handleDeleteTemplate = async () => {
+    try {
+      await deleteTemplate(template.id);
+      toast({
+        title: "템플릿 삭제 성공",
+        description: "템플릿이 성공적으로 삭제되었습니다.",
+      });
+      queryClient.invalidateQueries(templateQueries.getTemplatesQueryOptions());
+    } catch (error) {
+      console.error("error: ", error);
+    }
   };
 
   return (
@@ -175,9 +126,11 @@ function DeleteTemplateButton({ template }: { template: Template }) {
           <DialogClose asChild>
             <Button variant="outline">취소</Button>
           </DialogClose>
-          <Button variant="destructive" onClick={handleDeleteTemplate}>
-            삭제
-          </Button>
+          <DialogClose asChild>
+            <Button variant="destructive" onClick={handleDeleteTemplate}>
+              삭제
+            </Button>
+          </DialogClose>
         </DialogFooter>
       </DialogContent>
     </Dialog>
