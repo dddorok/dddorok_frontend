@@ -1,4 +1,4 @@
-export type ChartType = "NARRATIVE" | "GRID" | "MIXED";
+export type ChartType = "NARRATIVE" | "GRID" | "MIXED" | "NONE";
 export const CHART_TYPE: Record<
   ChartType,
   { label: string; value: ChartType }
@@ -15,10 +15,16 @@ export const CHART_TYPE: Record<
     label: "혼합형",
     value: "MIXED",
   },
+  NONE: {
+    label: "없음",
+    value: "NONE",
+  },
 };
-export const CHART_TYPE_OPTIONS = Object.values(CHART_TYPE);
+export const CHART_TYPE_OPTIONS = Object.values(CHART_TYPE).filter(
+  (chartType) => chartType.value !== "NONE"
+);
 
-export type NeedleType = "KNITTING" | "CROCHET";
+export type NeedleType = "KNITTING" | "CROCHET" | "NONE";
 export const NEEDLE: Record<NeedleType, { label: string; value: NeedleType }> =
   {
     KNITTING: {
@@ -29,8 +35,14 @@ export const NEEDLE: Record<NeedleType, { label: string; value: NeedleType }> =
       label: "코바늘",
       value: "CROCHET",
     },
+    NONE: {
+      label: "없음",
+      value: "NONE",
+    },
   };
-export const NEEDLE_OPTIONS = Object.values(NEEDLE);
+export const NEEDLE_OPTIONS = Object.values(NEEDLE).filter(
+  (needleType) => needleType.value !== "NONE"
+);
 
 // TOP_DOWN, BOTTOM_UP, PIECED, ROUND, NONE
 export type ConstructionMethodType =
