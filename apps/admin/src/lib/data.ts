@@ -2,7 +2,7 @@ export type ToolType = "대바늘" | "코바늘";
 export type PatternType = "서술형" | "차트형" | "혼합형";
 export type PublishStatus = "공개" | "비공개";
 
-export type ConstructionMethod = "탑다운" | "바텀업" | "조각잇기형" | "원통형";
+export type ConstructionMethod = "TOP_DOWN" | "BOTTOM_UP" | "PIECE" | "ROUND";
 export type SleeveType =
   | "래글런형"
   | "셋인형"
@@ -322,12 +322,6 @@ export const measurementItemsBySection = () => {
 export const MEASUREMENT_ITEMS = measurementItems.map((item) => item.name);
 export type MeasurementItem = (typeof MEASUREMENT_ITEMS)[number];
 
-export const CONSTRUCTION_METHODS: ConstructionMethod[] = [
-  "탑다운",
-  "바텀업",
-  "조각잇기형",
-  "원통형",
-];
 export const SLEEVE_TYPES: SleeveType[] = [
   "래글런형",
   "셋인형",
