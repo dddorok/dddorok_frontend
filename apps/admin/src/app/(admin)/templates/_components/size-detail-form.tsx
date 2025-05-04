@@ -27,6 +27,7 @@ import {
   getMeasurementItemById,
 } from "@/lib/data";
 import {
+  GetTemplateMeasurementValuesItemType,
   GetTemplateMeasurementValuesResponse,
   TemplateMeasurementValueType,
 } from "@/services/template/measure-value";
@@ -229,7 +230,6 @@ const useSizeDetails = () => {
     Record<SizeRange, Record<string, string>>
   >({} as Record<SizeRange, Record<string, string>>);
   const tableRef = useRef<HTMLTableElement>(null);
-  console.log("sizeDetails: ", sizeDetails);
 
   // 붙여넣기 이벤트 처리
   const handlePaste = (e: React.ClipboardEvent<HTMLTableElement>) => {
@@ -320,16 +320,9 @@ const useSizeDetails = () => {
   const initializeSizeDetails = (
     measurementValues: GetTemplateMeasurementValuesResponse
   ) => {
-    const measurementList = measurementValues.map((item) => item.id);
-    const details: any = {};
+    const details = convertToSizeRangeRecord(measurementValues);
+    console.log("details: ", details);
 
-    // 모든 사이즈 범위에 대해 빈 데이터 구조 초기화
-    for (const size of SIZE_RANGES) {
-      details[size] = {};
-      for (const item of measurementList) {
-        details[size][item] = "";
-      }
-    }
     setSizeDetails(details);
   };
 
@@ -382,6 +375,72 @@ function convertToTemplateMeasurementValueType(
       obj[key] = value !== undefined ? Number(value) : undefined;
     });
     result.push(obj);
+  });
+
+  return result;
+}
+
+const SIZE_RANGE_KEYS: SizeRange[] = [
+  "50-53",
+  "54-57",
+  "58-61",
+  "62-65",
+  "66-69",
+  "70-73",
+  "74-79",
+  "80-84",
+  "85-89",
+  "90-94",
+  "95-99",
+  "100-104",
+  "105-109",
+  "110-114",
+  "115-120",
+  "121-129",
+  "min",
+  "max",
+];
+
+const SIZE_RANGE_TO_FIELD: Record<SizeRange, string> = {
+  "50-53": "size_50_53",
+  "54-57": "size_54_57",
+  "58-61": "size_58_61",
+  "62-65": "size_62_65",
+  "66-69": "size_66_69",
+  "70-73": "size_70_73",
+  "74-79": "size_74_79",
+  "80-84": "size_80_84",
+  "85-89": "size_85_89",
+  "90-94": "size_90_94",
+  "95-99": "size_95_99",
+  "100-104": "size_100_104",
+  "105-109": "size_105_109",
+  "110-114": "size_110_114",
+  "115-120": "size_115_120",
+  "121-129": "size_121_129",
+  min: "min",
+  max: "max",
+};
+
+function convertToSizeRangeRecord(
+  arr: GetTemplateMeasurementValuesItemType[]
+): Record<SizeRange, Record<string, string>> {
+  const result: Record<SizeRange, Record<string, string>> = {} as any;
+
+  SIZE_RANGE_KEYS.forEach((range) => {
+    result[range] = {};
+  });
+
+  arr.forEach((item) => {
+    SIZE_RANGE_KEYS.forEach((range) => {
+      const field = SIZE_RANGE_TO_FIELD[range];
+      // code가 있으면 code, 없으면 id를 key로 사용
+      const key = item.id;
+      // 값이 undefined/null이어도 string으로 변환
+      result[range][key] = String(
+        item[field as keyof GetTemplateMeasurementValuesItemType]
+      );
+    });
   });
 
   return result;

@@ -3,7 +3,7 @@
 
 import { privateInstance } from "../instance";
 
-interface GetTemplateMeasurementValuesItemType {
+export interface GetTemplateMeasurementValuesItemType {
   id: string;
   template_id: string;
   measurement_item_id: string;
