@@ -64,7 +64,7 @@ export const privateInstance = ky.create({
               );
             }
           } else {
-            redirect("/login");
+            redirect("/oauth/login");
           }
         }
         return response;

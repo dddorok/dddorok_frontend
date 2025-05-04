@@ -4,8 +4,9 @@ import { Info } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+import { MeasurementRuleForm } from "../_components/measurement-rule-form/measurement-rule-form";
+
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { MeasurementRuleForm } from "@/app/measurement-rules/components/measurement-rule-form";
 import { useToast } from "@/hooks/use-toast";
 import { measurementRules, type MeasurementRule } from "@/lib/data";
 
@@ -15,55 +16,56 @@ export default function NewMeasurementRulePage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = (data: MeasurementRule, createTemplate: boolean) => {
-    setIsSubmitting(true);
+    console.log("data: ", data);
+    // setIsSubmitting(true);
 
     // 새 규칙을 측정 규칙 배열에 추가 (실제 구현에서는 API 호출로 대체)
-    measurementRules.push(data);
-    console.log("Measurement rule data saved:", data);
-    console.log("Current rules:", measurementRules);
-    console.log("Rule ID to redirect to:", data.id);
+    // measurementRules.push(data);
+    // console.log("Measurement rule data saved:", data);
+    // console.log("Current rules:", measurementRules);
+    // console.log("Rule ID to redirect to:", data.id);
 
-    // Simulate saving with a short delay
-    setTimeout(() => {
-      setIsSubmitting(false);
+    // // Simulate saving with a short delay
+    // setTimeout(() => {
+    //   setIsSubmitting(false);
 
-      toast({
-        title: "치수 규칙 생성 완료",
-        description: `"${data.name}" 치수 규칙이 성공적으로 저장되었습니다.`,
-      });
+    //   toast({
+    //     title: "치수 규칙 생성 완료",
+    //     description: `"${data.name}" 치수 규칙이 성공적으로 저장되었습니다.`,
+    //   });
 
-      if (createTemplate) {
-        // 템플릿 생성 페이지로 리다이렉트, 치수 규칙 ID를 쿼리 파라미터로 전달
-        console.log(`Redirecting to template creation with ruleId: ${data.id}`);
+    //   if (createTemplate) {
+    //     // 템플릿 생성 페이지로 리다이렉트, 치수 규칙 ID를 쿼리 파라미터로 전달
+    //     console.log(`Redirecting to template creation with ruleId: ${data.id}`);
 
-        try {
-          // 규칙이 있는지 확인
-          const savedRule = measurementRules.find((r) => r.id === data.id);
-          if (!savedRule) {
-            throw new Error("저장된 규칙을 찾을 수 없습니다");
-          }
+    //     try {
+    //       // 규칙이 있는지 확인
+    //       const savedRule = measurementRules.find((r) => r.id === data.id);
+    //       if (!savedRule) {
+    //         throw new Error("저장된 규칙을 찾을 수 없습니다");
+    //       }
 
-          // 저장 시간을 두어 데이터가 반영될 시간 확보
-          setTimeout(() => {
-            if (data.id) {
-              window.location.href = `/templates/new?ruleId=${encodeURIComponent(data.id)}`;
-            } else {
-              console.error("Rule ID is undefined, cannot redirect");
-              alert("치수 규칙 ID가 생성되지 않았습니다. 다시 시도해 주세요.");
-              router.push("/measurement-rules");
-            }
-          }, 500);
-        } catch (error) {
-          console.error("Error redirecting to template page:", error);
-          alert(
-            "치수 규칙은 저장되었으나 템플릿 생성 페이지로 이동 중 오류가 발생했습니다."
-          );
-          router.push("/measurement-rules");
-        }
-      } else {
-        router.push("/measurement-rules");
-      }
-    }, 500);
+    //       // 저장 시간을 두어 데이터가 반영될 시간 확보
+    //       setTimeout(() => {
+    //         if (data.id) {
+    //           window.location.href = `/templates/new?ruleId=${encodeURIComponent(data.id)}`;
+    //         } else {
+    //           console.error("Rule ID is undefined, cannot redirect");
+    //           alert("치수 규칙 ID가 생성되지 않았습니다. 다시 시도해 주세요.");
+    //           router.push("/measurement-rules");
+    //         }
+    //       }, 500);
+    //     } catch (error) {
+    //       console.error("Error redirecting to template page:", error);
+    //       alert(
+    //         "치수 규칙은 저장되었으나 템플릿 생성 페이지로 이동 중 오류가 발생했습니다."
+    //       );
+    //       router.push("/measurement-rules");
+    //     }
+    //   } else {
+    //     router.push("/measurement-rules");
+    //   }
+    // }, 500);
   };
 
   return (

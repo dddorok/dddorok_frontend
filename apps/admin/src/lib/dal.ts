@@ -5,11 +5,12 @@ import { updateSession } from "./auth";
 import { decrypt } from "./jose";
 
 export const verifySession = async () => {
-  const sessionCookieName = "@dddorok/session";
+  const sessionCookieName = "@dddorok-admin/session";
   const cookie = await getCookie(sessionCookieName);
+  console.log("cookie: ", cookie);
 
   if (!cookie) {
-    redirect("/login");
+    redirect("/oauth/login");
   }
   const session = await decrypt<{
     accessToken: string;
@@ -18,7 +19,7 @@ export const verifySession = async () => {
   }>(cookie as string);
 
   if (!session.accessToken) {
-    redirect("/login");
+    redirect("/oauth/login");
   }
 
   if (session.expiresAt < new Date()) {
