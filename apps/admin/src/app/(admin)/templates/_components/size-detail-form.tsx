@@ -21,8 +21,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { SIZE_RANGE_KEYS, SizeRangeType } from "@/constants/size-range";
-import { getMeasurementItemById } from "@/lib/data";
+import {
+  SIZE_RANGE_KEYS,
+  SIZE_RANGE_LABEL,
+  SizeRangeType,
+} from "@/constants/size-range";
 import {
   GetTemplateMeasurementValuesItemType,
   GetTemplateMeasurementValuesResponse,
@@ -59,6 +62,11 @@ export function SizeDetailForm({
     }
   };
 
+  // 측정 항목 ID로부터 한글 이름 가져오기
+  const getItemName = (itemId: string) => {
+    return measurementValues.find((item) => item.id === itemId)?.label;
+  };
+
   // 측정 규칙이 있지만 선택된 항목이 없는 경우 확인
   if (selectedItems.length === 0) {
     return (
@@ -72,12 +80,6 @@ export function SizeDetailForm({
       </Alert>
     );
   }
-
-  // 측정 항목 ID로부터 한글 이름 가져오기
-  const getItemName = (itemId: string) => {
-    const item = getMeasurementItemById(itemId);
-    return item ? item.name : itemId;
-  };
 
   return (
     <div className="space-y-6">
@@ -111,9 +113,9 @@ export function SizeDetailForm({
                   {SIZE_RANGE_KEYS.map((size) => (
                     <TableHead
                       key={size}
-                      className="text-center font-bold border"
+                      className="text-center font-bold border whitespace-nowrap"
                     >
-                      {size}
+                      {SIZE_RANGE_LABEL[size]}
                     </TableHead>
                   ))}
                 </TableRow>
@@ -121,7 +123,7 @@ export function SizeDetailForm({
               <TableBody>
                 {selectedItems.map((itemId) => (
                   <TableRow key={itemId} className="border">
-                    <TableCell className="font-medium border">
+                    <TableCell className="font-medium border whitespace-nowrap">
                       {getItemName(itemId)}
                     </TableCell>
                     {SIZE_RANGE_KEYS.map((size) => (
@@ -274,6 +276,7 @@ function convertToTemplateMeasurementValueType(
   // id별로 객체 생성
   const result: TemplateMeasurementValueType[] = [];
   allIds.forEach((id) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const obj: any = { id };
     SIZE_RANGE_KEYS.forEach((range) => {
       const value = input[range]?.[id];
