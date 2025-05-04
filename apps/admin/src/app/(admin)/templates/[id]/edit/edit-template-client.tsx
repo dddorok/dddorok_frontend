@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 
-import { TemplateForm } from "@/features/templates/components/template-form";
+import { TemplateForm } from "@/app/(admin)/templates/_components/template-form";
 import { templates, type Template } from "@/lib/data";
 
 interface EditTemplateClientProps {
