@@ -8,7 +8,7 @@ import { decrypt, encrypt } from "./jose";
 import { refreshToken } from "@/services/auth";
 import { apiInstance } from "@/services/instance";
 
-const sessionCookieName = "@dddorok/session" as const;
+const sessionCookieName = "@dddorok-admin/session" as const;
 const sessionExpiresAt = 60 * 1000; // 1분 (밀리초 단위)
 
 export async function createSession({
@@ -20,6 +20,7 @@ export async function createSession({
 }) {
   const expiresAt = new Date(Date.now() + sessionExpiresAt);
   const session = await encrypt({ accessToken, refreshToken, expiresAt });
+  console.log("session: ", session);
   const cookieStore = await cookies();
 
   cookieStore.set(sessionCookieName, session, {

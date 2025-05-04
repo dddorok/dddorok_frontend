@@ -4,8 +4,9 @@ import { AlertCircle, Info } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 
+import { MeasurementRuleForm } from "./measurement-rule-form";
+
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { MeasurementRuleForm } from "@/features/measurement-rules/components/measurement-rule-form";
 import { useToast } from "@/hooks/use-toast";
 import { measurementRules, type MeasurementRule } from "@/lib/data";
 
