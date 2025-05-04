@@ -322,25 +322,6 @@ export const measurementItemsBySection = () => {
 export const MEASUREMENT_ITEMS = measurementItems.map((item) => item.name);
 export type MeasurementItem = (typeof MEASUREMENT_ITEMS)[number];
 
-export const CONSTRUCTION_METHOD_OPTIONS = {
-  TOP_DOWN: {
-    label: "탑다운",
-    value: "TOP_DOWN",
-  },
-  BOTTOM_UP: {
-    label: "바텀업",
-    value: "BOTTOM_UP",
-  },
-  PIECE: {
-    label: "조각잇기형",
-    value: "PIECE",
-  },
-  ROUND: {
-    label: "원통형",
-    value: "ROUND",
-  },
-} as const;
-
 export const SLEEVE_TYPES: SleeveType[] = [
   "래글런형",
   "셋인형",

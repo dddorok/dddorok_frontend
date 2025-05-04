@@ -9,10 +9,11 @@ import {
   CHART_TYPE,
   CHART_TYPE_OPTIONS,
   ChartType,
+  CONSTRUCTION_METHOD_OPTIONS,
   NEEDLE,
   NEEDLE_OPTIONS,
   NeedleType,
-} from "../template.constants";
+} from "../../../../constants/template";
 
 import { CommonSelect } from "@/components/CommonUI";
 import { Button } from "@/components/ui/button";
@@ -41,27 +42,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  type Template,
-  CONSTRUCTION_METHOD_OPTIONS,
-  chartTypes,
-} from "@/lib/data";
+import { toast } from "@/hooks/use-toast";
+import { type Template, chartTypes } from "@/lib/data";
 import { GetMeasurementRuleByIdResponse } from "@/services/measurement-rule";
 
-interface TemplateFormProps {
-  template?: Template;
-  initialRuleData?: GetMeasurementRuleByIdResponse;
-  onSubmit: (data: Template) => void;
-  measurementRuleId: string;
-  category: {
-    level1: string;
-    level2: string;
-    level3: string;
-  };
-  mode: "CREATE" | "EDIT";
-}
-
-interface FormData {
+export interface TemplateFormData {
   name: string;
   needleType: NeedleType | null;
   chartType: ChartType | null;
@@ -72,13 +57,27 @@ interface FormData {
   is_published?: boolean; // edit에만 존재
 }
 
+interface TemplateFormProps {
+  template?: Template;
+  initialRuleData?: GetMeasurementRuleByIdResponse;
+  onSubmit: (data: TemplateFormData) => void;
+  measurementRuleId: string;
+  category: {
+    level1: string;
+    level2: string;
+    level3: string;
+  };
+  mode: "CREATE" | "EDIT";
+}
+
 export function TemplateForm({
   measurementRuleId,
   category,
   mode,
+  onSubmit,
 }: TemplateFormProps) {
   // Form setup - initialRuleData 처리
-  const form = useForm<FormData>({
+  const form = useForm<TemplateFormData>({
     defaultValues: {
       name: "",
       needleType: null,
@@ -112,19 +111,29 @@ export function TemplateForm({
     form.register("measurementRuleId");
   }, [form]);
 
-  const handleSubmit = (data: Template) => {
-    console.log("[TemplateForm] Form submission initiated:", data);
+  const handleSubmit = () => {
+    try {
+      onSubmit(form.getValues());
+    } catch (error) {
+      console.error("error: ", error);
+      toast({
+        title: "템플릿 저장 실패",
+        description: "템플릿 저장에 실패했습니다.",
+        variant: "destructive",
+      });
+    }
+    // console.log("[TemplateForm] Form submission initiated:", data);
 
-    // ID 정규화
-    data.measurementRuleId = String(data.measurementRuleId).trim();
-    console.log(
-      `[TemplateForm] Using normalized measurementRuleId: "${data.measurementRuleId}"`
-    );
+    // // ID 정규화
+    // data.measurementRuleId = String(data.measurementRuleId).trim();
+    // console.log(
+    //   `[TemplateForm] Using normalized measurementRuleId: "${data.measurementRuleId}"`
+    // );
   };
 
   return (
     <Form {...form}>
-      <form onSubmit={() => {}} className="space-y-8">
+      <div className="space-y-8">
         <Card>
           <CardHeader>
             <CardTitle>기본 정보 입력</CardTitle>
@@ -264,15 +273,17 @@ export function TemplateForm({
           <Button variant="outline" type="button">
             취소
           </Button>
-          <Button type="submit">저장</Button>
+          <Button type="submit" onClick={handleSubmit}>
+            저장
+          </Button>
         </div>
-      </form>
+      </div>
     </Form>
   );
 }
 
 function TemplateNameField() {
-  const form = useFormContext<FormData>();
+  const form = useFormContext<TemplateFormData>();
   const needleType: NeedleType | null = useWatch({ name: "needleType" });
   const chartType: ChartType | null = useWatch({ name: "chartType" });
 
@@ -314,17 +325,18 @@ const getIsChartBasedPattern = (chartType: ChartType) => {
 
 // TODO: 이건 일단 빈배열로가기, 지금은 서버 준비가 안됨
 function ChartTypeSelect() {
-  const form = useFormContext<FormData>();
+  const form = useFormContext<TemplateFormData>();
 
   // TODO: 차트형 또는 혼합형 패턴 -> 차트 유형 활성화
   // TODO: 필드가 비활성화될 때 값 초기화
 
-  const selectedPatternType = form.getValues("chartType");
+  const selectedPatternType = useWatch({ name: "chartType" });
   const chartBasedPattern =
     selectedPatternType === "GRID" || selectedPatternType === "MIXED";
 
   const measurementItems = []; // TODO: 측정 항목 조회
 
+  console.log("chartBasedPattern: ", chartBasedPattern);
   if (!chartBasedPattern) return null;
 
   return (
@@ -461,7 +473,7 @@ function ConstructionMethodSelect({
     level3: string;
   };
 }) {
-  const form = useFormContext<FormData>();
+  const form = useFormContext<TemplateFormData>();
   const needleType = useWatch({ name: "needleType" });
   const isConstructionMethodEnabled = getIsConstructionMethodEnabled({
     needleType,

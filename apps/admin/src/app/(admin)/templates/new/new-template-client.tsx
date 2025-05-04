@@ -5,15 +5,17 @@ import { AlertCircle, Info } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-import type { Template } from "@/lib/data";
-
-import { TemplateForm } from "@/app/(admin)/templates/_components/template-form";
+import {
+  TemplateForm,
+  TemplateFormData,
+} from "@/app/(admin)/templates/_components/template-form";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { measurementRuleQueries } from "@/queries/measurement-rule";
 import { GetMeasurementRuleListItemType } from "@/services/measurement-rule";
+import { createTemplate } from "@/services/template";
 
 export default function NewTemplateClient() {
   const router = useRouter();
@@ -40,34 +42,29 @@ export default function NewTemplateClient() {
     setRuleName(rule.rule_name);
   };
 
-  const handleSubmit = (data: Template) => {
-    setIsSubmitting(true);
+  const handleSubmit = async (data: TemplateFormData) => {
+    // setIsSubmitting(true);
 
-    console.log("Template form submitted:", data);
-    console.log("MeasurementRuleId:", data.measurementRuleId);
-
-    if (!data.measurementRuleId) {
-      toast({
-        title: "치수 규칙 필요",
-        description:
-          "치수 규칙이 선택되지 않았습니다. 치수 규칙을 먼저 선택해주세요.",
-        variant: "destructive",
-      });
-      setIsSubmitting(false);
-      return;
+    if (!data.needleType || !data.chartType) {
+      throw new Error("입력 필드가 비어있습니다.");
     }
 
-    // 성공 메시지 및 리다이렉트
+    const request = {
+      name: data.name,
+      needle_type: data.needleType,
+      chart_type: data.chartType,
+      measurement_rule_id: data.measurementRuleId,
+      construction_methods: data.constructionMethods,
+      chart_type_ids: data.chartTypeIds,
+    };
+    const response = await createTemplate(request);
+    console.log("response: ", response);
+
     toast({
       title: "템플릿 저장 성공",
       description: `"${data.name}" 템플릿이 생성되었습니다.`,
     });
-
-    // Simulate saving with a short delay
-    setTimeout(() => {
-      setIsSubmitting(false);
-      router.push("/templates");
-    }, 500);
+    router.push("/templates");
   };
 
   return (

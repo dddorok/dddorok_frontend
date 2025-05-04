@@ -31,3 +31,22 @@ export const NEEDLE: Record<NeedleType, { label: string; value: NeedleType }> =
     },
   };
 export const NEEDLE_OPTIONS = Object.values(NEEDLE);
+
+// TOP_DOWN, BOTTOM_UP, PIECED, ROUND, NONE
+export type ConstructionMethodType =
+  | "TOP_DOWN"
+  | "BOTTOM_UP"
+  | "PIECED"
+  | "ROUND";
+
+export const CONSTRUCTION_METHOD: Record<
+  ConstructionMethodType,
+  { label: string; value: ConstructionMethodType }
+> = {
+  TOP_DOWN: { label: "탑다운", value: "TOP_DOWN" },
+  BOTTOM_UP: { label: "바텀업", value: "BOTTOM_UP" },
+  PIECED: { label: "조각잇기형", value: "PIECED" },
+  ROUND: { label: "원통형", value: "ROUND" },
+};
+
+export const CONSTRUCTION_METHOD_OPTIONS = Object.values(CONSTRUCTION_METHOD);
