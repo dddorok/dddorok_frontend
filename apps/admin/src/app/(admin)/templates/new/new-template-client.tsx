@@ -1,9 +1,9 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { AlertCircle, Info, ArrowLeft, Check } from "lucide-react";
+import { AlertCircle, Info } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 
 import type { Template } from "@/lib/data";
 
@@ -13,10 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { measurementRuleQueries } from "@/queries/measurement-rule";
-import {
-  GetMeasurementRuleByIdResponse,
-  GetMeasurementRuleListItemType,
-} from "@/services/measurement-rule";
+import { GetMeasurementRuleListItemType } from "@/services/measurement-rule";
 
 export default function NewTemplateClient() {
   const router = useRouter();
@@ -24,7 +21,7 @@ export default function NewTemplateClient() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [ruleName, setRuleName] = useState<string>("");
   const [selectedRule, setSelectedRule] = useState<string | null>(
-    "bc4f2473-c9ba-4d80-ad46-7a93346e36c4"
+    "b18517e9-3aaa-4c0a-a2a1-af8b10756f90"
   );
   console.log("selectedRule: ", selectedRule);
 

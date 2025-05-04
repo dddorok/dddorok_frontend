@@ -5,6 +5,15 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import { useForm, useFormContext, useWatch } from "react-hook-form";
 
+import {
+  CHART_TYPE,
+  CHART_TYPE_OPTIONS,
+  ChartType,
+  NEEDLE,
+  NEEDLE_OPTIONS,
+  NeedleType,
+} from "../template.constants";
+
 import { CommonSelect } from "@/components/CommonUI";
 import { Button } from "@/components/ui/button";
 import {
@@ -51,9 +60,6 @@ interface TemplateFormProps {
   };
   mode: "CREATE" | "EDIT";
 }
-
-type NeedleType = "KNITTING" | "CROCHET";
-type ChartType = "NARRATIVE" | "GRID" | "MIXED";
 
 interface FormData {
   name: string;
@@ -127,33 +133,20 @@ export function TemplateForm({
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>템플릿명</FormLabel>
-                  <FormControl>
-                    <Input {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <TemplateNameField />
 
             <FormField
-              control={form.control}
               name="needleType"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>도구 유형</FormLabel>
-                  <CommonSelect
-                    options={[
-                      { label: "대바늘", value: "KNITTING" },
-                      { label: "코바늘", value: "CROCHET" },
-                    ]}
-                    value={field.value ?? ""}
-                    onChange={field.onChange}
+                  <CommonSelect<NeedleType>
+                    placeholder="도구 유형을 선택하세요"
+                    options={NEEDLE_OPTIONS}
+                    value={field.value ?? undefined}
+                    onChange={(value: NeedleType) => {
+                      field.onChange(value);
+                    }}
                   />
                   <FormMessage />
                 </FormItem>
@@ -161,17 +154,15 @@ export function TemplateForm({
             />
 
             <FormField
-              control={form.control}
               name="chartType"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>도안 유형</FormLabel>
                   <CommonSelect<ChartType>
-                    options={[
-                      { label: "서술형", value: "NARRATIVE" },
-                      { label: "차트형", value: "GRID" },
-                      { label: "혼합형", value: "MIXED" },
-                    ]}
+                    placeholder="도안 유형을 선택하세요"
+                    options={CHART_TYPE_OPTIONS}
+                    defaultValue={field.value ?? undefined}
+                    value={field.value ?? undefined}
                     onChange={(value: ChartType) => {
                       field.onChange(value);
                       // 차트 관련 필드 표시 로직 실행
@@ -181,32 +172,7 @@ export function TemplateForm({
                         form.setValue("chartTypeIds", []);
                       }
                     }}
-                    defaultValue={field.value ?? undefined}
-                    value={field.value as ChartType}
                   />
-                  {/* <Select
-                    onValueChange={(value: ChartType) => {
-                      field.onChange(value);
-                      // 차트 관련 필드 표시 로직 실행
-                      const chartBasedPattern = getIsChartBasedPattern(value);
-                      // 차트 유형이 선택되지 않았을 때 값 초기화
-                      if (!chartBasedPattern) {
-                        form.setValue("chartTypeIds", []);
-                      }
-                    }}
-                    defaultValue={field.value ?? undefined}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="도안 유형을 선택하세요" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="NARRATIVE">서술형</SelectItem>
-                      <SelectItem value="GRID">차트형</SelectItem>
-                      <SelectItem value="MIXED">혼합형</SelectItem>
-                    </SelectContent>
-                  </Select> */}
                   <FormMessage />
                 </FormItem>
               )}
@@ -302,6 +268,35 @@ export function TemplateForm({
         </div>
       </form>
     </Form>
+  );
+}
+
+function TemplateNameField() {
+  const form = useFormContext<FormData>();
+  const needleType: NeedleType | null = useWatch({ name: "needleType" });
+  const chartType: ChartType | null = useWatch({ name: "chartType" });
+
+  useEffect(() => {
+    if (!needleType || !chartType) return;
+    form.setValue(
+      "name",
+      `${NEEDLE[needleType].label} ${CHART_TYPE[chartType].label}`
+    );
+  }, [needleType, chartType]);
+
+  return (
+    <FormField
+      name="name"
+      render={({ field }) => (
+        <FormItem>
+          <FormLabel>템플릿명</FormLabel>
+          <FormControl>
+            <Input {...field} />
+          </FormControl>
+          <FormMessage />
+        </FormItem>
+      )}
+    />
   );
 }
 

@@ -8,7 +8,7 @@ import {
 
 export const CommonSelect = <T extends string>(props: {
   options: { label: string; value: T }[];
-  value: T;
+  value?: T;
   onChange: (value: T) => void;
   placeholder?: string;
   defaultValue?: T;
