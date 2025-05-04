@@ -39,6 +39,4 @@ export const SIZE_RANGE_LABEL: Record<SizeRangeType, string> = {
   max: "max",
 };
 
-export const SIZE_RANGE_KEYS: SizeRangeType[] = Object.keys(
-  SIZE_RANGE_LABEL
-) as SizeRangeType[];
+export const SIZE_RANGE_KEYS = Object.keys(SIZE_RANGE_LABEL) as SizeRangeType[];
