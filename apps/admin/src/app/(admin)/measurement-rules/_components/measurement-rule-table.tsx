@@ -1,5 +1,6 @@
 "use client";
 
+import { useQuery } from "@tanstack/react-query";
 import { useOverlay } from "@toss/use-overlay";
 import { List, Layers } from "lucide-react";
 import Link from "next/link";
@@ -28,13 +29,23 @@ import {
   measurementRules as originalMeasurementRules,
   templates,
 } from "@/lib/data";
+import { measurementRuleQueries } from "@/queries/measurement-rule";
+import { GetMeasurementRuleListItemType } from "@/services/measurement-rule";
 
 export function MeasurementRuleTable() {
   const overlay = useOverlay();
 
-  const [measurementRules, setMeasurementRules] = useState<MeasurementRule[]>(
-    originalMeasurementRules
-  );
+  const { data } = useQuery({
+    ...measurementRuleQueries.getMeasurementRuleListQueryOptions(),
+  });
+  console.log("data: ", data);
+
+  const measurementRules = data?.data || [];
+  console.log("measurementRules: ", measurementRules);
+
+  // const [measurementRules, setMeasurementRules] = useState<MeasurementRule[]>(
+  //   originalMeasurementRules
+  // );
 
   return (
     <Table>
@@ -57,10 +68,6 @@ export function MeasurementRuleTable() {
           </TableRow>
         ) : (
           measurementRules.map((rule) => {
-            const templateCount = 0;
-            // const templateCount = getTemplateCount(rule.id);
-            const isDeletable = templateCount === 0;
-
             return <TableItem rule={rule} />;
           })
         )}
@@ -69,7 +76,7 @@ export function MeasurementRuleTable() {
   );
 }
 
-function TableItem({ rule }: { rule: any }) {
+function TableItem({ rule }: { rule: GetMeasurementRuleListItemType }) {
   const overlay = useOverlay();
 
   // 해당 규칙을 사용하는 템플릿 개수 계산
@@ -78,7 +85,7 @@ function TableItem({ rule }: { rule: any }) {
       .length;
   };
 
-  const templateCount = getTemplateCount(rule.id);
+  const templateCount = rule.template_count;
   const isDeletable = templateCount === 0;
 
   // Function to get category name by ID
@@ -115,21 +122,21 @@ function TableItem({ rule }: { rule: any }) {
         />
       ));
     } else {
-      overlay.open(({ isOpen, close }) => (
-        <DeleteNotAllowDialog
-          open={isOpen}
-          onOpenChange={close}
-          ruleToDelete={rule}
-          onConfirm={() => {
-            console.log("delete");
-            close();
-          }}
-        />
-      ));
+      // overlay.open(({ isOpen, close }) => (
+      //   <DeleteNotAllowDialog
+      //     open={isOpen}
+      //     onOpenChange={close}
+      //     ruleToDelete={rule}
+      //     onConfirm={() => {
+      //       console.log("delete");
+      //       close();
+      //     }}
+      //   />
+      // ));
     }
   };
 
-  const onViewItemsRule = (rule: MeasurementRule) => {
+  const onViewItemsRule = (rule: GetMeasurementRuleListItemType) => {
     overlay.open(({ isOpen, close }) => (
       <RuleDialog viewItemsRule={rule} isOpen={isOpen} close={close} />
     ));
@@ -137,9 +144,9 @@ function TableItem({ rule }: { rule: any }) {
 
   return (
     <TableRow key={rule.id}>
-      <TableCell className="font-medium">{rule.name}</TableCell>
-      <TableCell>{getCategoryName(rule.categoryId)}</TableCell>
-      <TableCell>{rule.sleeveType || "-"}</TableCell>
+      <TableCell className="font-medium">{rule.rule_name}</TableCell>
+      <TableCell>{getCategoryName(rule.category_large)}</TableCell>
+      <TableCell>{rule.sleeve_type || "-"}</TableCell>
 
       {/* 측정 항목 수 클릭 가능 */}
       <TableCell>
@@ -149,7 +156,7 @@ function TableItem({ rule }: { rule: any }) {
           onClick={() => onViewItemsRule(rule)}
         >
           <List className="h-3 w-3" />
-          {rule.items.length}개
+          {rule.measurement_item_count}개
         </Button>
       </TableCell>
 

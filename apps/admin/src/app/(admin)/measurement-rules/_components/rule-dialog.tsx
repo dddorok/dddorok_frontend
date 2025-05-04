@@ -9,14 +9,15 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { getMeasurementItemById, MeasurementRule } from "@/lib/data";
+import { getMeasurementItemById } from "@/lib/data";
+import { GetMeasurementRuleListItemType } from "@/services/measurement-rule";
 
 export function RuleDialog({
   viewItemsRule,
   isOpen,
   close,
 }: {
-  viewItemsRule: MeasurementRule;
+  viewItemsRule: GetMeasurementRuleListItemType;
   isOpen: boolean;
   close: () => void;
 }) {
@@ -27,17 +28,18 @@ export function RuleDialog({
           <DialogTitle>
             <div className="flex items-center gap-2">
               <List className="h-5 w-5 text-blue-600" />
-              <span>"{viewItemsRule.name}" 측정 항목</span>
+              <span>"{viewItemsRule.rule_name}" 측정 항목</span>
             </div>
           </DialogTitle>
         </DialogHeader>
 
         <div className="py-4">
           <h3 className="font-medium mb-2 text-sm text-muted-foreground">
-            측정 항목 목록 ({viewItemsRule.items.length}개)
+            측정 항목 목록 ({viewItemsRule.measurement_item_count}개)
           </h3>
           <ul className="grid grid-cols-1 gap-2 mt-1 max-h-80 overflow-y-auto">
-            {viewItemsRule.items.map((itemId) => {
+            {/* TODO: 측정 항목 목록 추가 */}
+            {/* {viewItemsRule.items.map((itemId) => {
               const item = getMeasurementItemById(itemId);
               return (
                 <li
@@ -60,7 +62,7 @@ export function RuleDialog({
                   </div>
                 </li>
               );
-            })}
+            })} */}
           </ul>
         </div>
 

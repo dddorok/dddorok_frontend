@@ -35,6 +35,7 @@ export default function NewMeasurementRulePage() {
           description: `"${data.name}" 치수 규칙이 성공적으로 저장되었습니다.`,
         });
         router.push(`/measurement-rules`);
+        // TODO: 저장 후 템플릿으로 이동
         // router.push(`/templates/new?ruleId=${encodeURIComponent(data.id)}`);
         // window.location.href = `/templates/new?ruleId=${encodeURIComponent(data.id)}`;
       })

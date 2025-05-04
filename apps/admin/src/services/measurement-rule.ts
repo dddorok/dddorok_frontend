@@ -24,12 +24,16 @@ export const getMeasurementRuleItemCode = async () => {
   return data.data;
 };
 
-interface GetMeasurementRuleListItemType {
-  id: string;
-  rule_name: string;
+export interface GetMeasurementRuleListItemType {
   category_large: string;
   category_medium: string;
   category_small: string;
+  id: string;
+  measurement_item_count: number;
+  neck_line_type?: string;
+  rule_name: string;
+  sleeve_type?: string;
+  template_count: number;
 }
 
 export interface GetMeasurementRuleListResponse {
