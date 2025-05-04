@@ -97,17 +97,17 @@ export default function NewTemplateClient() {
           <TemplateForm
             onSubmit={handleSubmit}
             measurementRuleId={selectedRule}
-            categoryName={getCategoryName(rule)}
+            category={{
+              level1: rule.category_large,
+              level2: rule.category_medium,
+              level3: rule.category_small,
+            }}
           />
         </div>
       )}
     </div>
   );
 }
-
-const getCategoryName = (rule: GetMeasurementRuleByIdResponse) => {
-  return `${rule.category_large} > ${rule.category_medium} > ${rule.category_small}`;
-};
 
 function SelectMeasurementRule({
   handleSelectRule,

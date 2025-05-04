@@ -3,7 +3,7 @@
 import { AlertCircle, Info } from "lucide-react";
 import Link from "next/link";
 import { useState, useEffect } from "react";
-import { useForm, useFormContext } from "react-hook-form";
+import { useForm, useFormContext, useWatch } from "react-hook-form";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -39,7 +39,11 @@ interface TemplateFormProps {
   initialRuleData?: GetMeasurementRuleByIdResponse;
   onSubmit: (data: Template) => void;
   measurementRuleId: string;
-  categoryName: string;
+  category: {
+    level1: string;
+    level2: string;
+    level3: string;
+  };
 }
 
 type NeedleType = "KNITTING" | "CROCHET";
@@ -61,7 +65,7 @@ export function TemplateForm({
   initialRuleData,
   onSubmit,
   measurementRuleId,
-  categoryName,
+  category,
 }: TemplateFormProps) {
   // Form setup - initialRuleData 처리
   const form = useForm<FormData>({
@@ -193,7 +197,7 @@ export function TemplateForm({
                     onValueChange={(value: ChartType) => {
                       field.onChange(value);
                       // 차트 관련 필드 표시 로직 실행
-                      const chartBasedPattern = isChartBasedPattern(value);
+                      const chartBasedPattern = getIsChartBasedPattern(value);
                       // 차트 유형이 선택되지 않았을 때 값 초기화
                       if (!chartBasedPattern) {
                         form.setValue("chartTypeIds", []);
@@ -248,7 +252,7 @@ export function TemplateForm({
             <div>
               <FormLabel>카테고리</FormLabel>
               <div className="p-3 bg-gray-50 rounded-md border text-sm mt-1">
-                {categoryName}
+                {getCategoryName(category)}
               </div>
               <p className="text-xs text-muted-foreground mt-1">
                 카테고리는 선택한 치수 규칙에 따라 자동으로 설정됩니다.
@@ -258,7 +262,7 @@ export function TemplateForm({
         </Card>
 
         {/* Section 2: 조건부 속성 입력 */}
-        <ConstructionMethodSelect />
+        <ConstructionMethodSelect category={category} />
         {/* 차트 유형 */}
         {showChartFields && (
           <Card>
@@ -335,7 +339,15 @@ export function TemplateForm({
   );
 }
 
-const isChartBasedPattern = (chartType: ChartType) => {
+const getCategoryName = (category: {
+  level1: string;
+  level2: string;
+  level3: string;
+}) => {
+  return `${category.level1} > ${category.level2} > ${category.level3}`;
+};
+
+const getIsChartBasedPattern = (chartType: ChartType) => {
   return chartType === "GRID" || chartType === "MIXED";
 };
 
@@ -459,15 +471,51 @@ function ChartTypeSelect() {
   );
 }
 
-//
+const getIsConstructionMethodEnabled = ({
+  needleType,
+  category,
+}: {
+  needleType: NeedleType;
+  category: {
+    level1: string;
+    level2: string;
+    level3: string;
+  };
+}) => {
+  return needleType === "KNITTING" && category.level2 === "상의";
+};
+
 /**
  * 상의 제작 방식
  * 대바늘 && 상의 -> 제작 방식 활성화
  * @returns
  */
-function ConstructionMethodSelect() {
-  // TODO: * 대바늘 && 상의 -> 제작 방식 활성화
-  // TODO: 필드가 비활성화될 때 값 초기화
+function ConstructionMethodSelect({
+  category,
+}: {
+  category: {
+    level1: string;
+    level2: string;
+    level3: string;
+  };
+}) {
+  const form = useFormContext<FormData>();
+  const needleType = useWatch({ name: "needleType" });
+  const isConstructionMethodEnabled = getIsConstructionMethodEnabled({
+    needleType,
+    category,
+  });
+
+  useEffect(() => {
+    // 필드가 비활성화될 때 값 초기화
+    if (!isConstructionMethodEnabled) {
+      form.setValue("constructionMethods", []);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isConstructionMethodEnabled]);
+
+  if (!isConstructionMethodEnabled) return null;
+
   return (
     <Card>
       <CardHeader>
