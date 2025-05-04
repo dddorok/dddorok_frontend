@@ -6,20 +6,6 @@ import { MeasurementRuleTable } from "./_components/measurement-rule-table";
 import { Button } from "@/components/ui/button";
 
 export default function MeasurementRulesPage() {
-  const data = [
-    {
-      id: "547f37d9-5650-426f-89cb-79dd28705088",
-      rule_name: "상의 스웨터 라운드넥",
-      category_large: "의류",
-      category_medium: "상의",
-      category_small: "스웨터",
-      sleeve_type: "레글런",
-      neck_line_type: "라운드넥",
-      measurement_item_count: 2,
-      template_count: 0,
-    },
-  ];
-
   return (
     <div className="space-y-6">
       <div>

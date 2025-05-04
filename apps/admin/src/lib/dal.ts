@@ -10,6 +10,7 @@ export const verifySession = async () => {
   console.log("cookie: ", cookie);
 
   if (!cookie) {
+    console.log("no cookie");
     redirect("/oauth/login");
   }
   const session = await decrypt<{
@@ -19,6 +20,7 @@ export const verifySession = async () => {
   }>(cookie as string);
 
   if (!session.accessToken) {
+    console.log("no access token");
     redirect("/oauth/login");
   }
 

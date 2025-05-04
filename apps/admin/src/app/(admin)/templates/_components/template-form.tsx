@@ -31,13 +31,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { categories, getCategoryById } from "@/constants/category";
 import {
   type Template,
   type ToolType,
   type PatternType,
   type PublishStatus,
-  categories,
-  getCategoryById,
   CONSTRUCTION_METHODS,
   SLEEVE_TYPES,
   NECKLINE_TYPES,
