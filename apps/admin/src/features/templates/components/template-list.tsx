@@ -1,16 +1,10 @@
 "use client";
 
-import { useOverlay } from "@toss/use-overlay";
-import { AlertCircle, Info } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 
-import { GuideCard } from "./GuideCard";
-
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge"; // Assuming Badge component is imported
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
   DialogTrigger,

@@ -3,10 +3,9 @@ import Link from "next/link";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { getCategoryById } from "@/constants/category";
 import { GuideCard } from "@/features/templates/components/GuideCard";
 import { TemplateList } from "@/features/templates/components/template-list";
-import { templates, chartTypes as chartTypesList, Template } from "@/lib/data";
+
 export default function TemplatesPage() {
   return (
     <div className="space-y-6">
