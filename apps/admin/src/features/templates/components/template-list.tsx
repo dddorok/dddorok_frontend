@@ -1,5 +1,6 @@
 "use client";
 
+import { useOverlay } from "@toss/use-overlay";
 import { AlertCircle, Info } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
@@ -29,7 +30,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { getCategoryById } from "@/constants/category";
-import { templates, chartTypes as chartTypesList } from "@/lib/data";
+import { templates, chartTypes as chartTypesList, Template } from "@/lib/data";
 
 export function TemplateList() {
   const [deleteTemplateId, setDeleteTemplateId] = useState<string | null>(null);
@@ -95,113 +96,7 @@ export function TemplateList() {
             ) : (
               templates.map((template) => {
                 // 템플릿명 자동 생성 (도구유형 제외)
-                const category = getCategoryById(template.categoryIds[2] ?? "");
-                const formatOptions = [];
-
-                // 제작 방식 (있는 경우만)
-                if (
-                  template.constructionMethods &&
-                  template.constructionMethods.length > 0
-                ) {
-                  formatOptions.push(template.constructionMethods[0]);
-                }
-
-                // 넥라인 (있는 경우만)
-                if (template.necklineType) {
-                  formatOptions.push(template.necklineType);
-                }
-
-                // 소매 유형 (있는 경우만)
-                if (template.sleeveType) {
-                  formatOptions.push(template.sleeveType);
-                }
-
-                // 카테고리 소분류
-                if (category) {
-                  formatOptions.push(category.name);
-                }
-
-                // 완성된 템플릿명
-                const formattedName = formatOptions.join(" ");
-
-                // 차트 유형 문자열
-                const templateChartTypes =
-                  template.chartTypeIds
-                    ?.map((id) => {
-                      const chart = chartTypesList.find((c) => c.id === id);
-                      return chart ? chart.name : "";
-                    })
-                    .filter(Boolean)
-                    .join(", ") || "-";
-
-                return (
-                  <TableRow key={template.id}>
-                    <TableCell className="font-medium">
-                      {formattedName}
-                    </TableCell>
-                    <TableCell>{template.toolType}</TableCell>
-                    <TableCell>{templateChartTypes}</TableCell>
-                    <TableCell>
-                      <Badge
-                        variant={
-                          template.publishStatus === "공개"
-                            ? "default"
-                            : "secondary"
-                        }
-                      >
-                        {template.publishStatus}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-center">
-                      <div className="flex justify-center gap-2">
-                        <Link href={`/templates/${template.id}`}>
-                          <Button variant="outline" size="sm">
-                            세부 치수 편집
-                          </Button>
-                        </Link>
-                        <Link href={`/templates/${template.id}/edit`}>
-                          <Button variant="outline" size="sm">
-                            수정
-                          </Button>
-                        </Link>
-                        <Dialog
-                          open={deleteTemplateId === template.id}
-                          onOpenChange={(open) =>
-                            open
-                              ? setDeleteTemplateId(template.id)
-                              : setDeleteTemplateId(null)
-                          }
-                        >
-                          <DialogTrigger asChild>
-                            <Button variant="destructive" size="sm">
-                              삭제
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent>
-                            <DialogHeader>
-                              <DialogTitle>템플릿 삭제</DialogTitle>
-                              <DialogDescription>
-                                정말로 이 템플릿을 삭제하시겠습니까? 이 작업은
-                                되돌릴 수 없습니다.
-                              </DialogDescription>
-                            </DialogHeader>
-                            <DialogFooter>
-                              <DialogClose asChild>
-                                <Button variant="outline">취소</Button>
-                              </DialogClose>
-                              <Button
-                                variant="destructive"
-                                onClick={handleDeleteTemplate}
-                              >
-                                삭제
-                              </Button>
-                            </DialogFooter>
-                          </DialogContent>
-                        </Dialog>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                );
+                return <TemplateItem key={template.id} template={template} />;
               })
             )}
           </TableBody>
@@ -223,5 +118,112 @@ export function TemplateList() {
         </AlertDescription>
       </Alert>
     </div>
+  );
+}
+
+function TemplateItem({ template }: { template: Template }) {
+  // 완성된 템플릿명
+  const formattedName = (() => {
+    const category = getCategoryById(String(template.categoryIds[2]));
+    const formatOptions = [];
+
+    // 제작 방식 (있는 경우만)
+    if (
+      template.constructionMethods &&
+      template.constructionMethods.length > 0
+    ) {
+      formatOptions.push(template.constructionMethods[0]);
+    }
+
+    // 넥라인 (있는 경우만)
+    if (template.necklineType) {
+      formatOptions.push(template.necklineType);
+    }
+
+    // 소매 유형 (있는 경우만)
+    if (template.sleeveType) {
+      formatOptions.push(template.sleeveType);
+    }
+
+    // 카테고리 소분류
+    if (category) {
+      formatOptions.push(category.name);
+    }
+
+    return formatOptions.join(" ");
+  })();
+
+  // 차트 유형 문자열
+  const templateChartTypes =
+    template.chartTypeIds
+      ?.map((id) => {
+        const chart = chartTypesList.find((c) => c.id === id);
+        return chart ? chart.name : "";
+      })
+      .filter(Boolean)
+      .join(", ") || "-";
+
+  return (
+    <TableRow key={template.id}>
+      <TableCell className="font-medium">{formattedName}</TableCell>
+      <TableCell>{template.toolType}</TableCell>
+      <TableCell>{templateChartTypes}</TableCell>
+      <TableCell>
+        <Badge
+          variant={template.publishStatus === "공개" ? "default" : "secondary"}
+        >
+          {template.publishStatus}
+        </Badge>
+      </TableCell>
+      <TableCell className="text-center">
+        <div className="flex justify-center gap-2">
+          <Link href={`/templates/${template.id}`}>
+            <Button variant="outline" size="sm">
+              세부 치수 편집
+            </Button>
+          </Link>
+          <Link href={`/templates/${template.id}/edit`}>
+            <Button variant="outline" size="sm">
+              수정
+            </Button>
+          </Link>
+          <DeleteTemplateButton template={template} />
+        </div>
+      </TableCell>
+    </TableRow>
+  );
+}
+
+function DeleteTemplateButton({ template }: { template: Template }) {
+  const handleDeleteTemplate = () => {
+    // TODO: 삭제 처리
+    // overlay.close();
+    // setOpen(false);
+  };
+
+  return (
+    <Dialog>
+      <DialogTrigger asChild>
+        <Button variant="destructive" size="sm">
+          삭제
+        </Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>템플릿 삭제</DialogTitle>
+          <DialogDescription>
+            정말로 이 템플릿을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter>
+          <DialogClose asChild>
+            <Button variant="outline">취소</Button>
+          </DialogClose>
+          <Button variant="destructive" onClick={handleDeleteTemplate}>
+            삭제
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
