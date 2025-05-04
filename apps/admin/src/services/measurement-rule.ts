@@ -7,10 +7,6 @@ export const getMeasurementRules = async () => {
   return response.json();
 };
 
-// interface GetMeasurementRuleItemCodeRequest {
-//   category: string;
-// }
-
 export interface GetMeasurementRuleItemCodeResponse {
   id: string;
   category: string;
@@ -43,6 +39,46 @@ export interface GetMeasurementRuleListResponse {
 export const getMeasurementRuleList = async () => {
   const response = await privateInstance<GetMeasurementRuleListResponse>(
     "measurement-rule/list"
+  );
+  return response.json();
+};
+
+interface CreateMeasurementRuleRequest {
+  category_large: string;
+  category_medium: string;
+  category_small: string;
+  sleeve_type?: string;
+  neck_line_type?: string;
+  rule_name: string;
+  measurement_codes: string[];
+}
+
+interface CreateMeasurementRuleResponse {
+  id: string;
+  category_large: string;
+  category_medium: string;
+  category_small: string;
+  sleeve_type: string;
+  neck_line_type: string;
+  rule_name: string;
+  created_date: string;
+  updated_date: string;
+  items: {
+    id: string;
+    category: string;
+    section: string;
+    label: string;
+    code: string;
+  }[];
+}
+
+// 치수 규칙 및 항목 생성
+export const createMeasurementRule = async (
+  request: CreateMeasurementRuleRequest
+) => {
+  const response = await privateInstance<CreateMeasurementRuleResponse>(
+    "measurement-rule",
+    { json: request, method: "POST" }
   );
   return response.json();
 };

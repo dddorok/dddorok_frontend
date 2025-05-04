@@ -30,10 +30,10 @@ import { QueryDevTools } from "@/lib/react-query";
 interface MeasurementRuleFormProps {
   rule?: MeasurementRule;
   isEdit?: boolean;
-  onSubmit: (data: MeasurementRule, createTemplate: boolean) => void;
+  onSubmit: (data: MeasurementRuleFormData, createTemplate: boolean) => void;
 }
 
-interface MeasurementRuleFormData extends MeasurementRule {
+export interface MeasurementRuleFormData extends MeasurementRule {
   level1: string;
   level2: string;
   level3: string;
@@ -117,18 +117,18 @@ export function MeasurementRuleForm({
     };
 
     // 중복 체크
-    const isDuplicate = checkForDuplicates(
-      requestData.categoryId,
-      requestData.sleeveType
-    );
-    if (isDuplicate) {
-      form.setError("name", {
-        message: "중복된 규칙입니다.",
-      });
-      // form.setValue("duplicateError", true);
-      // setDuplicateError(true);
-      return;
-    }
+    // const isDuplicate = checkForDuplicates(
+    //   requestData.categoryId,
+    //   requestData.sleeveType
+    // );
+    // if (isDuplicate) {
+    //   form.setError("name", {
+    //     message: "중복된 규칙입니다.",
+    //   });
+    //   // form.setValue("duplicateError", true);
+    //   // setDuplicateError(true);
+    //   return;
+    // }
 
     onSubmit(requestData, createTemplate);
   };
