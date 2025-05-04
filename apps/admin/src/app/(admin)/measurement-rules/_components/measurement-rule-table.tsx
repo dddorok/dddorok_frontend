@@ -24,6 +24,7 @@ import {
   Table,
 } from "@/components/ui/table";
 import { getCategoryById } from "@/constants/category";
+import { SLEEVE } from "@/constants/top";
 import { toast } from "@/hooks/use-toast";
 import {
   type MeasurementRule,
@@ -40,19 +41,11 @@ import {
 } from "@/services/measurement-rule";
 
 export function MeasurementRuleTable() {
-  const overlay = useOverlay();
-
   const { data } = useQuery({
     ...measurementRuleQueries.getMeasurementRuleListQueryOptions(),
   });
-  console.log("data: ", data);
 
   const measurementRules = data?.data || [];
-  console.log("measurementRules: ", measurementRules);
-
-  // const [measurementRules, setMeasurementRules] = useState<MeasurementRule[]>(
-  //   originalMeasurementRules
-  // );
 
   return (
     <Table>
@@ -75,7 +68,7 @@ export function MeasurementRuleTable() {
           </TableRow>
         ) : (
           measurementRules.map((rule) => {
-            return <TableItem rule={rule} />;
+            return <TableItem rule={rule} key={rule.id} />;
           })
         )}
       </TableBody>
@@ -159,7 +152,9 @@ function TableItem({ rule }: { rule: GetMeasurementRuleListItemType }) {
     <TableRow key={rule.id}>
       <TableCell className="font-medium">{rule.rule_name}</TableCell>
       <TableCell>{getCategoryName(rule.category_large)}</TableCell>
-      <TableCell>{rule.sleeve_type || "-"}</TableCell>
+      <TableCell>
+        {rule.sleeve_type ? SLEEVE[rule.sleeve_type].label : "-"}
+      </TableCell>
 
       {/* 측정 항목 수 클릭 가능 */}
       <TableCell>
