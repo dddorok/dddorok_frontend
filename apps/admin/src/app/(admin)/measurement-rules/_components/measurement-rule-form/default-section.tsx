@@ -19,7 +19,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { categories, CATEGORY_ID, getCategoryById } from "@/constants/category";
-import { SLEEVE_TYPES, NECKLINE_TYPES } from "@/lib/data";
+import {
+  NECKLINE,
+  NECKLINE_OPTIONS,
+  NecklineType,
+  SLEEVE,
+  SLEEVE_OPTIONS,
+  SleeveType,
+} from "@/constants/top";
 
 export function MeasurementRuleDefaultSection() {
   const form = useFormContext();
@@ -146,17 +153,17 @@ function TopNeedFieldForm() {
       <FormSelect
         label="소매 유형"
         name="sleeveType"
-        options={SLEEVE_TYPES.map((type) => ({
-          id: type,
-          name: type,
+        options={SLEEVE_OPTIONS.map((type) => ({
+          id: type.value,
+          name: type.label,
         }))}
       />
       <FormSelect
         label="넥라인"
         name="necklineType"
-        options={NECKLINE_TYPES.map((type) => ({
-          id: type,
-          name: type,
+        options={NECKLINE_OPTIONS.map((type) => ({
+          id: type.value,
+          name: type.label,
         }))}
       />
     </>
@@ -173,17 +180,23 @@ function MeasurementRuleName() {
   const category = getCategoryById(categoryLevel3);
 
   const categoryLevel2 = useWatch({ name: "level2" });
-  const selectedSleeveType = useWatch({ name: "sleeveType" }) ?? "";
-  const selectedNecklineType = useWatch({ name: "necklineType" }) ?? "";
+  const selectedSleeveType: SleeveType = useWatch({ name: "sleeveType" });
+  const selectedNecklineType: NecklineType = useWatch({ name: "necklineType" });
 
   const getAuthName = () => {
     // 자동 생성되며 수동 수정 불가
     // form.clearErrors("name");
-    const category3Name = category?.name ?? "";
+    const category3Name = category?.name ?? null;
     switch (categoryLevel2) {
       // - 상의: `넥라인 + 소매 유형 + 소분류`
       case CATEGORY_ID.상의: {
-        return `${selectedNecklineType} ${selectedSleeveType} ${category3Name}`;
+        if (!selectedNecklineType || !selectedSleeveType || !category3Name) {
+          return null;
+        }
+        if (selectedNecklineType === "NODE" || selectedSleeveType === "NONE") {
+          return null;
+        }
+        return `${NECKLINE[selectedNecklineType]?.label ?? ""} ${SLEEVE[selectedSleeveType]?.label ?? ""} ${category3Name}`;
       }
       // - 그 외: `소분류명`
       default:
@@ -193,25 +206,18 @@ function MeasurementRuleName() {
 
   const authName = getAuthName();
 
+  // TODO: name field는 제거 가능 할 듯
   useEffect(() => {
     form.setValue("name", authName);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authName]);
 
   return (
-    <FormField
-      name="name"
-      render={({ field }) => (
-        <FormItem>
-          <FormLabel>규칙 이름</FormLabel>
-          <FormControl>
-            <Input {...field} readOnly placeholder="자동으로 생성됩니다" />
-          </FormControl>
-          <FormDescription>
-            소매 유형과 카테고리를 선택하면 자동으로 설정됩니다.
-          </FormDescription>
-          <FormMessage />
-        </FormItem>
-      )}
-    />
+    <div>
+      <FormLabel>규칙 이름</FormLabel>
+      <p className="p-3 bg-gray-50 rounded-md border text-sm mt-1">
+        {authName ?? "자동으로 생성됩니다"}
+      </p>
+    </div>
   );
 }

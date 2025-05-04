@@ -40,19 +40,11 @@ import {
 } from "@/services/measurement-rule";
 
 export function MeasurementRuleTable() {
-  const overlay = useOverlay();
-
   const { data } = useQuery({
     ...measurementRuleQueries.getMeasurementRuleListQueryOptions(),
   });
-  console.log("data: ", data);
 
   const measurementRules = data?.data || [];
-  console.log("measurementRules: ", measurementRules);
-
-  // const [measurementRules, setMeasurementRules] = useState<MeasurementRule[]>(
-  //   originalMeasurementRules
-  // );
 
   return (
     <Table>
@@ -75,7 +67,7 @@ export function MeasurementRuleTable() {
           </TableRow>
         ) : (
           measurementRules.map((rule) => {
-            return <TableItem rule={rule} />;
+            return <TableItem rule={rule} key={rule.id} />;
           })
         )}
       </TableBody>
