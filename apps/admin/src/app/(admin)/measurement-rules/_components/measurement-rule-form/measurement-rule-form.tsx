@@ -17,10 +17,10 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Form } from "@/components/ui/form";
+import { categories } from "@/constants/category";
+import { getCategoryById } from "@/constants/category";
 import {
   type MeasurementRule,
-  categories,
-  getCategoryById,
   type SleeveType,
   isDuplicateMeasurementRule,
   NecklineType,

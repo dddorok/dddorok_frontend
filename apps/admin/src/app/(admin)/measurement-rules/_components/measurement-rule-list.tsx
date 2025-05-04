@@ -25,15 +25,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { getCategoryById } from "@/constants/category";
 import { useToast } from "@/hooks/use-toast";
 import {
   type MeasurementRule,
   measurementRules as originalMeasurementRules,
-  getCategoryById,
   templates,
-  getMeasurementItemById,
 } from "@/lib/data";
-
 export function MeasurementRuleList() {
   const [measurementRules, setMeasurementRules] = useState<MeasurementRule[]>(
     originalMeasurementRules
@@ -51,7 +49,7 @@ export function MeasurementRuleList() {
   const ruleToDelete = measurementRules.find((r) => r.id === deleteRuleId);
 
   // Function to get category name by ID
-  const getCategoryName = (categoryId: number) => {
+  const getCategoryName = (categoryId: string) => {
     const category = getCategoryById(categoryId);
     return category ? category.name : "알 수 없음";
   };

@@ -26,12 +26,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  templates,
-  Template,
-  getCategoryById,
-  chartTypes as chartTypesList,
-} from "@/lib/data";
+import { getCategoryById } from "@/constants/category";
+import { templates, Template, chartTypes as chartTypesList } from "@/lib/data";
 
 export function TemplateList() {
   const [deleteTemplateId, setDeleteTemplateId] = useState<string | null>(null);
@@ -157,7 +153,7 @@ export function TemplateList() {
             ) : (
               templates.map((template) => {
                 // 템플릿명 자동 생성 (도구유형 제외)
-                const category = getCategoryById(template.categoryIds[2] ?? 0);
+                const category = getCategoryById(template.categoryIds[2] ?? "");
                 const formatOptions = [];
 
                 // 제작 방식 (있는 경우만)

@@ -22,10 +22,10 @@ import {
   TableCell,
   Table,
 } from "@/components/ui/table";
+import { getCategoryById } from "@/constants/category";
 import {
   type MeasurementRule,
   measurementRules as originalMeasurementRules,
-  getCategoryById,
   templates,
 } from "@/lib/data";
 
@@ -82,7 +82,7 @@ function TableItem({ rule }: { rule: any }) {
   const isDeletable = templateCount === 0;
 
   // Function to get category name by ID
-  const getCategoryName = (categoryId: number) => {
+  const getCategoryName = (categoryId: string) => {
     const category = getCategoryById(categoryId);
     return category ? category.name : "알 수 없음";
   };

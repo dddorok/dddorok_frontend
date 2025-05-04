@@ -18,14 +18,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  CATEGORY_ID,
-  SLEEVE_TYPES,
-  NECKLINE_TYPES,
-  getCategoryById,
-  categories,
-} from "@/lib/data";
-import { GetMeasurementRuleItemCodeResponse } from "@/services/measurement-rule";
+import { categories, CATEGORY_ID, getCategoryById } from "@/constants/category";
+import { SLEEVE_TYPES, NECKLINE_TYPES } from "@/lib/data";
 
 export function MeasurementRuleDefaultSection() {
   const form = useFormContext();
