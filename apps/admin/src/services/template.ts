@@ -41,3 +41,8 @@ export const createTemplate = async (template: CreateTemplateRequest) => {
   });
   return response.json();
 };
+
+export const deleteTemplate = async (templateId: string) => {
+  const response = await privateInstance.delete(`template/${templateId}`);
+  return response.json();
+};

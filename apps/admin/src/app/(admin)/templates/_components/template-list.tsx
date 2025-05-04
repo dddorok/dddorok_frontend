@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import { useState } from "react";
 
@@ -25,31 +25,14 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { CHART_TYPE, NEEDLE } from "@/constants/template";
-import { chartTypes as chartTypesList } from "@/lib/data";
+import { toast } from "@/hooks/use-toast";
 import { templateQueries } from "@/queries/template";
-import { TemplateType } from "@/services/template";
+import { deleteTemplate, TemplateType } from "@/services/template";
 
 export function TemplateList() {
   const { data: templates } = useQuery(
     templateQueries.getTemplatesQueryOptions()
   );
-  console.log("templates: ", templates);
-
-  const [deleteTemplateId, setDeleteTemplateId] = useState<string | null>(null);
-  // const templateToDelete = templates.find((t) => t.id === deleteTemplateId);
-
-  // 템플릿 삭제 처리
-  const handleDeleteTemplate = () => {
-    // if (!deleteTemplateId) return;
-    // // 실제 구현에서는 API 호출로 서버에서 삭제
-    // const index = templates?.findIndex((t) => t.id === deleteTemplateId);
-    // if (index !== -1) {
-    //   templates?.splice(index, 1);
-    //   setDeleteTemplateId(null);
-    //   // 서버 업데이트를 위해 페이지 새로고침 (실제 구현 시 SWR 또는 React Query로 대체)
-    //   window.location.reload();
-    // }
-  };
 
   return (
     <div className="border rounded-md">
@@ -110,10 +93,19 @@ function TemplateItem({ template }: { template: TemplateType }) {
 }
 
 function DeleteTemplateButton({ template }: { template: TemplateType }) {
-  const handleDeleteTemplate = () => {
-    // TODO: 삭제 처리
-    // overlay.close();
-    // setOpen(false);
+  const queryClient = useQueryClient();
+
+  const handleDeleteTemplate = async () => {
+    try {
+      await deleteTemplate(template.id);
+      toast({
+        title: "템플릿 삭제 성공",
+        description: "템플릿이 성공적으로 삭제되었습니다.",
+      });
+      queryClient.invalidateQueries(templateQueries.getTemplatesQueryOptions());
+    } catch (error) {
+      console.error("error: ", error);
+    }
   };
 
   return (
@@ -134,9 +126,11 @@ function DeleteTemplateButton({ template }: { template: TemplateType }) {
           <DialogClose asChild>
             <Button variant="outline">취소</Button>
           </DialogClose>
-          <Button variant="destructive" onClick={handleDeleteTemplate}>
-            삭제
-          </Button>
+          <DialogClose asChild>
+            <Button variant="destructive" onClick={handleDeleteTemplate}>
+              삭제
+            </Button>
+          </DialogClose>
         </DialogFooter>
       </DialogContent>
     </Dialog>
