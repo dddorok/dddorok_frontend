@@ -1,7 +1,8 @@
 "use client";
 
 import { Info, FileText } from "lucide-react";
-import { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
+import { useState, useRef } from "react";
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -20,17 +21,15 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  SIZE_RANGE_KEYS,
-  SIZE_RANGE_LABEL,
-  SizeRangeType,
-} from "@/constants/size-range";
-import { SIZE_RANGES, getMeasurementItemById } from "@/lib/data";
+import { SIZE_RANGE_KEYS, SizeRangeType } from "@/constants/size-range";
+import { getMeasurementItemById } from "@/lib/data";
 import {
   GetTemplateMeasurementValuesItemType,
   GetTemplateMeasurementValuesResponse,
   TemplateMeasurementValueType,
 } from "@/services/template/measure-value";
+
+type SizeDetailFormType = Record<SizeRangeType, Record<string, string>>;
 
 interface SizeDetailFormProps {
   onSubmit: (result: TemplateMeasurementValueType[]) => void;
@@ -41,6 +40,8 @@ export function SizeDetailForm({
   onSubmit,
   measurementValues,
 }: SizeDetailFormProps) {
+  const router = useRouter();
+
   const {
     sizeDetails,
     handlePaste,
@@ -48,15 +49,9 @@ export function SizeDetailForm({
     tableRef,
     selectedItems,
   } = useSizeDetails(measurementValues);
-  // console.log("sizeDetails: ", sizeDetails);
-  // Process size details table data when measurement rule is available
 
-  // 셀 값 변경 처리
-
-  // 폼 제출 처리
   const handleSubmit = () => {
     const result = convertToTemplateMeasurementValueType(sizeDetails);
-    console.log("result: ", result);
     try {
       onSubmit(result);
     } catch (error) {
@@ -155,7 +150,7 @@ export function SizeDetailForm({
       </Card>
 
       <div className="flex justify-end gap-4">
-        <Button variant="outline" type="button">
+        <Button variant="outline" type="button" onClick={() => router.back()}>
           취소
         </Button>
         <Button type="button" onClick={handleSubmit}>
@@ -170,9 +165,9 @@ const useSizeDetails = (
   measurementValues: GetTemplateMeasurementValuesResponse
 ) => {
   const selectedItems = measurementValues.map((item) => item.id);
-  const [sizeDetails, setSizeDetails] = useState<
-    Record<SizeRangeType, Record<string, string>>
-  >(convertToSizeRangeTypeRecord(measurementValues));
+  const [sizeDetails, setSizeDetails] = useState<SizeDetailFormType>(
+    convertToSizeRangeTypeRecord(measurementValues)
+  );
   const tableRef = useRef<HTMLTableElement>(null);
 
   // 붙여넣기 이벤트 처리
@@ -254,10 +249,7 @@ const useSizeDetails = (
   ) => {
     setSizeDetails((prev) => ({
       ...prev,
-      [sizeRange]: {
-        ...prev[sizeRange],
-        [itemId]: value,
-      },
+      [sizeRange]: { ...prev[sizeRange], [itemId]: value },
     }));
   };
 
@@ -271,7 +263,7 @@ const useSizeDetails = (
 };
 
 function convertToTemplateMeasurementValueType(
-  input: Record<SizeRangeType, Record<string, string>>
+  input: SizeDetailFormType
 ): TemplateMeasurementValueType[] {
   // 모든 id(측정항목) 추출
   const allIds = new Set<string>();
@@ -284,10 +276,7 @@ function convertToTemplateMeasurementValueType(
   allIds.forEach((id) => {
     const obj: any = { id };
     SIZE_RANGE_KEYS.forEach((range) => {
-      console.log("range: ", range);
-      // const key = SIZE_RANGE_TO_KEY[range];
       const value = input[range]?.[id];
-      console.log("value: ", value);
       obj[range] = value !== undefined ? Number(value) : undefined;
     });
     result.push(obj);
@@ -298,17 +287,15 @@ function convertToTemplateMeasurementValueType(
 
 function convertToSizeRangeTypeRecord(
   arr: GetTemplateMeasurementValuesItemType[]
-): Record<SizeRangeType, Record<string, string>> {
-  const result: Record<SizeRangeType, Record<string, string>> = {} as any;
+): SizeDetailFormType {
+  const result = {} as SizeDetailFormType;
 
   SIZE_RANGE_KEYS.forEach((range) => {
     result[range] = {};
   });
 
-  console.log("arr: ", arr);
   arr.forEach((item) => {
     SIZE_RANGE_KEYS.forEach((range) => {
-      // code가 있으면 code, 없으면 id를 key로 사용
       const key = item.id;
       // 값이 undefined/null이어도 string으로 변환
       result[range][key] = String(
@@ -317,6 +304,5 @@ function convertToSizeRangeTypeRecord(
     });
   });
 
-  console.log("result: ", result);
   return result;
 }

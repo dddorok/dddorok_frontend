@@ -1,14 +1,16 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
-import { notFound, useRouter } from "next/navigation";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { notFound } from "next/navigation";
 
 import { SizeDetailForm } from "@/app/(admin)/templates/_components/size-detail-form"; // Updated import path
 import { getCategoryById } from "@/constants/category";
-import { templates, type Template } from "@/lib/data";
+import { toast } from "@/hooks/use-toast";
+import { type Template } from "@/lib/data";
 import {
   templateMeasurementValuesQueries,
   templateQueries,
+  templateQueryKeys,
 } from "@/queries/template";
 import {
   TemplateMeasurementValueType,
@@ -51,7 +53,7 @@ function generateTemplateName(template: Template): string {
 export default function TemplateDetailClient({
   templateId,
 }: TemplateDetailClientProps) {
-  const router = useRouter();
+  const queryClient = useQueryClient();
   const { data: template, isLoading } = useQuery({
     ...templateQueries.getTemplateByIdQueryOptions(templateId),
   });
@@ -66,18 +68,14 @@ export default function TemplateDetailClient({
   const handleSaveSizeDetails = async (
     result: TemplateMeasurementValueType[]
   ) => {
-    console.log("result: ", result);
+    await updateTemplateMeasurementValues(templateId, result);
 
-    const response = await updateTemplateMeasurementValues(templateId, result);
-    console.log("response: ", response);
-
-    // 실제 구현에서는 API 호출로 서버에 저장
-    // const index = templates.findIndex((t) => t.id === updatedTemplate.id);
-    // if (index !== -1) {
-    //   templates[index] = updatedTemplate;
-    //   alert("세부 치수가 저장되었습니다.");
-    //   router.refresh();
-    // }
+    toast({
+      title: "세부 치수가 저장되었습니다.",
+    });
+    queryClient.invalidateQueries({
+      queryKey: templateQueryKeys.templateMeasurementValues(templateId),
+    });
   };
 
   if (isLoading || isLoadingMeasurementValues) {
