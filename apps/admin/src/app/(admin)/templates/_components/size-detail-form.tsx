@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertCircle, Info, FileText, Copy } from "lucide-react";
+import { Info, FileText } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -12,7 +12,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import {
   Table,
   TableBody,
@@ -21,11 +20,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  type SizeRange,
-  SIZE_RANGES,
-  getMeasurementItemById,
-} from "@/lib/data";
+import { SIZE_RANGE_KEYS, SizeRangeType } from "@/constants/size-range";
+import { SIZE_RANGES, getMeasurementItemById } from "@/lib/data";
 import {
   GetTemplateMeasurementValuesItemType,
   GetTemplateMeasurementValuesResponse,
@@ -44,7 +40,7 @@ export function SizeDetailForm({
   const [selectedItems, setSelectedItems] = useState<string[]>(
     measurementValues.map((item) => item.id)
   ); // 항목 ID 배열로 변경
-  const [sizeRanges, setSizeRanges] = useState<SizeRange[]>([]);
+  const [sizeRanges, setSizeRangeTypes] = useState<SizeRangeType[]>([]);
 
   const {
     sizeDetails,
@@ -61,7 +57,7 @@ export function SizeDetailForm({
 
     // 언제나 모든 사이즈 범위 사용 (SIZE_RANGES에서 정의된 모든 범위)
     // SIZE_RANGES 배열은 이미 'min'이 처음에, 'max'가 마지막에 정렬되어 있음
-    setSizeRanges(SIZE_RANGES);
+    // setSizeRangeTypes(SIZE_RANGES);
 
     // 기존 사이즈 세부 정보 로드 또는 새 빈 객체 초기화
     initializeSizeDetails(measurementValues);
@@ -131,10 +127,10 @@ export function SizeDetailForm({
   }
 
   // 표시를 위한 정렬된 사이즈 범위 생성
-  const displayOrderedSizeRanges = () => {
+  const displayOrderedSizeRangeTypes = () => {
     // SIZE_RANGES 배열의 순서를 그대로 사용
     // 이미 data.ts 파일에서 '121-129' 다음에 'min', 그 다음에 'max'가 오도록 정렬되어 있음
-    return sizeRanges;
+    return SIZE_RANGE_KEYS;
   };
 
   // 측정 항목 ID로부터 한글 이름 가져오기
@@ -172,7 +168,7 @@ export function SizeDetailForm({
                   <TableHead className="w-[150px] font-bold border">
                     측정 항목
                   </TableHead>
-                  {displayOrderedSizeRanges().map((size) => (
+                  {displayOrderedSizeRangeTypes().map((size) => (
                     <TableHead
                       key={size}
                       className="text-center font-bold border"
@@ -188,7 +184,7 @@ export function SizeDetailForm({
                     <TableCell className="font-medium border">
                       {getItemName(itemId)}
                     </TableCell>
-                    {displayOrderedSizeRanges().map((size) => (
+                    {displayOrderedSizeRangeTypes().map((size) => (
                       <TableCell
                         key={`${itemId}-${size}`}
                         className={`p-0 border ${size === "min" || size === "max" ? "bg-blue-50" : ""}`}
@@ -227,8 +223,8 @@ export function SizeDetailForm({
 
 const useSizeDetails = () => {
   const [sizeDetails, setSizeDetails] = useState<
-    Record<SizeRange, Record<string, string>>
-  >({} as Record<SizeRange, Record<string, string>>);
+    Record<SizeRangeType, Record<string, string>>
+  >({} as Record<SizeRangeType, Record<string, string>>);
   const tableRef = useRef<HTMLTableElement>(null);
 
   // 붙여넣기 이벤트 처리
@@ -290,7 +286,7 @@ const useSizeDetails = () => {
         ) {
           const itemId = selectedItems[targetRowIndex];
           const sizeRange = headerCells[targetColIndex]
-            ?.textContent as SizeRange;
+            ?.textContent as SizeRangeType;
 
           if (itemId && sizeRange && newSizeDetails[sizeRange]) {
             newSizeDetails[sizeRange][itemId] = cellData.trim();
@@ -304,7 +300,7 @@ const useSizeDetails = () => {
 
   // 셀 값 변경 처리
   const handleCellChange = (
-    sizeRange: SizeRange,
+    sizeRange: SizeRangeType,
     itemId: string,
     value: string
   ) => {
@@ -320,7 +316,7 @@ const useSizeDetails = () => {
   const initializeSizeDetails = (
     measurementValues: GetTemplateMeasurementValuesResponse
   ) => {
-    const details = convertToSizeRangeRecord(measurementValues);
+    const details = convertToSizeRangeTypeRecord(measurementValues);
     console.log("details: ", details);
 
     setSizeDetails(details);
@@ -335,7 +331,7 @@ const useSizeDetails = () => {
   };
 };
 
-const SIZE_RANGE_TO_KEY: Record<SizeRange, string> = {
+const SIZE_RANGE_TO_KEY: Record<SizeRangeType, string> = {
   "50-53": "size_50_53",
   "54-57": "size_54_57",
   "58-61": "size_58_61",
@@ -357,7 +353,7 @@ const SIZE_RANGE_TO_KEY: Record<SizeRange, string> = {
 };
 
 function convertToTemplateMeasurementValueType(
-  input: Record<SizeRange, Record<string, string>>
+  input: Record<SizeRangeType, Record<string, string>>
 ): TemplateMeasurementValueType[] {
   // 모든 id(측정항목) 추출
   const allIds = new Set<string>();
@@ -369,7 +365,7 @@ function convertToTemplateMeasurementValueType(
   const result: TemplateMeasurementValueType[] = [];
   allIds.forEach((id) => {
     const obj: any = { id };
-    (Object.keys(SIZE_RANGE_TO_KEY) as SizeRange[]).forEach((range) => {
+    (Object.keys(SIZE_RANGE_TO_KEY) as SizeRangeType[]).forEach((range) => {
       const key = SIZE_RANGE_TO_KEY[range];
       const value = input[range]?.[id];
       obj[key] = value !== undefined ? Number(value) : undefined;
@@ -380,68 +376,27 @@ function convertToTemplateMeasurementValueType(
   return result;
 }
 
-const SIZE_RANGE_KEYS: SizeRange[] = [
-  "50-53",
-  "54-57",
-  "58-61",
-  "62-65",
-  "66-69",
-  "70-73",
-  "74-79",
-  "80-84",
-  "85-89",
-  "90-94",
-  "95-99",
-  "100-104",
-  "105-109",
-  "110-114",
-  "115-120",
-  "121-129",
-  "min",
-  "max",
-];
-
-const SIZE_RANGE_TO_FIELD: Record<SizeRange, string> = {
-  "50-53": "size_50_53",
-  "54-57": "size_54_57",
-  "58-61": "size_58_61",
-  "62-65": "size_62_65",
-  "66-69": "size_66_69",
-  "70-73": "size_70_73",
-  "74-79": "size_74_79",
-  "80-84": "size_80_84",
-  "85-89": "size_85_89",
-  "90-94": "size_90_94",
-  "95-99": "size_95_99",
-  "100-104": "size_100_104",
-  "105-109": "size_105_109",
-  "110-114": "size_110_114",
-  "115-120": "size_115_120",
-  "121-129": "size_121_129",
-  min: "min",
-  max: "max",
-};
-
-function convertToSizeRangeRecord(
+function convertToSizeRangeTypeRecord(
   arr: GetTemplateMeasurementValuesItemType[]
-): Record<SizeRange, Record<string, string>> {
-  const result: Record<SizeRange, Record<string, string>> = {} as any;
+): Record<SizeRangeType, Record<string, string>> {
+  const result: Record<SizeRangeType, Record<string, string>> = {} as any;
 
   SIZE_RANGE_KEYS.forEach((range) => {
     result[range] = {};
   });
 
+  console.log("arr: ", arr);
   arr.forEach((item) => {
     SIZE_RANGE_KEYS.forEach((range) => {
-      const field = SIZE_RANGE_TO_FIELD[range];
       // code가 있으면 code, 없으면 id를 key로 사용
       const key = item.id;
       // 값이 undefined/null이어도 string으로 변환
       result[range][key] = String(
-        item[field as keyof GetTemplateMeasurementValuesItemType]
+        item[range as keyof GetTemplateMeasurementValuesItemType]
       );
     });
   });
 
+  console.log("result: ", result);
   return result;
 }
