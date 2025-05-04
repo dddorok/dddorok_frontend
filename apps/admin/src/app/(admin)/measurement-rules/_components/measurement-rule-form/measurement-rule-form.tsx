@@ -29,6 +29,7 @@ import { QueryDevTools } from "@/lib/react-query";
 
 interface MeasurementRuleFormProps {
   rule?: MeasurementRule;
+  initialValues?: MeasurementRuleFormData;
   isEdit?: boolean;
   onSubmit: (data: MeasurementRuleFormData, createTemplate: boolean) => void;
 }
@@ -44,11 +45,13 @@ export interface MeasurementRuleFormData extends MeasurementRule {
 
 export function MeasurementRuleForm({
   rule,
+  initialValues,
   isEdit = false,
   onSubmit,
 }: MeasurementRuleFormProps) {
+  console.log("initialValues: ", initialValues);
   const form = useForm<MeasurementRuleFormData>({
-    defaultValues: rule || {
+    defaultValues: initialValues || {
       id: "",
       categoryId: "",
       name: "",

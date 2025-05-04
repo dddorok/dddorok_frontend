@@ -104,6 +104,7 @@ export interface GetMeasurementRuleByIdResponse {
     category: string;
     section: string;
     label: string;
+    code: string;
   }[];
 }
 // 치수 규칙 단일 조회
@@ -120,6 +121,18 @@ export const getMeasurementRuleById = async (id: string) => {
 export const deleteMeasurementRule = async (id: string) => {
   const response = await privateInstance(`measurement-rule/${id}`, {
     method: "DELETE",
+  });
+  return response.json();
+};
+
+// 치수 규칙 수정
+export const updateMeasurementRule = async (
+  id: string,
+  request: CreateMeasurementRuleRequest
+) => {
+  const response = await privateInstance(`measurement-rule/${id}`, {
+    json: request,
+    method: "PATCH",
   });
   return response.json();
 };
