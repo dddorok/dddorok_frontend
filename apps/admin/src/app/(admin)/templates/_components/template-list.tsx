@@ -1,5 +1,6 @@
 "use client";
 
+import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { useState } from "react";
 
@@ -25,8 +26,12 @@ import {
 } from "@/components/ui/table";
 import { getCategoryById } from "@/constants/category";
 import { templates, chartTypes as chartTypesList, Template } from "@/lib/data";
+import { templateQueries } from "@/queries/template";
 
 export function TemplateList() {
+  const { data } = useQuery(templateQueries.getTemplatesQueryOptions());
+  console.log("templates: ", data);
+
   const [deleteTemplateId, setDeleteTemplateId] = useState<string | null>(null);
   const templateToDelete = templates.find((t) => t.id === deleteTemplateId);
 
