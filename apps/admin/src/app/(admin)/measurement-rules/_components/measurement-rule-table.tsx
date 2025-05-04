@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useOverlay } from "@toss/use-overlay";
 import { List, Layers } from "lucide-react";
 import Link from "next/link";
@@ -24,13 +24,20 @@ import {
   Table,
 } from "@/components/ui/table";
 import { getCategoryById } from "@/constants/category";
+import { toast } from "@/hooks/use-toast";
 import {
   type MeasurementRule,
   measurementRules as originalMeasurementRules,
   templates,
 } from "@/lib/data";
-import { measurementRuleQueries } from "@/queries/measurement-rule";
-import { GetMeasurementRuleListItemType } from "@/services/measurement-rule";
+import {
+  measurementRuleQueries,
+  measurementRuleQueryKeys,
+} from "@/queries/measurement-rule";
+import {
+  deleteMeasurementRule,
+  GetMeasurementRuleListItemType,
+} from "@/services/measurement-rule";
 
 export function MeasurementRuleTable() {
   const overlay = useOverlay();
@@ -77,6 +84,7 @@ export function MeasurementRuleTable() {
 }
 
 function TableItem({ rule }: { rule: GetMeasurementRuleListItemType }) {
+  const queryClient = useQueryClient();
   const overlay = useOverlay();
 
   // 해당 규칙을 사용하는 템플릿 개수 계산
@@ -94,15 +102,11 @@ function TableItem({ rule }: { rule: GetMeasurementRuleListItemType }) {
     return category ? category.name : "알 수 없음";
   };
 
-  // 삭제 가능 여부 확인
-  const canDeleteRule = (ruleId: string) => {
-    return getTemplateCount(ruleId) === 0;
-  };
-
   // 삭제 버튼 클릭 핸들러
-  const handleDeleteClick = (ruleId: string) => {
+  const handleDeleteClick = () => {
     // 삭제 가능 여부 확인 후 적절한 다이얼로그 표시
-    if (canDeleteRule(ruleId)) {
+    const isDeletable = rule.template_count === 0;
+    if (isDeletable) {
       // setIsDeleteDialogOpen(true);
       overlay.open(({ isOpen, close }) => (
         <ConfirmDialog
@@ -110,7 +114,24 @@ function TableItem({ rule }: { rule: GetMeasurementRuleListItemType }) {
           onOpenChange={close}
           onAction={() => {
             console.log("delete");
-            close();
+            deleteMeasurementRule(rule.id)
+              .then(() => {
+                toast({
+                  title: "치수 규칙 삭제 완료",
+                  description: "치수 규칙이 성공적으로 삭제되었습니다.",
+                });
+                close();
+                queryClient.invalidateQueries({
+                  queryKey: measurementRuleQueryKeys.all(),
+                });
+              })
+              .catch((error) => {
+                console.error("치수 규칙 삭제 실패", error);
+                toast({
+                  title: "치수 규칙 삭제 실패",
+                  description: "치수 규칙 삭제 중 오류가 발생했습니다.",
+                });
+              });
           }}
           title="치수 규칙 삭제"
           description={
@@ -122,17 +143,17 @@ function TableItem({ rule }: { rule: GetMeasurementRuleListItemType }) {
         />
       ));
     } else {
-      // overlay.open(({ isOpen, close }) => (
-      //   <DeleteNotAllowDialog
-      //     open={isOpen}
-      //     onOpenChange={close}
-      //     ruleToDelete={rule}
-      //     onConfirm={() => {
-      //       console.log("delete");
-      //       close();
-      //     }}
-      //   />
-      // ));
+      overlay.open(({ isOpen, close }) => (
+        <DeleteNotAllowDialog
+          open={isOpen}
+          onOpenChange={close}
+          ruleToDelete={rule}
+          onConfirm={() => {
+            console.log("delete");
+            close();
+          }}
+        />
+      ));
     }
   };
 
@@ -201,7 +222,7 @@ function TableItem({ rule }: { rule: GetMeasurementRuleListItemType }) {
             variant="outline"
             size="sm"
             className={`${isDeletable ? "text-red-500 hover:text-red-700 hover:bg-red-50" : "text-gray-400"}`}
-            onClick={() => handleDeleteClick(rule.id)}
+            onClick={() => handleDeleteClick()}
           >
             삭제
           </Button>

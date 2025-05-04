@@ -115,3 +115,11 @@ export const getMeasurementRuleById = async (id: string) => {
   const data = await response.json();
   return data.data;
 };
+
+// 치수 규칙 삭제
+export const deleteMeasurementRule = async (id: string) => {
+  const response = await privateInstance(`measurement-rule/${id}`, {
+    method: "DELETE",
+  });
+  return response.json();
+};
