@@ -1,13 +1,17 @@
 import { privateInstance } from "./instance";
 
-import { ChartType, NeedleType } from "@/constants/template";
+import {
+  ChartType,
+  ConstructionMethodType,
+  NeedleType,
+} from "@/constants/template";
 
 export interface TemplateType {
   id: string;
   name: string;
-  needle_type: string;
-  pattern_type: string;
-  construction_methods: string[];
+  needle_type: NeedleType;
+  chart_type: ChartType;
+  construction_methods: ConstructionMethodType[];
   is_published: boolean;
   measurement_rule_id: string;
   chart_types: string[];
