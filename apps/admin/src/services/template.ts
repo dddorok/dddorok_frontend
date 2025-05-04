@@ -5,6 +5,7 @@ import {
   ConstructionMethodType,
   NeedleType,
 } from "@/constants/template";
+import { NecklineType, SleeveType } from "@/constants/top";
 
 export interface TemplateType {
   id: string;
@@ -44,5 +45,59 @@ export const createTemplate = async (template: CreateTemplateRequest) => {
 
 export const deleteTemplate = async (templateId: string) => {
   const response = await privateInstance.delete(`template/${templateId}`);
+  return response.json();
+};
+
+interface TemplateMeasurementRule {
+  id: string;
+  category_large: string;
+  category_medium: string;
+  category_small: string;
+  sleeve_type: SleeveType;
+  neck_line_type: NecklineType;
+  rule_name: string;
+  created_date: string;
+  updated_date: string;
+  items: {
+    id: string;
+    category: string;
+    section: string;
+    label: string;
+  }[];
+}
+
+export interface GetTemplateByIdResponse {
+  id: string;
+  name: string;
+  needle_type: NeedleType;
+  chart_type: ChartType;
+  is_published: boolean;
+  construction_methods: ConstructionMethodType[];
+  measurement_rule: TemplateMeasurementRule;
+}
+// 단일 템플릿 조회
+export const getTemplateById = async (templateId: string) => {
+  const response = await privateInstance
+    .get<{ data: GetTemplateByIdResponse }>(`template/${templateId}`)
+    .json();
+  return response.data;
+};
+
+interface UpdateTemplateRequest {
+  name: string;
+  needle_type: NeedleType;
+  chart_type: ChartType;
+  construction_methods: ConstructionMethodType[];
+  is_published: boolean;
+  chart_type_ids?: string[];
+}
+
+export const updateTemplate = async (
+  templateId: string,
+  template: UpdateTemplateRequest
+) => {
+  const response = await privateInstance.patch(`template/${templateId}`, {
+    json: template,
+  });
   return response.json();
 };

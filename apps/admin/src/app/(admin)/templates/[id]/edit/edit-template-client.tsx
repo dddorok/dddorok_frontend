@@ -1,29 +1,63 @@
 "use client";
 
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 
-import { TemplateForm } from "@/app/(admin)/templates/_components/template-form";
-import { templates, type Template } from "@/lib/data";
+import {
+  TemplateForm,
+  TemplateFormData,
+} from "@/app/(admin)/templates/_components/template-form";
+import { toast } from "@/hooks/use-toast";
+import { templateQueries, templateQueryKeys } from "@/queries/template";
+import { updateTemplate } from "@/services/template";
 
 interface EditTemplateClientProps {
-  template: Template;
+  templateId: string;
 }
 
 export default function EditTemplateClient({
-  template,
+  templateId,
 }: EditTemplateClientProps) {
   const router = useRouter();
+  const queryClient = useQueryClient();
+  const { data: template } = useQuery({
+    ...templateQueries.getTemplateByIdQueryOptions(templateId),
+    enabled: !!templateId,
+  });
 
-  // 기본 정보 업데이트 처리
-  const handleUpdateTemplate = (updatedTemplate: Template) => {
-    // 실제 구현에서는 API 호출로 서버에 저장
-    const index = templates.findIndex((t) => t.id === updatedTemplate.id);
-    if (index !== -1) {
-      templates[index] = updatedTemplate;
-      alert("템플릿이 수정되었습니다.");
-      router.refresh();
+  const onSubmit = (data: TemplateFormData) => {
+    console.log(data);
+    if (
+      !data.name ||
+      !data.needleType ||
+      !data.chartType ||
+      !data.constructionMethods ||
+      data.isPublished === undefined
+    ) {
+      throw new Error("모든 필드를 입력해주세요.");
     }
+    updateTemplate(templateId, {
+      name: data.name,
+      needle_type: data.needleType,
+      chart_type: data.chartType,
+      construction_methods: data.constructionMethods,
+      is_published: data.isPublished,
+      chart_type_ids: data.chartTypeIds,
+    });
+
+    toast({
+      title: "템플릿 수정 완료",
+      description: "템플릿 수정이 완료되었습니다.",
+    });
+    queryClient.invalidateQueries({
+      queryKey: templateQueryKeys.all(),
+    });
+    router.push(`/templates`);
   };
+
+  if (!template) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <div className="space-y-6">
@@ -33,7 +67,26 @@ export default function EditTemplateClient({
 
       {/* 탭은 임시로 제거하고 기본 정보만 표시 */}
       <div className="mt-6">
-        <TemplateForm template={template} onSubmit={handleUpdateTemplate} />
+        <TemplateForm
+          onSubmit={onSubmit}
+          mode="EDIT"
+          measurementRuleId={template.measurement_rule.id}
+          category={{
+            level1: template.measurement_rule.category_large,
+            level2: template.measurement_rule.category_medium,
+            level3: template.measurement_rule.category_small,
+          }}
+          initialTemplate={{
+            name: template.name,
+            needleType:
+              template.needle_type === "NONE" ? null : template.needle_type,
+            chartType:
+              template.chart_type === "NONE" ? null : template.chart_type,
+            constructionMethods: template.construction_methods,
+            isPublished: template.is_published || false,
+            // chartTypeIds: template.chart_types,
+          }}
+        />
       </div>
     </div>
   );

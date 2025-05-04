@@ -10,6 +10,7 @@ import {
   CHART_TYPE_OPTIONS,
   ChartType,
   CONSTRUCTION_METHOD_OPTIONS,
+  ConstructionMethodType,
   NEEDLE,
   NEEDLE_OPTIONS,
   NeedleType,
@@ -44,22 +45,19 @@ import {
 } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
 import { type Template, chartTypes } from "@/lib/data";
-import { GetMeasurementRuleByIdResponse } from "@/services/measurement-rule";
 
 export interface TemplateFormData {
   name: string;
   needleType: NeedleType | null;
   chartType: ChartType | null;
   measurementRuleId: string;
-  constructionMethods: string[];
+  constructionMethods: ConstructionMethodType[];
   chartTypeIds: string[];
 
-  is_published?: boolean; // edit에만 존재
+  isPublished?: boolean; // edit에만 존재
 }
 
 interface TemplateFormProps {
-  template?: Template;
-  initialRuleData?: GetMeasurementRuleByIdResponse;
   onSubmit: (data: TemplateFormData) => void;
   measurementRuleId: string;
   category: {
@@ -68,6 +66,7 @@ interface TemplateFormProps {
     level3: string;
   };
   mode: "CREATE" | "EDIT";
+  initialTemplate?: Partial<TemplateFormData>;
 }
 
 export function TemplateForm({
@@ -75,41 +74,24 @@ export function TemplateForm({
   category,
   mode,
   onSubmit,
+  initialTemplate,
 }: TemplateFormProps) {
+  console.log("initialTemplate: ", initialTemplate);
   // Form setup - initialRuleData 처리
   const form = useForm<TemplateFormData>({
     defaultValues: {
-      name: "",
-      needleType: null,
-      chartType: null,
-      constructionMethods: [],
+      name: initialTemplate?.name || "",
+      needleType: initialTemplate?.needleType || null,
+      chartType: initialTemplate?.chartType || null,
+      constructionMethods: initialTemplate?.constructionMethods || [],
       measurementRuleId: measurementRuleId,
-      chartTypeIds: [],
+      chartTypeIds: initialTemplate?.chartTypeIds || [],
+      isPublished: initialTemplate?.isPublished,
     },
-    // defaultValues: template || {
-    //   id: "",
-    //   name: "",
-    //   needleType: "대바늘",
-    //   chartType: "서술형",
-    //   publishStatus: "공개",
-    //   thumbnail: "",
-    //   lastModified: new Date().toISOString().split("T")[0],
-    //   categoryIds: [],
-    //   constructionMethods: [],
-    //   measurementItems: initialRuleData?.items || [],
-    //   sleeveType: initialRuleData?.sleeve_type,
-    //   measurementRuleId: initialRuleData?.id
-    //     ? String(initialRuleData.id)
-    //     : undefined,
-    // },
   });
 
   // 조건부 UI 표시를 위한 상태들
-  const [showChartFields, setShowChartFields] = useState(false); // 차트 유형
-  // Hidden field 등록
-  useEffect(() => {
-    form.register("measurementRuleId");
-  }, [form]);
+  const [showChartFields] = useState(false); // 차트 유형
 
   const handleSubmit = () => {
     try {
@@ -544,16 +526,16 @@ function ConstructionMethodSelect({
 }
 
 function PublishStatusSelect() {
-  // TODO: 게시 상태 선택 (edit)
   return (
     <FormField
-      name="publishStatus"
+      name="isPublished"
       render={({ field }) => (
         <FormItem>
           <FormLabel>게시 상태</FormLabel>
           <Select
-            onValueChange={(value) => field.onChange(value)}
-            defaultValue={field.value}
+            onValueChange={(value) => field.onChange(value === "true")}
+            defaultValue={field.value ? "true" : "false"}
+            value={field.value ? "true" : "false"}
           >
             <FormControl>
               <SelectTrigger>
@@ -561,8 +543,8 @@ function PublishStatusSelect() {
               </SelectTrigger>
             </FormControl>
             <SelectContent>
-              <SelectItem value="공개">공개</SelectItem>
-              <SelectItem value="비공개">비공개</SelectItem>
+              <SelectItem value="true">공개</SelectItem>
+              <SelectItem value="false">비공개</SelectItem>
             </SelectContent>
           </Select>
           <FormMessage />

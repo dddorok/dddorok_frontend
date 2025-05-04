@@ -18,11 +18,6 @@ export default async function EditTemplatePage({
 }) {
   const { id } = await params;
   // Find template by ID
-  const template = templates.find((t) => t.id === id);
 
-  if (!template) {
-    notFound();
-  }
-
-  return <EditTemplateClient template={template} />;
+  return <EditTemplateClient templateId={id} />;
 }
