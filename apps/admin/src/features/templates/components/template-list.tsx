@@ -51,72 +51,33 @@ export function TemplateList() {
   };
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold">템플릿 관리</h2>
-      </div>
-      <GuideCard />
-
-      <Alert
-        variant="default"
-        className="bg-blue-50 text-blue-800 border-blue-200"
-      >
-        <AlertCircle className="h-4 w-4" />
-        <AlertDescription>
-          새로운 템플릿을 추가하려면 [치수 규칙 설정] 메뉴에서 규칙을 선택한 후
-          템플릿을 생성해주세요.
-        </AlertDescription>
-      </Alert>
-
-      <div className="flex justify-end">
-        <Button size="lg" asChild>
-          <Link href="/templates/new">새 템플릿 추가</Link>
-        </Button>
-      </div>
-
-      <div className="border rounded-md">
-        <Table>
-          <TableHeader>
+    <div className="border rounded-md">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead className="w-1/3">템플릿명</TableHead>
+            <TableHead className="w-1/6">도구 유형</TableHead>
+            <TableHead className="w-1/6">차트 유형</TableHead>
+            <TableHead className="w-1/6">게시 상태</TableHead>
+            <TableHead className="text-center w-1/6">작업</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {templates.length === 0 ? (
             <TableRow>
-              <TableHead className="w-1/3">템플릿명</TableHead>
-              <TableHead className="w-1/6">도구 유형</TableHead>
-              <TableHead className="w-1/6">차트 유형</TableHead>
-              <TableHead className="w-1/6">게시 상태</TableHead>
-              <TableHead className="text-center w-1/6">작업</TableHead>
+              <TableCell colSpan={5} className="text-center py-10">
+                템플릿이 없습니다. 새 템플릿 추가 버튼을 클릭하여 템플릿을
+                생성해주세요.
+              </TableCell>
             </TableRow>
-          </TableHeader>
-          <TableBody>
-            {templates.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={5} className="text-center py-10">
-                  템플릿이 없습니다. 새 템플릿 추가 버튼을 클릭하여 템플릿을
-                  생성해주세요.
-                </TableCell>
-              </TableRow>
-            ) : (
-              templates.map((template) => {
-                // 템플릿명 자동 생성 (도구유형 제외)
-                return <TemplateItem key={template.id} template={template} />;
-              })
-            )}
-          </TableBody>
-        </Table>
-      </div>
-
-      <Alert className="bg-blue-50 border-blue-200 text-blue-800">
-        <Info className="h-4 w-4" />
-        <AlertDescription>
-          <p>
-            <strong>샘플 데이터 안내:</strong> 현재 보이는 데이터는
-            예시용입니다. 실제 구현 시 백엔드 API와 연동하여 실제 데이터를
-            표시해야 합니다.
-          </p>
-          <p className="mt-1">
-            <strong>데이터 모델 참고:</strong> 각 템플릿은 measurementRuleId
-            필드를 통해 치수 규칙과 연결됩니다.
-          </p>
-        </AlertDescription>
-      </Alert>
+          ) : (
+            templates.map((template) => {
+              // 템플릿명 자동 생성 (도구유형 제외)
+              return <TemplateItem key={template.id} template={template} />;
+            })
+          )}
+        </TableBody>
+      </Table>
     </div>
   );
 }
@@ -177,16 +138,12 @@ function TemplateItem({ template }: { template: Template }) {
       </TableCell>
       <TableCell className="text-center">
         <div className="flex justify-center gap-2">
-          <Link href={`/templates/${template.id}`}>
-            <Button variant="outline" size="sm">
-              세부 치수 편집
-            </Button>
-          </Link>
-          <Link href={`/templates/${template.id}/edit`}>
-            <Button variant="outline" size="sm">
-              수정
-            </Button>
-          </Link>
+          <Button variant="outline" size="sm" asChild>
+            <Link href={`/templates/${template.id}`}>세부 치수 편집</Link>
+          </Button>
+          <Button variant="outline" size="sm" asChild>
+            <Link href={`/templates/${template.id}/edit`}>수정</Link>
+          </Button>
           <DeleteTemplateButton template={template} />
         </div>
       </TableCell>
