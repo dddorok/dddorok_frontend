@@ -14,7 +14,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { measurementRuleQueries } from "@/queries/measurement-rule";
 import {
-  getMeasurementRuleById,
+  GetMeasurementRuleByIdResponse,
   GetMeasurementRuleListItemType,
 } from "@/services/measurement-rule";
 
@@ -22,11 +22,11 @@ export default function NewTemplateClient() {
   const router = useRouter();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [initialTemplate, setInitialTemplate] = useState<
-    Partial<Template> | undefined
-  >(undefined);
   const [ruleName, setRuleName] = useState<string>("");
-  const [selectedRule, setSelectedRule] = useState<string | null>(null);
+  const [selectedRule, setSelectedRule] = useState<string | null>(
+    "bc4f2473-c9ba-4d80-ad46-7a93346e36c4"
+  );
+  console.log("selectedRule: ", selectedRule);
 
   const { data: rule } = useQuery({
     ...measurementRuleQueries.getMeasurementRuleByIdQueryOptions(
@@ -34,7 +34,6 @@ export default function NewTemplateClient() {
     ),
     enabled: !!selectedRule,
   });
-  console.log("rule: ", rule);
 
   // 치수 규칙 선택 처리 함수
   const handleSelectRule = async (rule: GetMeasurementRuleListItemType) => {
@@ -42,20 +41,6 @@ export default function NewTemplateClient() {
 
     setSelectedRule(rule.id);
     setRuleName(rule.rule_name);
-
-    // const templateData = await getMeasurementRuleById(rule.id);
-    // 템플릿 초기 데이터 설정
-    // const templateData = {
-    //   measurementRuleId: rule.id,
-    //   measurementItems: rule.items,
-    //   sleeveType: rule.sleeveType,
-    //   toolType: "대바늘",
-    //   patternType: "서술형",
-    //   publishStatus: "공개",
-    // };
-
-    // console.log("Setting template data:", templateData);
-    // setInitialTemplate(templateData);
   };
 
   const handleSubmit = (data: Template) => {
@@ -97,48 +82,32 @@ export default function NewTemplateClient() {
         </p>
       </div>
 
-      {!selectedRule ? (
+      {!selectedRule && (
         // 치수 규칙 선택 UI
         <SelectMeasurementRule handleSelectRule={handleSelectRule} />
-      ) : (
-        // 선택된 치수 규칙 정보 표시 및 템플릿 폼
+      )}
+      {selectedRule && rule && (
         <div className="space-y-6">
-          <Alert
-            variant="default"
-            className="bg-blue-50 border-blue-200 text-blue-800"
-          >
-            <Info className="h-4 w-4" />
-            <AlertTitle>치수 규칙 선택됨</AlertTitle>
-            <AlertDescription className="flex justify-between items-center">
-              <div>
-                <p>
-                  <strong>{ruleName}</strong> 치수 규칙을 사용하여 템플릿을
-                  생성합니다.
-                </p>
-                <p className="text-xs">규칙 ID: {selectedRule}</p>
-              </div>
-              <Button
-                variant="outline"
-                size="sm"
-                className="text-blue-600 border-blue-300"
-                onClick={() => setSelectedRule(null)}
-              >
-                다른 규칙 선택
-              </Button>
-            </AlertDescription>
-          </Alert>
+          <SelectedRuleInfo
+            ruleName={ruleName}
+            selectedRule={selectedRule}
+            onOtherRuleSelect={() => setSelectedRule(null)}
+          />
 
-          {initialTemplate !== undefined && (
-            <TemplateForm
-              onSubmit={handleSubmit}
-              initialRuleData={initialTemplate}
-            />
-          )}
+          <TemplateForm
+            onSubmit={handleSubmit}
+            measurementRuleId={selectedRule}
+            categoryName={getCategoryName(rule)}
+          />
         </div>
       )}
     </div>
   );
 }
+
+const getCategoryName = (rule: GetMeasurementRuleByIdResponse) => {
+  return `${rule.category_large} > ${rule.category_medium} > ${rule.category_small}`;
+};
 
 function SelectMeasurementRule({
   handleSelectRule,
@@ -201,26 +170,39 @@ function SelectMeasurementRule({
   );
 }
 
-function SelectedRuleInfo({ rule }: { rule: GetMeasurementRuleListItemType }) {
+function SelectedRuleInfo({
+  ruleName,
+  selectedRule,
+  onOtherRuleSelect,
+}: {
+  ruleName: string;
+  selectedRule: string;
+  onOtherRuleSelect: () => void;
+}) {
   return (
-    <Card
-      key={rule.id}
-      className={`cursor-pointer hover:border-blue-400 transition-colors border-blue-500 bg-blue-50"`}
-      // onClick={() => handleSelectRule(rule)}
+    <Alert
+      variant="default"
+      className="bg-blue-50 border-blue-200 text-blue-800"
     >
-      <CardContent className="p-4 flex justify-between items-center">
+      <Info className="h-4 w-4" />
+      <AlertTitle>치수 규칙 선택됨</AlertTitle>
+      <AlertDescription className="flex justify-between items-center">
         <div>
-          <h3 className="font-medium">{rule.name}</h3>
-          <p className="text-sm text-muted-foreground">
-            측정 항목: {rule.measurement_item_count}개
-            {rule.sleeve_type && ` • 소매 유형: ${rule.sleeve_type}`}
+          <p>
+            <strong>{ruleName}</strong> 치수 규칙을 사용하여 템플릿을
+            생성합니다.
           </p>
+          <p className="text-xs">규칙 ID: {selectedRule}</p>
         </div>
-        <Check className="h-5 w-5 text-blue-500" />
-        {/* {(selectedRule as any)?.id === rule.id && (
-        <Check className="h-5 w-5 text-blue-500" />
-      )} */}
-      </CardContent>
-    </Card>
+        <Button
+          variant="outline"
+          size="sm"
+          className="text-blue-600 border-blue-300"
+          onClick={onOtherRuleSelect}
+        >
+          다른 규칙 선택
+        </Button>
+      </AlertDescription>
+    </Alert>
   );
 }
