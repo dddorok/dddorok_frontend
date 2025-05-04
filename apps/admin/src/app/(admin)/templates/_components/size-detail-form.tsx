@@ -22,221 +22,87 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
-  type Template,
-  type MeasurementRule,
-  type SizeDetail,
-  type MeasurementItem,
   type SizeRange,
   SIZE_RANGES,
-  measurementRules,
   getMeasurementItemById,
 } from "@/lib/data";
+import {
+  GetTemplateMeasurementValuesResponse,
+  TemplateMeasurementValueType,
+} from "@/services/template/measure-value";
 
 interface SizeDetailFormProps {
-  template: Template;
-  onSubmit: (updatedTemplate: Template) => void;
+  onSubmit: (result: TemplateMeasurementValueType[]) => void;
+  measurementValues: GetTemplateMeasurementValuesResponse;
 }
 
-export function SizeDetailForm({ template, onSubmit }: SizeDetailFormProps) {
-  const [measurementRule, setMeasurementRule] = useState<
-    MeasurementRule | undefined
-  >();
-  const [selectedItems, setSelectedItems] = useState<string[]>([]); // 항목 ID 배열로 변경
+export function SizeDetailForm({
+  onSubmit,
+  measurementValues,
+}: SizeDetailFormProps) {
+  const [selectedItems, setSelectedItems] = useState<string[]>(
+    measurementValues.map((item) => item.id)
+  ); // 항목 ID 배열로 변경
   const [sizeRanges, setSizeRanges] = useState<SizeRange[]>([]);
-  const [sizeDetails, setSizeDetails] = useState<
-    Record<SizeRange, Record<string, string>>
-  >({} as Record<SizeRange, Record<string, string>>);
-  const tableRef = useRef<HTMLTableElement>(null);
 
+  const {
+    sizeDetails,
+    handlePaste,
+    handleCellChange,
+    initializeSizeDetails,
+    tableRef,
+  } = useSizeDetails();
+  // console.log("sizeDetails: ", sizeDetails);
   // Process size details table data when measurement rule is available
   useEffect(() => {
-    if (template.measurementRuleId) {
-      const rule = measurementRules.find(
-        (r) => r.id === template.measurementRuleId
-      );
-      setMeasurementRule(rule);
+    const measurementList = measurementValues.map((item) => item.id);
+    setSelectedItems(measurementList);
 
-      if (rule) {
-        setSelectedItems(rule.items);
+    // 언제나 모든 사이즈 범위 사용 (SIZE_RANGES에서 정의된 모든 범위)
+    // SIZE_RANGES 배열은 이미 'min'이 처음에, 'max'가 마지막에 정렬되어 있음
+    setSizeRanges(SIZE_RANGES);
 
-        // 언제나 모든 사이즈 범위 사용 (SIZE_RANGES에서 정의된 모든 범위)
-        // SIZE_RANGES 배열은 이미 'min'이 처음에, 'max'가 마지막에 정렬되어 있음
-        setSizeRanges(SIZE_RANGES);
+    // 기존 사이즈 세부 정보 로드 또는 새 빈 객체 초기화
+    initializeSizeDetails(measurementValues);
+    // 기존 sizeDetails가 있으면 로드된 빈 구조에 덮어쓰기
+    // if (measurementValues && measurementValues.length > 0) {
+    //   for (const detail of measurementValues) {
+    //     for (const [item, value] of Object.entries(detail.measurements)) {
+    //       // 항목 ID를 찾기
+    //       const itemId = selectedItems.find((id) => {
+    //         const measurementItem = getMeasurementItemById(id);
+    //         return measurementItem && measurementItem.name === item;
+    //       });
 
-        // 기존 사이즈 세부 정보 로드 또는 새 빈 객체 초기화
-        const details: any = {};
+    //       if (itemId) {
+    //         details[detail.sizeRange][itemId] = value.toString();
+    //       } else {
+    //         // 기존 방식으로 처리 (호환성 유지)
+    //         const matchingItemId = selectedItems.find((id) => {
+    //           return id === item;
+    //         });
+    //         if (matchingItemId) {
+    //           details[detail.sizeRange][matchingItemId] = value.toString();
+    //         }
+    //       }
+    //     }
+    //   }
+    // }
 
-        // 모든 사이즈 범위에 대해 빈 데이터 구조 초기화
-        for (const size of SIZE_RANGES) {
-          details[size] = {};
-          for (const item of rule.items) {
-            details[size][item] = "";
-          }
-        }
-
-        // 기존 sizeDetails가 있으면 로드된 빈 구조에 덮어쓰기
-        if (template.sizeDetails && template.sizeDetails.length > 0) {
-          for (const detail of template.sizeDetails) {
-            for (const [item, value] of Object.entries(detail.measurements)) {
-              // 항목 ID를 찾기
-              const itemId = selectedItems.find((id) => {
-                const measurementItem = getMeasurementItemById(id);
-                return measurementItem && measurementItem.name === item;
-              });
-
-              if (itemId) {
-                details[detail.sizeRange][itemId] = value.toString();
-              } else {
-                // 기존 방식으로 처리 (호환성 유지)
-                const matchingItemId = selectedItems.find((id) => {
-                  return id === item;
-                });
-                if (matchingItemId) {
-                  details[detail.sizeRange][matchingItemId] = value.toString();
-                }
-              }
-            }
-          }
-        }
-
-        setSizeDetails(details);
-      }
-    }
-  }, [template]);
+    // }
+  }, []);
 
   // 셀 값 변경 처리
-  const handleCellChange = (
-    sizeRange: SizeRange,
-    itemId: string,
-    value: string
-  ) => {
-    setSizeDetails((prev) => ({
-      ...prev,
-      [sizeRange]: {
-        ...prev[sizeRange],
-        [itemId]: value,
-      },
-    }));
-  };
-
-  // 붙여넣기 이벤트 처리
-  const handlePaste = (e: React.ClipboardEvent<HTMLTableElement>) => {
-    e.preventDefault();
-
-    const clipboardData = e.clipboardData;
-    const pastedData = clipboardData.getData("text");
-    const rows = pastedData.split("\n").filter((row) => row.trim());
-
-    // 이벤트가 발생한 셀 위치 찾기
-    const activeElement = document.activeElement;
-    if (
-      !activeElement ||
-      !(
-        activeElement instanceof HTMLInputElement ||
-        activeElement instanceof HTMLTableCellElement
-      )
-    ) {
-      return;
-    }
-
-    let targetCell = activeElement;
-    if (activeElement instanceof HTMLInputElement) {
-      targetCell = activeElement.closest("td") as HTMLTableCellElement;
-    }
-
-    if (!targetCell) return;
-
-    // 행과 열 인덱스 찾기
-    const rowIndex = Array.from(
-      targetCell.parentElement?.parentElement?.children || []
-    ).indexOf(targetCell.parentElement as HTMLTableRowElement);
-    const colIndex = Array.from(
-      targetCell.parentElement?.children || []
-    ).indexOf(targetCell);
-
-    if (rowIndex === -1 || colIndex === -1) return;
-
-    // 새 데이터로 상태 업데이트
-    const newSizeDetails = { ...sizeDetails };
-    const tableRows = Array.from(
-      tableRef.current?.querySelectorAll("tbody tr") || []
-    );
-    const headerCells = Array.from(
-      tableRef.current?.querySelectorAll("thead th") || []
-    );
-
-    rows.forEach((rowData, rowOffset) => {
-      const columns = rowData.split("\t");
-      columns.forEach((cellData, colOffset) => {
-        const targetRowIndex = rowIndex + rowOffset;
-        const targetColIndex = colIndex + colOffset;
-
-        if (
-          targetRowIndex < tableRows.length &&
-          targetColIndex > 0 &&
-          targetColIndex < headerCells.length
-        ) {
-          const itemRow = tableRows[targetRowIndex];
-          const itemId = selectedItems[targetRowIndex];
-          const sizeRange = headerCells[targetColIndex]
-            ?.textContent as SizeRange;
-
-          if (itemId && sizeRange && newSizeDetails[sizeRange]) {
-            newSizeDetails[sizeRange][itemId] = cellData.trim();
-          }
-        }
-      });
-    });
-
-    setSizeDetails(newSizeDetails);
-  };
 
   // 폼 제출 처리
   const handleSubmit = () => {
-    // sizeDetails 객체를 Template.sizeDetails 배열 형식으로 변환
-    const formattedSizeDetails: SizeDetail[] = Object.entries(sizeDetails).map(
-      ([size, measurements]) => {
-        const measurementObj: Record<MeasurementItem, number> = {} as Record<
-          MeasurementItem,
-          number
-        >;
-
-        for (const [itemId, value] of Object.entries(measurements)) {
-          // 측정 항목 이름 가져오기
-          const item = getMeasurementItemById(itemId);
-          const itemName = item ? item.name : itemId;
-
-          // 빈 값은 0으로 처리
-          measurementObj[itemName as MeasurementItem] = value
-            ? Number.parseFloat(value)
-            : 0;
-        }
-
-        return {
-          sizeRange: size as SizeRange,
-          measurements: measurementObj,
-        };
-      }
-    );
-
-    onSubmit({
-      ...template,
-      sizeDetails: formattedSizeDetails,
-    });
+    const result = convertToTemplateMeasurementValueType(sizeDetails);
+    try {
+      onSubmit(result);
+    } catch (error) {
+      console.error("Error submitting size details: ", error);
+    }
   };
-
-  if (!measurementRule) {
-    return (
-      <Alert variant="destructive">
-        <AlertCircle className="h-4 w-4" />
-        <AlertTitle>오류</AlertTitle>
-        <AlertDescription>
-          이 템플릿에 연결된 측정 규칙을 찾을 수 없습니다. 먼저 측정 규칙을
-          지정해주세요.
-        </AlertDescription>
-      </Alert>
-    );
-  }
 
   // 측정 규칙이 있지만 선택된 항목이 없는 경우 확인
   if (selectedItems.length === 0) {
@@ -356,4 +222,167 @@ export function SizeDetailForm({ template, onSubmit }: SizeDetailFormProps) {
       </div>
     </div>
   );
+}
+
+const useSizeDetails = () => {
+  const [sizeDetails, setSizeDetails] = useState<
+    Record<SizeRange, Record<string, string>>
+  >({} as Record<SizeRange, Record<string, string>>);
+  const tableRef = useRef<HTMLTableElement>(null);
+  console.log("sizeDetails: ", sizeDetails);
+
+  // 붙여넣기 이벤트 처리
+  const handlePaste = (e: React.ClipboardEvent<HTMLTableElement>) => {
+    e.preventDefault();
+
+    const clipboardData = e.clipboardData;
+    const pastedData = clipboardData.getData("text");
+    const rows = pastedData.split("\n").filter((row) => row.trim());
+
+    // 이벤트가 발생한 셀 위치 찾기
+    const activeElement = document.activeElement;
+    if (
+      !activeElement ||
+      !(
+        activeElement instanceof HTMLInputElement ||
+        activeElement instanceof HTMLTableCellElement
+      )
+    ) {
+      return;
+    }
+
+    let targetCell = activeElement;
+    if (activeElement instanceof HTMLInputElement) {
+      targetCell = activeElement.closest("td") as HTMLTableCellElement;
+    }
+
+    if (!targetCell) return;
+
+    // 행과 열 인덱스 찾기
+    const rowIndex = Array.from(
+      targetCell.parentElement?.parentElement?.children || []
+    ).indexOf(targetCell.parentElement as HTMLTableRowElement);
+    const colIndex = Array.from(
+      targetCell.parentElement?.children || []
+    ).indexOf(targetCell);
+
+    if (rowIndex === -1 || colIndex === -1) return;
+
+    // 새 데이터로 상태 업데이트
+    const newSizeDetails = { ...sizeDetails };
+    const tableRows = Array.from(
+      tableRef.current?.querySelectorAll("tbody tr") || []
+    );
+    const headerCells = Array.from(
+      tableRef.current?.querySelectorAll("thead th") || []
+    );
+
+    rows.forEach((rowData, rowOffset) => {
+      const columns = rowData.split("\t");
+      columns.forEach((cellData, colOffset) => {
+        const targetRowIndex = rowIndex + rowOffset;
+        const targetColIndex = colIndex + colOffset;
+
+        if (
+          targetRowIndex < tableRows.length &&
+          targetColIndex > 0 &&
+          targetColIndex < headerCells.length
+        ) {
+          const itemId = selectedItems[targetRowIndex];
+          const sizeRange = headerCells[targetColIndex]
+            ?.textContent as SizeRange;
+
+          if (itemId && sizeRange && newSizeDetails[sizeRange]) {
+            newSizeDetails[sizeRange][itemId] = cellData.trim();
+          }
+        }
+      });
+    });
+
+    setSizeDetails(newSizeDetails);
+  };
+
+  // 셀 값 변경 처리
+  const handleCellChange = (
+    sizeRange: SizeRange,
+    itemId: string,
+    value: string
+  ) => {
+    setSizeDetails((prev) => ({
+      ...prev,
+      [sizeRange]: {
+        ...prev[sizeRange],
+        [itemId]: value,
+      },
+    }));
+  };
+
+  const initializeSizeDetails = (
+    measurementValues: GetTemplateMeasurementValuesResponse
+  ) => {
+    const measurementList = measurementValues.map((item) => item.id);
+    const details: any = {};
+
+    // 모든 사이즈 범위에 대해 빈 데이터 구조 초기화
+    for (const size of SIZE_RANGES) {
+      details[size] = {};
+      for (const item of measurementList) {
+        details[size][item] = "";
+      }
+    }
+    setSizeDetails(details);
+  };
+
+  return {
+    sizeDetails,
+    handlePaste,
+    handleCellChange,
+    initializeSizeDetails,
+    tableRef,
+  };
+};
+
+const SIZE_RANGE_TO_KEY: Record<SizeRange, string> = {
+  "50-53": "size_50_53",
+  "54-57": "size_54_57",
+  "58-61": "size_58_61",
+  "62-65": "size_62_65",
+  "66-69": "size_66_69",
+  "70-73": "size_70_73",
+  "74-79": "size_74_79",
+  "80-84": "size_80_84",
+  "85-89": "size_85_89",
+  "90-94": "size_90_94",
+  "95-99": "size_95_99",
+  "100-104": "size_100_104",
+  "105-109": "size_105_109",
+  "110-114": "size_110_114",
+  "115-120": "size_115_120",
+  "121-129": "size_121_129",
+  min: "min",
+  max: "max",
+};
+
+function convertToTemplateMeasurementValueType(
+  input: Record<SizeRange, Record<string, string>>
+): TemplateMeasurementValueType[] {
+  // 모든 id(측정항목) 추출
+  const allIds = new Set<string>();
+  Object.values(input).forEach((measurements) => {
+    Object.keys(measurements).forEach((id) => allIds.add(id));
+  });
+
+  // id별로 객체 생성
+  const result: TemplateMeasurementValueType[] = [];
+  allIds.forEach((id) => {
+    const obj: any = { id };
+    (Object.keys(SIZE_RANGE_TO_KEY) as SizeRange[]).forEach((range) => {
+      const key = SIZE_RANGE_TO_KEY[range];
+      const value = input[range]?.[id];
+      obj[key] = value !== undefined ? Number(value) : undefined;
+    });
+    result.push(obj);
+  });
+
+  return result;
 }

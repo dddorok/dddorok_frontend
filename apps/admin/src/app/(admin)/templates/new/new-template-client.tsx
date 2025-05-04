@@ -15,7 +15,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { measurementRuleQueries } from "@/queries/measurement-rule";
 import { GetMeasurementRuleListItemType } from "@/services/measurement-rule";
-import { createTemplate } from "@/services/template";
+import { createTemplate } from "@/services/template/template";
 
 export default function NewTemplateClient() {
   const router = useRouter();

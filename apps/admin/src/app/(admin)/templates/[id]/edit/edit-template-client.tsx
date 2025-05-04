@@ -9,7 +9,7 @@ import {
 } from "@/app/(admin)/templates/_components/template-form";
 import { toast } from "@/hooks/use-toast";
 import { templateQueries, templateQueryKeys } from "@/queries/template";
-import { updateTemplate } from "@/services/template";
+import { updateTemplate } from "@/services/template/template";
 
 interface EditTemplateClientProps {
   templateId: string;

@@ -27,7 +27,7 @@ import {
 import { CHART_TYPE, NEEDLE } from "@/constants/template";
 import { toast } from "@/hooks/use-toast";
 import { templateQueries } from "@/queries/template";
-import { deleteTemplate, TemplateType } from "@/services/template";
+import { deleteTemplate, TemplateType } from "@/services/template/template";
 
 export function TemplateList() {
   const { data: templates } = useQuery(
