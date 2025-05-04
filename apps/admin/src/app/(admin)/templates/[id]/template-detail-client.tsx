@@ -2,8 +2,9 @@
 
 import { useRouter } from "next/navigation";
 
+import { getCategoryById } from "@/constants/category";
 import { SizeDetailForm } from "@/features/templates/components/size-detail-form"; // Updated import path
-import { templates, type Template, getCategoryById } from "@/lib/data";
+import { templates, type Template } from "@/lib/data";
 
 interface TemplateDetailClientProps {
   template: Template;
@@ -29,7 +30,7 @@ function generateTemplateName(template: Template): string {
   }
 
   // 카테고리 소분류
-  const category = getCategoryById(template.categoryIds[2] ?? 0);
+  const category = getCategoryById(String(template.categoryIds[2]));
   if (category) {
     formatOptions.push(category.name);
   }
