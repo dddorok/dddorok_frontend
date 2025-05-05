@@ -51,7 +51,7 @@ export default function NewTemplateClient() {
       chart_type: data.chartType,
       measurement_rule_id: data.measurementRuleId,
       construction_methods: data.constructionMethods,
-      chart_type_ids: data.chartTypeIds,
+      chart_type_ids: data.chartTypeIds || [],
     };
     const response = await createTemplate(request);
     console.log("response: ", response);

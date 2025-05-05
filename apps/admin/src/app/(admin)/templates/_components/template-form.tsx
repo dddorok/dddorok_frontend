@@ -1,21 +1,11 @@
 "use client";
 
-import { AlertCircle, Info } from "lucide-react";
-import Link from "next/link";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useState, useEffect } from "react";
 import { useForm, useFormContext, useWatch } from "react-hook-form";
+import * as z from "zod";
 
-import {
-  CHART_TYPE,
-  CHART_TYPE_OPTIONS,
-  ChartType,
-  CONSTRUCTION_METHOD_OPTIONS,
-  ConstructionMethodType,
-  NEEDLE,
-  NEEDLE_OPTIONS,
-  NeedleType,
-} from "../../../../constants/template";
-
+import { BasicAlert } from "@/components/Alert";
 import { CommonSelect } from "@/components/CommonUI";
 import { Button } from "@/components/ui/button";
 import {
@@ -43,22 +33,37 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  CHART_TYPE,
+  CHART_TYPE_OPTIONS,
+  ChartType,
+  ChartTypeSchema,
+  CONSTRUCTION_METHOD_OPTIONS,
+  ConstructionMethodSchema,
+  NEEDLE,
+  NEEDLE_OPTIONS,
+  NeedleType,
+  NeedleTypeSchema,
+} from "@/constants/template";
 import { toast } from "@/hooks/use-toast";
-import { type Template, chartTypes } from "@/lib/data";
+import { chartTypes } from "@/lib/data";
 
-export interface TemplateFormData {
-  name: string;
-  needleType: NeedleType | null;
-  chartType: ChartType | null;
-  measurementRuleId: string;
-  constructionMethods: ConstructionMethodType[];
-  chartTypeIds: string[];
+const templateFormSchema = z.object({
+  name: z.string().min(1, "템플릿 이름을 입력해주세요"),
+  measurementRuleId: z.string().min(1, "치수 규칙을 선택해주세요"),
+  needleType: NeedleTypeSchema,
+  chartType: ChartTypeSchema,
+  constructionMethods: z
+    .array(ConstructionMethodSchema)
+    .min(1, "최소 1개 이상의 제작 방식을 선택해주세요"),
+  isPublished: z.boolean().optional(),
+  chartTypeIds: z.array(z.string()).optional(),
+});
 
-  isPublished?: boolean; // edit에만 존재
-}
+export type TemplateFormData = z.infer<typeof templateFormSchema>;
 
 interface TemplateFormProps {
-  onSubmit: (data: TemplateFormData) => void;
+  onSubmit: (data: TemplateFormData) => Promise<void>;
   measurementRuleId: string;
   category: {
     level1: string;
@@ -76,26 +81,28 @@ export function TemplateForm({
   onSubmit,
   initialTemplate,
 }: TemplateFormProps) {
-  console.log("initialTemplate: ", initialTemplate);
-  // Form setup - initialRuleData 처리
-  const form = useForm<TemplateFormData>({
+  const form = useForm<z.infer<typeof templateFormSchema>>({
+    resolver: zodResolver(templateFormSchema),
     defaultValues: {
       name: initialTemplate?.name || "",
-      needleType: initialTemplate?.needleType || null,
-      chartType: initialTemplate?.chartType || null,
+      needleType: initialTemplate?.needleType,
+      chartType: initialTemplate?.chartType,
       constructionMethods: initialTemplate?.constructionMethods || [],
       measurementRuleId: measurementRuleId,
       chartTypeIds: initialTemplate?.chartTypeIds || [],
       isPublished: initialTemplate?.isPublished,
     },
+    mode: "onSubmit",
+    shouldFocusError: true,
   });
 
   // 조건부 UI 표시를 위한 상태들
   const [showChartFields] = useState(false); // 차트 유형
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     try {
-      onSubmit(form.getValues());
+      const request = form.getValues();
+      await onSubmit(request);
     } catch (error) {
       console.error("error: ", error);
       toast({
@@ -104,13 +111,6 @@ export function TemplateForm({
         variant: "destructive",
       });
     }
-    // console.log("[TemplateForm] Form submission initiated:", data);
-
-    // // ID 정규화
-    // data.measurementRuleId = String(data.measurementRuleId).trim();
-    // console.log(
-    //   `[TemplateForm] Using normalized measurementRuleId: "${data.measurementRuleId}"`
-    // );
   };
 
   return (
@@ -198,7 +198,6 @@ export function TemplateForm({
             <CardContent>
               {/* Chart Type - Multi-select */}
               <FormField
-                control={form.control}
                 name="chartTypeIds"
                 render={({ field }) => (
                   <FormItem>
@@ -226,7 +225,7 @@ export function TemplateForm({
                               } else {
                                 field.onChange(
                                   currentValues.filter(
-                                    (id) => id !== chartType.id
+                                    (id: string) => id !== chartType.id
                                   )
                                 );
                               }
@@ -255,7 +254,7 @@ export function TemplateForm({
           <Button variant="outline" type="button">
             취소
           </Button>
-          <Button type="submit" onClick={handleSubmit}>
+          <Button type="submit" onClick={form.handleSubmit(handleSubmit)}>
             저장
           </Button>
         </div>
@@ -273,7 +272,8 @@ function TemplateNameField() {
     if (!needleType || !chartType) return;
     form.setValue(
       "name",
-      `${NEEDLE[needleType].label} ${CHART_TYPE[chartType].label}`
+      `${NEEDLE[needleType].label} ${CHART_TYPE[chartType].label}`,
+      { shouldValidate: true }
     );
   }, [needleType, chartType]);
 
@@ -315,8 +315,6 @@ function ChartTypeSelect() {
   const selectedPatternType = useWatch({ name: "chartType" });
   const chartBasedPattern =
     selectedPatternType === "GRID" || selectedPatternType === "MIXED";
-
-  const measurementItems = []; // TODO: 측정 항목 조회
 
   console.log("chartBasedPattern: ", chartBasedPattern);
   if (!chartBasedPattern) return null;
@@ -431,6 +429,11 @@ function ConstructionMethodSelect({
       </CardHeader>
       <CardContent className="space-y-6">
         {/* Construction Methods (Multi-select) */}
+        {form.formState.errors.constructionMethods && (
+          <BasicAlert variant="destructive">
+            상의 제작 방식을 1개 이상 입력해주세요.
+          </BasicAlert>
+        )}
         <div>
           <FormLabel>제작 방식 (다중 선택 가능)</FormLabel>
           <FormDescription>

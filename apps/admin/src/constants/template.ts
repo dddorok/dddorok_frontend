@@ -1,4 +1,9 @@
-export type ChartType = "NARRATIVE" | "GRID" | "MIXED" | "NONE";
+import { z } from "zod";
+
+export const ChartTypeSchema = z.enum(["NARRATIVE", "GRID", "MIXED"], {
+  required_error: "차트 유형을 선택해주세요",
+});
+export type ChartType = z.infer<typeof ChartTypeSchema> | "NONE";
 export const CHART_TYPE: Record<
   ChartType,
   { label: string; value: ChartType }
@@ -20,11 +25,12 @@ export const CHART_TYPE: Record<
     value: "NONE",
   },
 };
-export const CHART_TYPE_OPTIONS = Object.values(CHART_TYPE).filter(
-  (chartType) => chartType.value !== "NONE"
-);
+export const CHART_TYPE_OPTIONS = Object.values(CHART_TYPE);
 
-export type NeedleType = "KNITTING" | "CROCHET" | "NONE";
+export const NeedleTypeSchema = z.enum(["KNITTING", "CROCHET", "NONE"], {
+  required_error: "바늘 종류를 선택해주세요",
+});
+export type NeedleType = z.infer<typeof NeedleTypeSchema> | "NONE";
 export const NEEDLE: Record<NeedleType, { label: string; value: NeedleType }> =
   {
     KNITTING: {
@@ -44,12 +50,15 @@ export const NEEDLE_OPTIONS = Object.values(NEEDLE).filter(
   (needleType) => needleType.value !== "NONE"
 );
 
-// TOP_DOWN, BOTTOM_UP, PIECED, ROUND, NONE
+export const ConstructionMethodSchema = z.enum([
+  "TOP_DOWN",
+  "BOTTOM_UP",
+  "PIECED",
+  "ROUND",
+]);
 export type ConstructionMethodType =
-  | "TOP_DOWN"
-  | "BOTTOM_UP"
-  | "PIECED"
-  | "ROUND";
+  | z.infer<typeof ConstructionMethodSchema>
+  | "NONE";
 
 export const CONSTRUCTION_METHOD: Record<
   ConstructionMethodType,
@@ -59,6 +68,9 @@ export const CONSTRUCTION_METHOD: Record<
   BOTTOM_UP: { label: "바텀업", value: "BOTTOM_UP" },
   PIECED: { label: "조각잇기형", value: "PIECED" },
   ROUND: { label: "원통형", value: "ROUND" },
+  NONE: { label: "없음", value: "NONE" },
 };
 
-export const CONSTRUCTION_METHOD_OPTIONS = Object.values(CONSTRUCTION_METHOD);
+export const CONSTRUCTION_METHOD_OPTIONS = Object.values(
+  CONSTRUCTION_METHOD
+).filter((constructionMethod) => constructionMethod.value !== "NONE");
