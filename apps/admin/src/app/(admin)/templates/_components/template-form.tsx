@@ -325,60 +325,9 @@ function ChartTypeSelect() {
     <Card>
       <CardHeader>
         <CardTitle>차트 유형 선택</CardTitle>
-        <CardDescription>측정 항목과 차트 유형을 설정해주세요.</CardDescription>
+        <CardDescription>차트 유형을 설정해주세요.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-        <div>
-          <FormLabel>측정 항목</FormLabel>
-
-          {/* 중요: 치수 규칙 ID를 hidden input으로 추가 */}
-          <input type="hidden" {...form.register("measurementRuleId")} />
-
-          <div className="mt-2">
-            {form.getValues("measurementRuleId") ? (
-              <div className="p-4 border border-blue-100 bg-blue-50 rounded-md text-blue-800">
-                <div className="flex items-center gap-2 font-medium">
-                  <Info className="h-4 w-4" />
-                  <span>
-                    자동 설정된 측정 항목 (규칙 ID:{" "}
-                    {form.getValues("measurementRuleId")})
-                  </span>
-                </div>
-                <p className="mt-1 text-sm pl-6">
-                  치수 규칙에 따라 측정 항목이 자동으로 설정되었습니다.
-                  <br />
-                  템플릿 저장 이후 각 사이즈별 치수를 설정할 수 있습니다.
-                </p>
-                {measurementItems?.length && measurementItems.length > 0 && (
-                  <div className="mt-2 pl-6 text-sm">
-                    <strong>설정된 항목 ({measurementItems.length}개):</strong>{" "}
-                    {/* TODO: 측정 항목 조회 */}
-                    {/* {measurementItems
-                      .map((itemId) => {
-                        const item = getMeasurementItemById(itemId);
-                        return item ? item.name : itemId;
-                      })
-                      .join(", ")} */}
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div className="p-4 border border-red-200 bg-red-50 rounded-md text-red-800">
-                <div className="flex items-center gap-2 font-medium">
-                  <AlertCircle className="h-4 w-4" />
-                  <span>치수 규칙 필요</span>
-                </div>
-                <p className="mt-1 text-sm pl-6">
-                  치수 규칙이 설정되지 않았습니다. 치수 규칙은 필수 항목입니다.
-                  <br />
-                  템플릿을 생성하려면 먼저 치수 규칙 페이지에서 템플릿 생성
-                  버튼을 클릭하세요.
-                </p>
-              </div>
-            )}
-          </div>
-        </div>
-
         <FormField
           control={form.control}
           name="chartTypeIds"

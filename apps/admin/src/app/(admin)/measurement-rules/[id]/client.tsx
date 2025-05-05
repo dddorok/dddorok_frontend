@@ -13,6 +13,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { NecklineType, SleeveType } from "@/constants/top";
 import { useToast } from "@/hooks/use-toast";
 import { measurementRuleQueries } from "@/queries/measurement-rule";
+import { CustomError } from "@/services/instance";
 import { updateMeasurementRule } from "@/services/measurement-rule";
 
 interface EditMeasurementRuleClientProps {
@@ -47,9 +48,13 @@ export default function EditMeasurementRuleClient({
       });
       queryClient.invalidateQueries();
       router.push(`/measurement-rules`);
-
-      console.log("data: ", data);
     } catch (error) {
+      if (error instanceof CustomError) {
+        if (error.error === "RULE_NAME_DUPLICATE") {
+          throw error;
+        }
+      }
+
       if (error instanceof Error) {
         toast({
           variant: "destructive",

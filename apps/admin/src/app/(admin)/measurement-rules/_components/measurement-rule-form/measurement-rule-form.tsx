@@ -21,12 +21,7 @@ import {
 import { Form } from "@/components/ui/form";
 import { categories } from "@/constants/category";
 import { getCategoryById } from "@/constants/category";
-import {
-  NecklineType,
-  NecklineTypeSchema,
-  SleeveType,
-  SleeveTypeSchema,
-} from "@/constants/top";
+import { NecklineTypeSchema, SleeveTypeSchema } from "@/constants/top";
 import { QueryDevTools } from "@/lib/react-query";
 import { CustomError } from "@/services/instance";
 

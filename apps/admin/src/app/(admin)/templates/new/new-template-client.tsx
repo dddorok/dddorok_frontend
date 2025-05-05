@@ -1,9 +1,9 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import { AlertCircle, Info } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { Suspense, useState } from "react";
 
 import {
   TemplateForm,
@@ -20,12 +20,8 @@ import { createTemplate } from "@/services/template/template";
 export default function NewTemplateClient() {
   const router = useRouter();
   const { toast } = useToast();
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [ruleName, setRuleName] = useState<string>("");
-  const [selectedRule, setSelectedRule] = useState<string | null>(
-    "b18517e9-3aaa-4c0a-a2a1-af8b10756f90"
-  );
-  console.log("selectedRule: ", selectedRule);
+  const [selectedRule, setSelectedRule] = useState<string | null>(null);
 
   const { data: rule } = useQuery({
     ...measurementRuleQueries.getMeasurementRuleByIdQueryOptions(
@@ -109,11 +105,15 @@ function SelectMeasurementRule({
 }: {
   handleSelectRule: (rule: GetMeasurementRuleListItemType) => void;
 }) {
-  const { data } = useQuery({
+  const { data, isLoading } = useQuery({
     ...measurementRuleQueries.getMeasurementRuleListQueryOptions(),
   });
 
   const measurementRules = data?.data || [];
+
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <div className="space-y-6">
