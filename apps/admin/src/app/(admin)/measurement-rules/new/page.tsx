@@ -3,7 +3,6 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { Info } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
 
 import {
   MeasurementRuleForm,
@@ -12,6 +11,7 @@ import {
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
+import { CustomError } from "@/services/instance";
 import { createMeasurementRule } from "@/services/measurement-rule";
 
 export default function NewMeasurementRulePage() {
@@ -24,7 +24,7 @@ export default function NewMeasurementRulePage() {
     redirectTo: "LIST" | "TEMPLATE_NEW"
   ) => {
     try {
-      await createMeasurementRule({
+      const res = await createMeasurementRule({
         category_large: data.level1,
         category_medium: data.level2,
         category_small: data.level3,
@@ -47,11 +47,16 @@ export default function NewMeasurementRulePage() {
           router.refresh();
           break;
         case "TEMPLATE_NEW":
-          router.push(`/templates/new?ruleId=${encodeURIComponent(data.id)}`);
+          router.push(`/templates/new?ruleId=${encodeURIComponent(res.id)}`);
           break;
       }
     } catch (err) {
-      console.error("Error creating measurement rule:", err);
+      if (err instanceof CustomError) {
+        if (err.error === "RULE_NAME_DUPLICATE") {
+          throw err;
+        }
+      }
+
       toast({
         title: "치수 규칙 생성 실패",
         description: "치수 규칙 생성 중 오류가 발생했습니다.",

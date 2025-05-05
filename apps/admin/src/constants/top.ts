@@ -1,19 +1,25 @@
-export type SleeveType =
-  | "RAGLAN"
-  | "SET_IN"
-  | "DROP"
-  | "SADDLE"
-  | "YOKE"
-  | "VEST"
-  | "NONE";
+import { z } from "zod";
 
-export type NecklineType =
-  | "ROUND_NECK"
-  | "V_NECK"
-  | "U_NECK"
-  | "SQUARE_NECK"
-  | "TURTLE_NECK"
-  | "NODE";
+export const SleeveTypeSchema = z.enum([
+  "RAGLAN",
+  "SET_IN",
+  "DROP",
+  "SADDLE",
+  "YOKE",
+  "VEST",
+  "NONE",
+]);
+export type SleeveType = z.infer<typeof SleeveTypeSchema>;
+
+export const NecklineTypeSchema = z.enum([
+  "ROUND_NECK",
+  "V_NECK",
+  "U_NECK",
+  "SQUARE_NECK",
+  "TURTLE_NECK",
+  "NONE",
+]);
+export type NecklineType = z.infer<typeof NecklineTypeSchema>;
 
 export const SLEEVE: Record<SleeveType, { label: string; value: SleeveType }> =
   {
@@ -35,7 +41,7 @@ export const NECKLINE: Record<
   U_NECK: { label: "유넥", value: "U_NECK" },
   SQUARE_NECK: { label: "스퀘어넥", value: "SQUARE_NECK" },
   TURTLE_NECK: { label: "터틀넥", value: "TURTLE_NECK" },
-  NODE: { label: "해당없음", value: "NODE" },
+  NONE: { label: "해당없음", value: "NONE" },
 };
 
 export const SLEEVE_OPTIONS = Object.values(SLEEVE);

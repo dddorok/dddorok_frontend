@@ -10,7 +10,6 @@ import {
   FormItem,
   FormMessage,
 } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -122,6 +121,7 @@ function FormSelect({
               onValueChange={(value) => {
                 field.onChange(value);
                 onChange?.(value);
+                field.onBlur();
               }}
             >
               <SelectTrigger>
@@ -136,6 +136,7 @@ function FormSelect({
               </SelectContent>
             </Select>
           </FormControl>
+          <FormMessage />
         </FormItem>
       )}
     />
@@ -193,7 +194,7 @@ function MeasurementRuleName() {
         if (!selectedNecklineType || !selectedSleeveType || !category3Name) {
           return null;
         }
-        if (selectedNecklineType === "NODE" || selectedSleeveType === "NONE") {
+        if (selectedNecklineType === "NONE" || selectedSleeveType === "NONE") {
           return null;
         }
         return `${NECKLINE[selectedNecklineType]?.label ?? ""} ${SLEEVE[selectedSleeveType]?.label ?? ""} ${category3Name}`;
@@ -218,6 +219,7 @@ function MeasurementRuleName() {
       <p className="p-3 bg-gray-50 rounded-md border text-sm mt-1">
         {authName ?? "자동으로 생성됩니다"}
       </p>
+      <FormMessage />
     </div>
   );
 }

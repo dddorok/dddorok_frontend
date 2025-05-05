@@ -4,12 +4,29 @@ import { redirect } from "next/navigation";
 import { updateSession } from "@/lib/auth";
 import { verifySession } from "@/lib/dal";
 
-interface ErrorResponse {
+export interface ErrorResponse {
   message: string;
   code: number;
   path: string;
   timestamp: string;
   error: string;
+}
+
+export class CustomError extends Error {
+  message: string;
+  code: number;
+  path: string;
+  timestamp: string;
+  error: string;
+
+  constructor(response: ErrorResponse) {
+    super(response.message);
+    this.message = response.message;
+    this.code = response.code;
+    this.path = response.path;
+    this.timestamp = response.timestamp;
+    this.error = response.error;
+  }
 }
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL + "/api";
@@ -80,6 +97,7 @@ export const privateInstance = ky.create({
         if (response) {
           const data = (await response.json()) as ErrorResponse;
           error.message = data.message || "알 수 없는 에러가 발생했습니다.";
+          throw new CustomError(data);
         }
 
         return error;

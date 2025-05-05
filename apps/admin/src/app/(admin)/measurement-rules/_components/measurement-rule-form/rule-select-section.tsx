@@ -74,11 +74,14 @@ function RuleCheckList({
   const handleItemChange = (itemCode: string, checked: boolean) => {
     const currentItems = form.getValues().items || [];
     if (checked) {
-      form.setValue("items", [...currentItems, itemCode]);
+      form.setValue("items", [...currentItems, itemCode], {
+        shouldValidate: true,
+      });
     } else {
       form.setValue(
         "items",
-        currentItems.filter((code: string) => code !== itemCode)
+        currentItems.filter((code: string) => code !== itemCode),
+        { shouldValidate: true }
       );
     }
   };
@@ -104,15 +107,18 @@ function RuleCheckList({
     if (selected) {
       // 섹션 항목 모두 추가 (중복 제거)
       const sectionItemIds = sectionItems.map((item) => item.code);
-      form.setValue("items", [
-        ...new Set([...currentItems, ...sectionItemIds]),
-      ]);
+      form.setValue(
+        "items",
+        [...new Set([...currentItems, ...sectionItemIds])],
+        { shouldValidate: true }
+      );
     } else {
       // 섹션 항목 모두 제거
       const sectionItemIds = sectionItems.map((item) => item.code);
       form.setValue(
         "items",
-        currentItems.filter((code: string) => !sectionItemIds.includes(code))
+        currentItems.filter((code: string) => !sectionItemIds.includes(code)),
+        { shouldValidate: true }
       );
     }
   };
