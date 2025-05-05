@@ -19,12 +19,5 @@ export default async function TemplatePage({
   // Await the params to fix the error
   const { id } = await params;
 
-  // Find template by ID
-  const template = templates.find((t) => t.id === id);
-
-  if (!template) {
-    notFound();
-  }
-
-  return <TemplateDetailClient template={template} />;
+  return <TemplateDetailClient templateId={id} />;
 }

@@ -404,7 +404,7 @@ export const getMeasurementItemNames = (itemIds: string[]): string[] => {
 };
 
 // Sample template data
-export const templates: Template[] = [
+export const templates = [
   {
     id: "1",
     name: "베이직 스웨터",
