@@ -74,7 +74,9 @@ export default function NewTemplateClient() {
 
       {!selectedRule && (
         // 치수 규칙 선택 UI
-        <SelectMeasurementRule handleSelectRule={handleSelectRule} />
+        <Suspense>
+          <SelectMeasurementRule handleSelectRule={handleSelectRule} />
+        </Suspense>
       )}
       {selectedRule && rule && (
         <div className="space-y-6">
@@ -105,15 +107,11 @@ function SelectMeasurementRule({
 }: {
   handleSelectRule: (rule: GetMeasurementRuleListItemType) => void;
 }) {
-  const { data, isLoading } = useQuery({
+  const { data } = useSuspenseQuery({
     ...measurementRuleQueries.getMeasurementRuleListQueryOptions(),
   });
 
   const measurementRules = data?.data || [];
-
-  if (isLoading) {
-    return <div>Loading...</div>;
-  }
 
   return (
     <div className="space-y-6">

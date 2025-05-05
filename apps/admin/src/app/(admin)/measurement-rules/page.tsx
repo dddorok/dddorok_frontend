@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Suspense } from "react";
 
 import { GuideCard } from "./_components/GuideCard";
 import { MeasurementRuleTable } from "./_components/measurement-rule-table";
@@ -21,7 +22,9 @@ export default function MeasurementRulesPage() {
       </div>
 
       <div className="border rounded-md">
-        <MeasurementRuleTable />
+        <Suspense>
+          <MeasurementRuleTable />
+        </Suspense>
       </div>
     </div>
   );

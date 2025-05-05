@@ -1,6 +1,10 @@
 "use client";
 
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  useQuery,
+  useQueryClient,
+  useSuspenseQuery,
+} from "@tanstack/react-query";
 import { useOverlay } from "@toss/use-overlay";
 import { List, Layers } from "lucide-react";
 import Link from "next/link";
@@ -12,7 +16,6 @@ import {
 import { RuleDialog } from "./rule-dialog";
 
 import { ConfirmDialog } from "@/components/Dialog/ConfirmDialog";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   TableHeader,
@@ -22,8 +25,6 @@ import {
   TableCell,
   Table,
 } from "@/components/ui/table";
-import { getCategoryById } from "@/constants/category";
-import { SLEEVE } from "@/constants/top";
 import { toast } from "@/hooks/use-toast";
 import {
   measurementRuleQueries,
@@ -35,7 +36,7 @@ import {
 } from "@/services/measurement-rule";
 
 export function MeasurementRuleTable() {
-  const { data } = useQuery({
+  const { data } = useSuspenseQuery({
     ...measurementRuleQueries.getMeasurementRuleListQueryOptions(),
   });
 

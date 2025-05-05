@@ -6,8 +6,17 @@ import { decrypt } from "./jose";
 
 export const verifySession = async () => {
   const sessionCookieName = "@dddorok-admin/session";
-  const cookie = await getCookie(sessionCookieName);
+  let cookie: string | null = null;
+  if (typeof window === "undefined") {
+    const cookieStore = await import("next/headers").then((mod) =>
+      mod.cookies()
+    );
+    cookie = cookieStore.get(sessionCookieName)?.value ?? null;
+  } else {
+    cookie = (await getCookie(sessionCookieName)) as string | null;
+  }
 
+  console.log("cookie: ", cookie);
   if (!cookie) {
     console.log("no cookie");
     redirect("/oauth/login");
