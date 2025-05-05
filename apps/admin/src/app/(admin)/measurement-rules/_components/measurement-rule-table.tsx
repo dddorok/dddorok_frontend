@@ -46,10 +46,8 @@ export function MeasurementRuleTable() {
       <TableHeader>
         <TableRow>
           <TableHead>규칙 이름</TableHead>
-          <TableHead>카테고리</TableHead>
-          <TableHead>소매 유형</TableHead>
           <TableHead>측정 항목 수</TableHead>
-          <TableHead>템플릿 수</TableHead>
+          <TableHead>사용상태</TableHead>
           <TableHead className="text-center">작업</TableHead>
         </TableRow>
       </TableHeader>
@@ -76,12 +74,6 @@ function TableItem({ rule }: { rule: GetMeasurementRuleListItemType }) {
 
   const templateCount = rule.template_count;
   const isDeletable = templateCount === 0;
-
-  // Function to get category name by ID
-  const getCategoryName = (categoryId: string) => {
-    const category = getCategoryById(categoryId);
-    return category ? category.name : "알 수 없음";
-  };
 
   // 삭제 버튼 클릭 핸들러
   const handleDeleteClick = () => {
@@ -145,10 +137,6 @@ function TableItem({ rule }: { rule: GetMeasurementRuleListItemType }) {
   return (
     <TableRow key={rule.id}>
       <TableCell className="font-medium">{rule.rule_name}</TableCell>
-      <TableCell>{getCategoryName(rule.category_large)}</TableCell>
-      <TableCell>
-        {rule.sleeve_type ? SLEEVE[rule.sleeve_type].label : "-"}
-      </TableCell>
 
       {/* 측정 항목 수 클릭 가능 */}
       <TableCell>
@@ -164,7 +152,8 @@ function TableItem({ rule }: { rule: GetMeasurementRuleListItemType }) {
 
       {/* 템플릿 수 클릭 가능 */}
       <TableCell>
-        <Button
+        수정필요
+        {/* <Button
           variant="ghost"
           className="p-0 h-auto font-normal text-blue-600 hover:text-blue-800 hover:bg-blue-50 flex items-center gap-1"
           onClick={() => {
@@ -189,7 +178,7 @@ function TableItem({ rule }: { rule: GetMeasurementRuleListItemType }) {
           >
             {templateCount}개
           </Badge>
-        </Button>
+        </Button> */}
       </TableCell>
 
       <TableCell className="text-center">
