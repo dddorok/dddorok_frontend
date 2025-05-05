@@ -30,7 +30,7 @@ const devItems: SidebarNavItem[] = [
 export const navItems: SidebarNavItem[] = [
   {
     title: "개발자 가이드",
-    url: "/",
+    url: "/developer-guide",
     Icon: FileText,
   },
   {
