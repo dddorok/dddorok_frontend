@@ -19,40 +19,32 @@ import {
 import { Form } from "@/components/ui/form";
 import { categories } from "@/constants/category";
 import { getCategoryById } from "@/constants/category";
-import {
-  type MeasurementRule,
-  type SleeveType,
-  NecklineType,
-} from "@/lib/data";
+import { NecklineType, SleeveType } from "@/constants/top";
 import { QueryDevTools } from "@/lib/react-query";
 
 interface MeasurementRuleFormProps {
-  rule?: MeasurementRule;
   initialValues?: MeasurementRuleFormData;
   isEdit?: boolean;
   onSubmit: (data: MeasurementRuleFormData, createTemplate: boolean) => void;
 }
 
-export interface MeasurementRuleFormData extends MeasurementRule {
+export interface MeasurementRuleFormData {
   level1: string;
   level2: string;
   level3: string;
   sleeveType?: SleeveType;
   necklineType?: NecklineType;
   name: string;
+  items: string[];
 }
 
 export function MeasurementRuleForm({
-  rule,
   initialValues,
   isEdit = false,
   onSubmit,
 }: MeasurementRuleFormProps) {
-  console.log("initialValues: ", initialValues);
   const form = useForm<MeasurementRuleFormData>({
     defaultValues: initialValues || {
-      id: "",
-      categoryId: "",
       name: "",
       items: [],
       level1: categories[0]?.id || "",
@@ -60,29 +52,6 @@ export function MeasurementRuleForm({
     },
   });
 
-  // TODO
-  // Edit mode일 경우 초기 카테고리 설정
-  // useEffect(() => {
-  //   if (rule?.categoryId) {
-  //     const category = getCategoryById(rule.categoryId);
-  //     if (category) {
-  //       const parentCategory = category.parent_id
-  //         ? getCategoryById(category.parent_id)
-  //         : null;
-  //       const grandParentCategory = parentCategory?.parent_id
-  //         ? getCategoryById(parentCategory.parent_id)
-  //         : null;
-
-  //       setSelectedCategory({
-  //         level1: grandParentCategory?.id || null,
-  //         level2: parentCategory?.id || null,
-  //         level3: category.id,
-  //       });
-  //     }
-  //   }
-  // }, [rule]);
-
-  // Handle form submission
   const handleSubmit = (
     data: MeasurementRuleFormData,
     createTemplate: boolean = false

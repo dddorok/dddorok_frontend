@@ -1,14 +1,8 @@
 "use client";
 
-import {
-  useQuery,
-  useQueryClient,
-  useSuspenseQuery,
-} from "@tanstack/react-query";
-import { AlertCircle, Info } from "lucide-react";
-import { data } from "motion/react-client";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Info } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
 
 import {
   MeasurementRuleForm,
@@ -16,8 +10,8 @@ import {
 } from "../_components/measurement-rule-form/measurement-rule-form";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { NecklineType, SleeveType } from "@/constants/top";
 import { useToast } from "@/hooks/use-toast";
-import { NecklineType, SleeveType } from "@/lib/data";
 import { measurementRuleQueries } from "@/queries/measurement-rule";
 import { updateMeasurementRule } from "@/services/measurement-rule";
 
@@ -53,25 +47,19 @@ export default function EditMeasurementRuleClient({
       });
       queryClient.invalidateQueries();
       router.push(`/measurement-rules`);
+
+      console.log("data: ", data);
     } catch (error) {
+      if (error instanceof Error) {
+        toast({
+          variant: "destructive",
+          title: "치수 규칙 수정 실패",
+          description: error.message,
+        });
+      }
       console.error("Error updating measurement rule:", error);
     }
-
-    console.log("data: ", data);
   };
-
-  // TODO: Error boundary 추가
-  // if (notFound) {
-  //   return (
-  //     <Alert variant="destructive">
-  //       <AlertCircle className="h-4 w-4" />
-  //       <AlertTitle>오류</AlertTitle>
-  //       <AlertDescription>
-  //         해당 ID의 측정 규칙을 찾을 수 없습니다.
-  //       </AlertDescription>
-  //     </Alert>
-  //   );
-  // }
 
   if (rule === undefined) {
     return <div>Loading...</div>;
@@ -98,8 +86,6 @@ export default function EditMeasurementRuleClient({
       {rule && (
         <MeasurementRuleForm
           initialValues={{
-            id: rule.id,
-            categoryId: rule.category_large,
             name: rule.rule_name,
             level1: rule.category_large,
             level2: rule.category_medium,
