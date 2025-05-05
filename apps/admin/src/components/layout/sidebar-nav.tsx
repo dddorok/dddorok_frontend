@@ -13,7 +13,7 @@ import type { LucideIcon } from "lucide-react";
 
 const isDev = process.env.NODE_ENV === "development";
 
-export interface SidebarNavItem {
+interface SidebarNavItem {
   title: string;
   url: string;
   Icon: LucideIcon;

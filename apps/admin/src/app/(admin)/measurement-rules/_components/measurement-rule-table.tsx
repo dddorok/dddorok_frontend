@@ -4,7 +4,6 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useOverlay } from "@toss/use-overlay";
 import { List, Layers } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
 
 import {
   DeleteNotAllowDialog,
@@ -26,11 +25,6 @@ import {
 import { getCategoryById } from "@/constants/category";
 import { SLEEVE } from "@/constants/top";
 import { toast } from "@/hooks/use-toast";
-import {
-  type MeasurementRule,
-  measurementRules as originalMeasurementRules,
-  templates,
-} from "@/lib/data";
 import {
   measurementRuleQueries,
   measurementRuleQueryKeys,

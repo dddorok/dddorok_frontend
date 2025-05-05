@@ -11,7 +11,6 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { MeasurementRule, templates } from "@/lib/data";
 import { GetMeasurementRuleListItemType } from "@/services/measurement-rule";
 
 export function DeleteNotAllowDialog({
@@ -92,9 +91,11 @@ export function ViewTemplatesRuleDialog({
 }) {
   // 해당 규칙을 사용하는 템플릿 목록 가져오기
   const getTemplatesByRuleId = (ruleId: string) => {
-    return templates.filter(
-      (template) => template.measurementRuleId === ruleId
-    );
+    // TODO : 서버에서 가져오기
+    // return templates.filter(
+    //   (template) => template.measurementRuleId === ruleId
+    // );
+    return [];
   };
 
   return (

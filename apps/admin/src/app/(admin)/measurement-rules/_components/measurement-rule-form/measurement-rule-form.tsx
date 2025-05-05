@@ -22,7 +22,6 @@ import { getCategoryById } from "@/constants/category";
 import {
   type MeasurementRule,
   type SleeveType,
-  isDuplicateMeasurementRule,
   NecklineType,
 } from "@/lib/data";
 import { QueryDevTools } from "@/lib/react-query";
@@ -82,19 +81,6 @@ export function MeasurementRuleForm({
   //     }
   //   }
   // }, [rule]);
-
-  // 중복 체크
-  const checkForDuplicates = (
-    categoryId: string,
-    sleeveType?: SleeveType
-  ): boolean => {
-    // 수정 모드에서는 자기 자신을 제외하고 중복 체크
-    return isDuplicateMeasurementRule(
-      categoryId,
-      sleeveType,
-      isEdit ? rule?.id : undefined
-    );
-  };
 
   // Handle form submission
   const handleSubmit = (

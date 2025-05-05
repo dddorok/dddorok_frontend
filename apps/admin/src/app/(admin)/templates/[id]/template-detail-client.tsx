@@ -21,35 +21,6 @@ interface TemplateDetailClientProps {
   templateId: string;
 }
 
-// 자동 템플릿명 생성 함수
-function generateTemplateName(template: Template): string {
-  const formatOptions = [];
-
-  // 제작 방식 (있는 경우만)
-  if (template.constructionMethods && template.constructionMethods.length > 0) {
-    formatOptions.push(template.constructionMethods[0]);
-  }
-
-  // 넥라인 (있는 경우만)
-  if (template.necklineType) {
-    formatOptions.push(template.necklineType);
-  }
-
-  // 소매 유형 (있는 경우만)
-  if (template.sleeveType) {
-    formatOptions.push(template.sleeveType);
-  }
-
-  // 카테고리 소분류
-  const category = getCategoryById(String(template.categoryIds[2]));
-  if (category) {
-    formatOptions.push(category.name);
-  }
-
-  // 완성된 템플릿명 (없으면 기존 이름 사용)
-  return formatOptions.length > 0 ? formatOptions.join(" ") : template.name;
-}
-
 export default function TemplateDetailClient({
   templateId,
 }: TemplateDetailClientProps) {

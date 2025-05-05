@@ -7,12 +7,10 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { getMeasurementItemById, measurementItems } from "@/lib/data";
+import { measurementItems } from "@/lib/data";
 import { measurementRuleQueries } from "@/queries/measurement-rule";
-import { GetMeasurementRuleListItemType } from "@/services/measurement-rule";
 
 export function RuleDialog({
   ruleId,
@@ -20,7 +18,6 @@ export function RuleDialog({
   close,
 }: {
   ruleId: string;
-  // viewItemsRule: GetMeasurementRuleListItemType;
   isOpen: boolean;
   close: () => void;
 }) {
@@ -54,7 +51,6 @@ export function RuleDialog({
                   ruleItem.name.replace(/\s+/g, "") ===
                   item.label.replace(/\s+/g, "")
               );
-              // const item = getMeasurementItemById(itemId);
               return (
                 <li
                   key={item.id}
