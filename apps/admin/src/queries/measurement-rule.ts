@@ -7,6 +7,9 @@ import {
   GetMeasurementRuleItemCodeResponse,
   getMeasurementRuleList,
   GetMeasurementRuleListResponse,
+  getMeasurementRuleTemplateList,
+  GetMeasurementRuleTemplateListItemType,
+  GetMeasurementRuleTemplateListResponse,
 } from "@/services/measurement-rule";
 
 export const measurementRuleQueryKeys = {
@@ -14,6 +17,12 @@ export const measurementRuleQueryKeys = {
   measurementRuleItemCode: () => ["measurement-rule-item-code"],
   measurementRuleList: () => ["measurement-rule", "list"],
   measurementRuleById: (id: string) => ["measurement-rule", id],
+  measurementRuleTemplateList: (id: string) => [
+    "measurement-rule",
+    id,
+    "template",
+    "list",
+  ],
 };
 
 // 치수 규칙 항목 코드 조회
@@ -40,8 +49,17 @@ const getMeasurementRuleByIdQueryOptions = (id: string) => {
   });
 };
 
+// 치수 규칙 id로 템플릿 조회
+const getMeasurementRuleTemplateListQueryOptions = (id: string) => {
+  return queryOptions<GetMeasurementRuleTemplateListItemType[]>({
+    queryKey: measurementRuleQueryKeys.measurementRuleTemplateList(id),
+    queryFn: () => getMeasurementRuleTemplateList(id),
+  });
+};
+
 export const measurementRuleQueries = {
   getMeasurementRuleItemCodeQueryOptions,
   getMeasurementRuleListQueryOptions,
   getMeasurementRuleByIdQueryOptions,
+  getMeasurementRuleTemplateListQueryOptions,
 };

@@ -1,21 +1,19 @@
 "use client";
 
-import {
-  useQuery,
-  useQueryClient,
-  useSuspenseQuery,
-} from "@tanstack/react-query";
+import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { useOverlay } from "@toss/use-overlay";
 import { List, Layers } from "lucide-react";
 import Link from "next/link";
+import { Suspense } from "react";
 
 import {
   DeleteNotAllowDialog,
-  ViewTemplatesRuleDialog,
+  MeasurementRuleRelatedTemplateDialog,
 } from "./delete-not-allow-dialog";
 import { RuleDialog } from "./rule-dialog";
 
 import { ConfirmDialog } from "@/components/Dialog/ConfirmDialog";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   TableHeader,
@@ -153,21 +151,29 @@ function TableItem({ rule }: { rule: GetMeasurementRuleListItemType }) {
 
       {/* 템플릿 수 클릭 가능 */}
       <TableCell>
-        수정필요
-        {/* <Button
+        <Button
           variant="ghost"
           className="p-0 h-auto font-normal text-blue-600 hover:text-blue-800 hover:bg-blue-50 flex items-center gap-1"
           onClick={() => {
             overlay.open(({ isOpen, close }) => (
-              <ViewTemplatesRuleDialog
-                open={isOpen}
-                onOpenChange={close}
-                viewTemplatesRule={rule}
-                onDelete={() => {
-                  close();
-                  // TODO: 삭제 처리
-                }}
-              />
+              <Suspense>
+                <MeasurementRuleRelatedTemplateDialog
+                  ruleId={rule.id}
+                  ruleName={rule.rule_name}
+                  open={isOpen}
+                  onOpenChange={close}
+                />
+              </Suspense>
+
+              // <ViewTemplatesRuleDialog
+              //   open={isOpen}
+              //   onOpenChange={close}
+              //   viewTemplatesRule={rule}
+              //   onDelete={() => {
+              //     close();
+              //     // TODO: 삭제 처리
+              //   }}
+              // />
             ));
           }}
           disabled={templateCount === 0}
@@ -179,7 +185,7 @@ function TableItem({ rule }: { rule: GetMeasurementRuleListItemType }) {
           >
             {templateCount}개
           </Badge>
-        </Button> */}
+        </Button>
       </TableCell>
 
       <TableCell className="text-center">

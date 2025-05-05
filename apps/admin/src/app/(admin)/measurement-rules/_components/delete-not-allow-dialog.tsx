@@ -1,3 +1,4 @@
+import { useSuspenseQuery } from "@tanstack/react-query";
 import { useOverlay } from "@toss/use-overlay";
 import { Ban, Layers, XCircle } from "lucide-react";
 import Link from "next/link";
@@ -11,6 +12,7 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
+import { measurementRuleQueries } from "@/queries/measurement-rule";
 import { GetMeasurementRuleListItemType } from "@/services/measurement-rule";
 
 export function DeleteNotAllowDialog({
@@ -56,10 +58,11 @@ export function DeleteNotAllowDialog({
             onClick={() => {
               onOpenChange(false);
               overlay.open(({ isOpen, close }) => (
-                <ViewTemplatesRuleDialog
+                <MeasurementRuleRelatedTemplateDialog
                   open={isOpen}
                   onOpenChange={close}
-                  viewTemplatesRule={ruleToDelete}
+                  ruleId={ruleToDelete.id}
+                  ruleName={ruleToDelete.rule_name}
                   onDelete={() => {
                     close();
                     onConfirm();
@@ -77,26 +80,24 @@ export function DeleteNotAllowDialog({
   );
 }
 
-// 연결된 템플릿 목록 다이얼로그
-export function ViewTemplatesRuleDialog({
+export function MeasurementRuleRelatedTemplateDialog({
+  ruleId,
   open,
   onOpenChange,
-  viewTemplatesRule,
+  ruleName,
   onDelete,
 }: {
+  ruleId: string;
+  ruleName: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  viewTemplatesRule: GetMeasurementRuleListItemType;
-  onDelete: () => void;
+  onDelete?: () => void;
 }) {
-  // 해당 규칙을 사용하는 템플릿 목록 가져오기
-  const getTemplatesByRuleId = (ruleId: string) => {
-    // TODO : 서버에서 가져오기
-    // return templates.filter(
-    //   (template) => template.measurementRuleId === ruleId
-    // );
-    return [];
-  };
+  const { data: relatedTemplates } = useSuspenseQuery({
+    ...measurementRuleQueries.getMeasurementRuleTemplateListQueryOptions(
+      ruleId
+    ),
+  });
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -105,14 +106,14 @@ export function ViewTemplatesRuleDialog({
           <DialogTitle>
             <div className="flex items-center gap-2">
               <Layers className="h-5 w-5 text-blue-600" />
-              <span>"{viewTemplatesRule.rule_name}" 연결 템플릿</span>
+              <span>"{ruleName}" 연결 템플릿</span>
             </div>
           </DialogTitle>
         </DialogHeader>
 
         <div className="py-4">
           {(() => {
-            const relatedTemplates = getTemplatesByRuleId(viewTemplatesRule.id);
+            // const relatedTemplates = getTemplatesByRuleId(viewTemplatesRule.id);
 
             if (relatedTemplates.length === 0) {
               return (
@@ -134,7 +135,7 @@ export function ViewTemplatesRuleDialog({
                         <div>
                           <p className="font-medium">{template.name}</p>
                           <p className="text-xs text-muted-foreground mt-1">
-                            {template.toolType} / {template.patternType}
+                            {template.needle_type} / {template.chart_type}
                           </p>
                         </div>
                         <Link href={`/templates/${template.id}`}>
@@ -152,14 +153,11 @@ export function ViewTemplatesRuleDialog({
         </div>
 
         <DialogFooter className="flex justify-between items-center">
-          <div>
-            {/* 연결된 템플릿이 없는 경우에만 삭제 버튼 표시 */}
-            {getTemplatesByRuleId(viewTemplatesRule.id).length === 0 && (
-              <Button variant="destructive" size="sm" onClick={onDelete}>
-                삭제하기
-              </Button>
-            )}
-          </div>
+          {relatedTemplates.length === 0 && onDelete && (
+            <Button variant="outline" onClick={onDelete}>
+              삭제하기
+            </Button>
+          )}
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             닫기
           </Button>

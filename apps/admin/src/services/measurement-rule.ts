@@ -2,6 +2,11 @@
 
 import { apiInstance, privateInstance } from "./instance";
 
+import {
+  ChartType,
+  ConstructionMethodType,
+  NeedleType,
+} from "@/constants/template";
 import { NecklineType, SleeveType } from "@/constants/top";
 
 export const getMeasurementRules = async () => {
@@ -137,4 +142,26 @@ export const updateMeasurementRule = async (
     method: "PATCH",
   });
   return response.json();
+};
+
+export interface GetMeasurementRuleTemplateListItemType {
+  id: string;
+  name: string;
+  needle_type: NeedleType;
+  chart_type: ChartType;
+  is_published: boolean;
+  construction_methods: ConstructionMethodType[];
+}
+
+export interface GetMeasurementRuleTemplateListResponse {
+  data: GetMeasurementRuleTemplateListItemType[];
+}
+
+// 치수 규칙 id로 템플릿 조회
+export const getMeasurementRuleTemplateList = async (id: string) => {
+  const response =
+    await privateInstance<GetMeasurementRuleTemplateListResponse>(
+      `measurement-rule/${id}/template/list`
+    ).json();
+  return response.data;
 };
