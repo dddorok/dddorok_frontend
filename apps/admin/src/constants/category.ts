@@ -153,7 +153,7 @@ export const categories: Category[] = [
   },
 ] as const;
 
-export const flattenedCategories = (): Category[] => {
+const flattenedCategories = (): Category[] => {
   const flattened: Category[] = [];
 
   const flatten = (cats: Category[]) => {
@@ -171,21 +171,4 @@ export const flattenedCategories = (): Category[] => {
 
 export const getCategoryById = (id: string): Category | undefined => {
   return flattenedCategories().find((c) => c.id === id);
-};
-
-export const getParentCategories = (id: string): Category[] => {
-  const result: Category[] = [];
-  let category = getCategoryById(id);
-
-  while (category?.parent_id) {
-    const parent = getCategoryById(category.parent_id);
-    if (parent) {
-      result.unshift(parent);
-      category = parent;
-    } else {
-      break;
-    }
-  }
-
-  return result;
 };

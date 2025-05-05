@@ -2,7 +2,6 @@
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
-import { useState } from "react";
 
 import { Badge } from "@/components/ui/badge"; // Assuming Badge component is imported
 import { Button } from "@/components/ui/button";
@@ -24,15 +23,37 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { CHART_TYPE, NEEDLE } from "@/constants/template";
+import {
+  CHART_TYPE,
+  ChartType,
+  NEEDLE,
+  NeedleType,
+} from "@/constants/template";
 import { toast } from "@/hooks/use-toast";
 import { templateQueries } from "@/queries/template";
 import { deleteTemplate, TemplateType } from "@/services/template/template";
 
-export function TemplateList() {
+export function TemplateList({
+  filterOptions,
+}: {
+  filterOptions: {
+    needleType: NeedleType | null;
+    chartType: ChartType | null;
+  };
+}) {
   const { data: templates } = useQuery(
     templateQueries.getTemplatesQueryOptions()
   );
+
+  const viewTemplateList = templates
+    ?.filter((template) => {
+      if (filterOptions.needleType === null) return true;
+      return template.needle_type === filterOptions.needleType;
+    })
+    .filter((template) => {
+      if (filterOptions.chartType === null) return true;
+      return template.chart_type === filterOptions.chartType;
+    });
 
   return (
     <div className="border rounded-md">
@@ -40,26 +61,32 @@ export function TemplateList() {
         <TableHeader>
           <TableRow>
             <TableHead className="w-1/3">템플릿명</TableHead>
-            <TableHead className="w-1/6">도구 유형</TableHead>
-            <TableHead className="w-1/6">차트 유형</TableHead>
+            {/* <TableHead className="w-1/6">도구 유형</TableHead>
+            <TableHead className="w-1/6">차트 유형</TableHead> */}
             <TableHead className="w-1/6">게시 상태</TableHead>
             <TableHead className="text-center w-1/6">작업</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {templates?.length === 0 ? (
+          {templates?.length === 0 && (
             <TableRow>
               <TableCell colSpan={5} className="text-center py-10">
                 템플릿이 없습니다. 새 템플릿 추가 버튼을 클릭하여 템플릿을
                 생성해주세요.
               </TableCell>
             </TableRow>
-          ) : (
-            templates?.map((template) => {
-              // 템플릿명 자동 생성 (도구유형 제외)
-              return <TemplateItem key={template.id} template={template} />;
-            })
           )}
+          {templates?.length !== 0 && viewTemplateList?.length === 0 && (
+            <TableRow>
+              <TableCell colSpan={5} className="text-center py-10">
+                검색 조건에 맞는 템플릿이 없습니다.
+              </TableCell>
+            </TableRow>
+          )}
+          {viewTemplateList?.map((template) => {
+            // 템플릿명 자동 생성 (도구유형 제외)
+            return <TemplateItem key={template.id} template={template} />;
+          })}
         </TableBody>
       </Table>
     </div>
@@ -70,8 +97,8 @@ function TemplateItem({ template }: { template: TemplateType }) {
   return (
     <TableRow key={template.id}>
       <TableCell className="font-medium">{template.name}</TableCell>
-      <TableCell>{NEEDLE[template.needle_type].label ?? "-"}</TableCell>
-      <TableCell>{CHART_TYPE[template.chart_type]?.label ?? "-"}</TableCell>
+      {/* <TableCell>{NEEDLE[template.needle_type].label ?? "-"}</TableCell>
+      <TableCell>{CHART_TYPE[template.chart_type]?.label ?? "-"}</TableCell> */}
       <TableCell>
         <Badge variant={template.is_published ? "default" : "secondary"}>
           {template.is_published ? "공개" : "비공개"}

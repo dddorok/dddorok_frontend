@@ -4,9 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { notFound } from "next/navigation";
 
 import { SizeDetailForm } from "@/app/(admin)/templates/_components/size-detail-form"; // Updated import path
-import { getCategoryById } from "@/constants/category";
 import { toast } from "@/hooks/use-toast";
-import { type Template } from "@/lib/data";
 import {
   templateMeasurementValuesQueries,
   templateQueries,
