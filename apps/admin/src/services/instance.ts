@@ -29,7 +29,9 @@ export class CustomError extends Error {
   }
 }
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL + "/api";
+const API_BASE_URL =
+  (process.env.NEXT_PUBLIC_API_URL ?? "https://dev-admin-api.dddorok.com") +
+  "/api";
 
 export const apiInstance = ky.create({
   prefixUrl: API_BASE_URL,

@@ -1,11 +1,10 @@
-// "use client";
-
-import { s } from "motion/react-client";
 import { redirect } from "next/navigation";
 
 import { LoginButton } from "./LoginButton";
 
 import { login } from "@/services/auth";
+
+export const dynamic = "force-dynamic";
 
 export default async function OAuthRedirect(props: {
   searchParams: Promise<{ provider: string; code: string; state: string }>;

@@ -25,8 +25,7 @@ export default function EditTemplateClient({
     enabled: !!templateId,
   });
 
-  const onSubmit = (data: TemplateFormData) => {
-    console.log(data);
+  const onSubmit = async (data: TemplateFormData) => {
     if (
       !data.name ||
       !data.needleType ||
@@ -79,10 +78,14 @@ export default function EditTemplateClient({
           initialTemplate={{
             name: template.name,
             needleType:
-              template.needle_type === "NONE" ? null : template.needle_type,
+              template.needle_type === "NONE"
+                ? undefined
+                : template.needle_type,
             chartType:
-              template.chart_type === "NONE" ? null : template.chart_type,
-            constructionMethods: template.construction_methods,
+              template.chart_type === "NONE" ? undefined : template.chart_type,
+            constructionMethods: template.construction_methods.filter(
+              (method) => method !== "NONE"
+            ),
             isPublished: template.is_published || false,
             // chartTypeIds: template.chart_types,
           }}

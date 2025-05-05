@@ -1,6 +1,4 @@
-// /api/measurement-rule/list
-
-import { apiInstance, privateInstance } from "./instance";
+import { privateInstance } from "./instance";
 
 import {
   ChartType,
@@ -10,7 +8,7 @@ import {
 import { NecklineType, SleeveType } from "@/constants/top";
 
 export const getMeasurementRules = async () => {
-  const response = await apiInstance("measurement-rule/list");
+  const response = await privateInstance("measurement-rule/list");
   return response.json();
 };
 
