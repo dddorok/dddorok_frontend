@@ -1,3 +1,4 @@
+import { useQuery } from "@tanstack/react-query";
 import { ComponentProps, useEffect } from "react";
 import { useFormContext, useWatch } from "react-hook-form";
 
@@ -26,9 +27,11 @@ import {
   SLEEVE_OPTIONS,
   SleeveType,
 } from "@/constants/top";
+import { measurementRuleQueries } from "@/queries/measurement-rule";
 
 export function MeasurementRuleDefaultSection() {
   const form = useFormContext();
+
   return (
     <div className="space-y-4">
       {form.formState.errors.name && (
@@ -184,6 +187,12 @@ function MeasurementRuleName() {
   const selectedSleeveType: SleeveType = useWatch({ name: "sleeveType" });
   const selectedNecklineType: NecklineType = useWatch({ name: "necklineType" });
 
+  const { data: measurementRulesData } = useQuery({
+    ...measurementRuleQueries.getMeasurementRuleListQueryOptions(),
+  });
+  const measurementRules = measurementRulesData?.data || [];
+  console.log("measurementRules: ", measurementRules);
+
   const getAuthName = () => {
     // 자동 생성되며 수동 수정 불가
     // form.clearErrors("name");
@@ -209,6 +218,13 @@ function MeasurementRuleName() {
 
   // TODO: name field는 제거 가능 할 듯
   useEffect(() => {
+    if (measurementRules.find((rule) => rule.rule_name === authName)) {
+      form.setError("name", {
+        message: "이미 존재하는 규칙 이름입니다.",
+      });
+    } else {
+      form.clearErrors("name");
+    }
     form.setValue("name", authName);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authName]);
