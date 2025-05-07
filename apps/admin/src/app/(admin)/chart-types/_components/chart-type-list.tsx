@@ -4,6 +4,8 @@ import { Info } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 
+import { ChartDeleteDialog, ChartTypeDetailsDialog } from "./chart.dialog";
+
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -71,48 +73,6 @@ export function ChartTypeList() {
         </p>
       </div>
 
-      {/* 기획 의도 및 개발자를 위한 설명 카드 */}
-      <Card className="bg-amber-50 border-amber-200">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-amber-800 flex items-center gap-2 text-lg">
-            <Info className="h-5 w-5" />
-            기획 의도 및 개발 지침
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="text-amber-700 space-y-2 text-sm">
-          <p>
-            <strong>기능 개요:</strong> 차트 유형 관리 페이지는 도안에서
-            사용되는 각종 차트 유형을 정의하고 관리하는 페이지입니다. 차트
-            유형은 템플릿에서 참조되어 사용됩니다.
-          </p>
-          <p>
-            <strong>주요 워크플로우:</strong>
-          </p>
-          <ol className="list-decimal pl-5 space-y-1">
-            <li>
-              관리자가 다양한 차트 유형을 미리 등록 (예: 브이넥 바텀업 앞몸판,
-              라운드넥 탑다운 상단, 소매 등)
-            </li>
-            <li>등록된 차트 유형은 템플릿 생성 시 선택 가능</li>
-            <li>차트 유형별로 고유 ID와 표시 이름 관리</li>
-            <li>불필요한 차트 유형은 삭제 가능 (연결된 템플릿이 없는 경우)</li>
-          </ol>
-          <p>
-            <strong>개발 참고사항:</strong>
-          </p>
-          <ul className="list-disc pl-5 space-y-1">
-            <li>차트 유형 삭제 시 연결된 템플릿이 있는지 확인 필요</li>
-            <li>
-              차트 유형과 템플릿은 M:N 관계 (템플릿은 여러 차트 유형 포함 가능)
-            </li>
-            <li>
-              API 연동 시 필요한 엔드포인트: GET/POST/PUT/DELETE
-              /api/chart-types
-            </li>
-          </ul>
-        </CardContent>
-      </Card>
-
       <div className="flex justify-end">
         <Link href="/chart-types/new">
           <Button size="lg">새 차트 유형 추가</Button>
@@ -154,52 +114,7 @@ export function ChartTypeList() {
                           수정
                         </Button>
                       </Link>
-                      <Dialog
-                        open={
-                          isDeleteDialogOpen &&
-                          deleteChartTypeId === chartType.id
-                        }
-                        onOpenChange={setIsDeleteDialogOpen}
-                      >
-                        <DialogTrigger asChild>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="text-red-500 hover:text-red-700 hover:bg-red-50"
-                            onClick={() => {
-                              setDeleteChartTypeId(chartType.id);
-                              setIsDeleteDialogOpen(true);
-                            }}
-                          >
-                            삭제
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent>
-                          <DialogHeader>
-                            <DialogTitle>차트 유형 삭제</DialogTitle>
-                            <DialogDescription>
-                              '{chartTypeToDelete?.name}' 차트 유형을 정말
-                              삭제하시겠습니까? 이 작업은 되돌릴 수 없으며, 이
-                              차트 유형을 사용하는 템플릿에 영향을 줄 수
-                              있습니다.
-                            </DialogDescription>
-                          </DialogHeader>
-                          <DialogFooter>
-                            <Button
-                              variant="outline"
-                              onClick={() => setIsDeleteDialogOpen(false)}
-                            >
-                              취소
-                            </Button>
-                            <Button
-                              variant="destructive"
-                              onClick={handleDeleteChartType}
-                            >
-                              삭제
-                            </Button>
-                          </DialogFooter>
-                        </DialogContent>
-                      </Dialog>
+                      <ChartDeleteDialog />
                     </div>
                   </TableCell>
                 </TableRow>
@@ -229,46 +144,11 @@ export function ChartTypeList() {
 
       {/* Chart Type Details Dialog */}
       {viewChartType && (
-        <Dialog
+        <ChartTypeDetailsDialog
           open={!!viewChartType}
-          onOpenChange={(open) => !open && setViewChartType(null)}
-        >
-          <DialogContent className="max-w-4xl">
-            <DialogHeader>
-              <DialogTitle>{viewChartType.name}</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div>
-                <h3 className="font-medium">기본 정보</h3>
-                <div className="grid grid-cols-2 gap-4 mt-2">
-                  <div>
-                    <p className="text-sm text-muted-foreground">
-                      차트 유형 ID
-                    </p>
-                    <p>{viewChartType.id}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">
-                      차트 유형 이름
-                    </p>
-                    <p>{viewChartType.name}</p>
-                  </div>
-                </div>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">
-                  <strong>개발 참고:</strong> 실제 구현 시 이 다이얼로그에 차트
-                  유형을 사용하는 템플릿 목록 표시 기능 추가 필요
-                </p>
-              </div>
-            </div>
-            <DialogFooter>
-              <Link href={`/chart-types/${viewChartType.id}`}>
-                <Button>차트 유형 수정</Button>
-              </Link>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+          onOpenChange={() => setViewChartType(null)}
+          viewChartType={viewChartType}
+        />
       )}
     </div>
   );
