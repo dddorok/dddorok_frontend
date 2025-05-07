@@ -3,9 +3,9 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-import type { ChartTypeFormData } from "@/features/chart-types/components/chart-type-form";
+import type { ChartTypeFormData } from "@/app/(admin)/chart-types/_components/chart-type-form";
 
-import { ChartTypeForm } from "@/features/chart-types/components/chart-type-form";
+import { ChartTypeForm } from "@/app/(admin)/chart-types/_components/chart-type-form";
 import { useToast } from "@/hooks/use-toast";
 import { chartTypes, type ChartType } from "@/lib/data";
 

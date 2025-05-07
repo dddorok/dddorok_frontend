@@ -6,7 +6,7 @@ import { useState, useEffect } from "react";
 import {
   ChartTypeForm,
   ChartTypeFormData,
-} from "@/features/chart-types/components/chart-type-form";
+} from "@/app/(admin)/chart-types/_components/chart-type-form";
 import { useToast } from "@/hooks/use-toast";
 import { ChartType, chartTypes } from "@/lib/data";
 
