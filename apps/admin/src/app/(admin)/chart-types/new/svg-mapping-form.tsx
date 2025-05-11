@@ -15,6 +15,8 @@ export default function SvgMappingForm() {
     진동길이: false,
     허리길이: false,
   });
+  const [svgPath, setSvgPath] = useState<HTMLElement | null>(null);
+  console.log("svgPath: ", svgPath);
 
   const [selectedPath, setSelectedPath] = useState("");
 
@@ -45,6 +47,42 @@ export default function SvgMappingForm() {
     }));
   };
 
+  const onUpload = () => {
+    // SVG 파일 업로드 처리
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = ".svg";
+
+    input.onchange = (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const svgContent = e.target?.result as string;
+        const parser = new DOMParser();
+        const svgDoc = parser.parseFromString(svgContent, "image/svg+xml");
+
+        // SVG 요소를 찾아서 현재 SVG를 대체
+        const svgContainer = document.querySelector(".w-full.h-full.relative");
+        if (svgContainer) {
+          // const oldSvg = svgContainer.querySelector("svg");
+          const newSvg = svgDoc.documentElement;
+          // console.log("newSvg: ", newSvg);
+
+          setSvgPath(newSvg);
+          // console.log("oldSvg: ", oldSvg);
+          // if (oldSvg) {
+          //   svgContainer.replaceChild(newSvg, oldSvg);
+          // }
+        }
+      };
+      reader.readAsText(file);
+    };
+
+    input.click();
+  };
+
   return (
     <div className="w-full mx-auto p-6 space-y-6">
       <h2 className="text-2xl font-bold">Step 2. SVG 영역과 매핑</h2>
@@ -52,97 +90,22 @@ export default function SvgMappingForm() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* 왼쪽 SVG 미리보기 패널 */}
         <div className="space-y-4">
-          <Card className="p-4 border h-72 flex items-center justify-center">
-            <div className="w-full h-full relative">
+          <Card className="p-4 border flex items-center justify-center h-fit">
+            <div className="w-full h-full relative pt-10">
               <div className="text-lg font-medium absolute top-2 left-4">
                 미리보기 패널
               </div>
 
               {/* SVG 미리보기 */}
-              <svg viewBox="0 0 200 200" className="w-full h-full">
-                {/* 간단한 인체 라인 그리기 */}
-                <g stroke="#000" fill="none" strokeWidth="1.5">
-                  {/* 목 라인 */}
-                  <path d="M100,50 C110,50 120,55 120,65" />
-
-                  {/* 어깨 라인 - 왼쪽 */}
-                  <path
-                    d="M120,65 L140,75"
-                    strokeWidth="2"
-                    stroke={
-                      selectedPath === "BODY_SHOULDER_SLOPE_LENGTH"
-                        ? "#f00"
-                        : "#000"
-                    }
-                  >
-                    <circle
-                      cx="120"
-                      cy="65"
-                      r="3"
-                      fill="white"
-                      stroke="black"
-                      strokeWidth="1"
-                    />
-                    <circle
-                      cx="140"
-                      cy="75"
-                      r="3"
-                      fill="white"
-                      stroke="black"
-                      strokeWidth="1"
-                    />
-                  </path>
-
-                  {/* 몸통 라인 - 왼쪽 */}
-                  <path d="M140,75 L150,120" />
-
-                  {/* 허리 라인 */}
-                  <path d="M90,120 L150,120">
-                    <circle
-                      cx="90"
-                      cy="120"
-                      r="3"
-                      fill="white"
-                      stroke="black"
-                      strokeWidth="1"
-                    />
-                    <circle
-                      cx="150"
-                      cy="120"
-                      r="3"
-                      fill="white"
-                      stroke="black"
-                      strokeWidth="1"
-                    />
-                  </path>
-
-                  {/* 허리 아래 라인 */}
-                  <path d="M90,140 L150,140">
-                    <circle
-                      cx="90"
-                      cy="140"
-                      r="3"
-                      fill="white"
-                      stroke="black"
-                      strokeWidth="1"
-                    />
-                    <circle
-                      cx="150"
-                      cy="140"
-                      r="3"
-                      fill="white"
-                      stroke="black"
-                      strokeWidth="1"
-                    />
-                  </path>
-                </g>
-              </svg>
+              {svgPath && (
+                <div dangerouslySetInnerHTML={{ __html: svgPath.outerHTML }} />
+              )}
             </div>
           </Card>
 
           {/* 파일 업로드 버튼 */}
           <div>
-            <Button variant="outline" className="w-full">
+            <Button variant="outline" className="w-full" onClick={onUpload}>
               파일 업로드 영역 (알파벳 .svg)
             </Button>
           </div>
@@ -212,10 +175,10 @@ export default function SvgMappingForm() {
               <AlertCircle className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-red-500" />
             </div>
 
-            <div className="text-sm text-gray-500 text-center mt-2">
+            {/* <div className="text-sm text-gray-500 text-center mt-2">
               <span className="block">↑</span>
               <span>매핑시 잘못 측정 원인가 제일 안안하게할</span>
-            </div>
+            </div> */}
           </div>
 
           {/* 버튼 영역 */}
