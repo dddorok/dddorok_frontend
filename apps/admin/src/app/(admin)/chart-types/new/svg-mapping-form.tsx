@@ -16,29 +16,9 @@ export default function SvgMappingForm() {
     허리길이: false,
   });
   const [svgPath, setSvgPath] = useState<HTMLElement | null>(null);
-  console.log("svgPath: ", svgPath);
 
   const [selectedPath, setSelectedPath] = useState("");
-
-  // 샘플 SVG 경로 데이터
-  const svgPaths = [
-    {
-      id: "BODY_FRONT_NECK_WIDTH",
-      name: "BODY_FRONT_NECK_WIDTH",
-      selected: false,
-    },
-    {
-      id: "BODY_SHOULDER_SLOPE_LENGTH",
-      name: "BODY_SHOULDER_SLOPE_LENGTH",
-      selected: false,
-    },
-    {
-      id: "BODY_SHOULDER_SLOPE_WIDTH",
-      name: "BODY_SHOULDER_SLOPE_WIDTH",
-      selected: false,
-    },
-    { id: "BODY_WAIST_LENGTH", name: "BODY_WAIST_LENGTH", selected: false },
-  ];
+  const [pathList, setPathList] = useState<SvgPath[]>([]);
 
   const toggleMeasurement = (key: string) => {
     setSelectedMeasurements((prev) => ({
@@ -66,15 +46,13 @@ export default function SvgMappingForm() {
         // SVG 요소를 찾아서 현재 SVG를 대체
         const svgContainer = document.querySelector(".w-full.h-full.relative");
         if (svgContainer) {
-          // const oldSvg = svgContainer.querySelector("svg");
           const newSvg = svgDoc.documentElement;
-          // console.log("newSvg: ", newSvg);
+          console.log("newSvg: ", newSvg);
 
+          const paths = extractSvgPaths(newSvg);
+
+          setPathList(paths);
           setSvgPath(newSvg);
-          // console.log("oldSvg: ", oldSvg);
-          // if (oldSvg) {
-          //   svgContainer.replaceChild(newSvg, oldSvg);
-          // }
         }
       };
       reader.readAsText(file);
@@ -113,15 +91,14 @@ export default function SvgMappingForm() {
           {/* Path ID 리스트 */}
           <div className="space-y-2">
             <div className="text-sm font-medium">Path ID</div>
-            {svgPaths.map((path, index) => (
+            {pathList.map((path) => (
               <div key={path.id} className="flex items-center space-x-2 ml-4">
-                <div className="text-gray-500">{index + 1}</div>
                 <div
                   className={`flex-1 ${selectedPath === path.id ? "font-medium" : ""}`}
                   onClick={() => setSelectedPath(path.id)}
                   style={{ cursor: "pointer" }}
                 >
-                  {path.name} →
+                  {path.id}
                 </div>
               </div>
             ))}
@@ -191,3 +168,35 @@ export default function SvgMappingForm() {
     </div>
   );
 }
+
+interface SvgPath {
+  id: string;
+  path: string;
+  stroke?: string;
+  strokeLinecap?: string;
+}
+
+const extractSvgPaths = (svgElement: HTMLElement): SvgPath[] => {
+  const paths: SvgPath[] = [];
+
+  // SVG 내의 모든 path 요소를 찾습니다
+  const pathElements = svgElement.querySelectorAll("path");
+
+  pathElements.forEach((path) => {
+    const id = path.id;
+    const pathData = path.getAttribute("d");
+    const stroke = path.getAttribute("stroke");
+    const strokeLinecap = path.getAttribute("stroke-linecap");
+
+    if (id && pathData) {
+      paths.push({
+        id,
+        path: pathData,
+        stroke: stroke || undefined,
+        strokeLinecap: strokeLinecap || undefined,
+      });
+    }
+  });
+
+  return paths;
+};
