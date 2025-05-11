@@ -1,9 +1,16 @@
-import { NewChartTypeClient } from "./new-chart-type-client";
+"use client";
+import { useState } from "react";
 
-export const metadata = {
-  title: "새 차트 유형 추가 | 관리자 페이지",
-};
+import InformationForm from "./information-form";
+import SvgMappingForm from "./svg-mapping-form";
 
 export default function NewChartTypePage() {
-  return <NewChartTypeClient />;
+  const [step, setStep] = useState(1);
+
+  return (
+    <>
+      {step === 1 && <InformationForm onNext={() => setStep(2)} />}
+      {step === 2 && <SvgMappingForm />}
+    </>
+  );
 }
