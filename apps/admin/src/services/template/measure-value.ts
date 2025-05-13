@@ -1,6 +1,3 @@
-// /api/template/{template_id}/measurement-value
-// 템플릿 세브 치수 값 리스트 조회
-
 import { privateInstance } from "../instance";
 
 export interface GetTemplateMeasurementValuesItemType {

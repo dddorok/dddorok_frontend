@@ -3,7 +3,6 @@ import { AlertCircle, Badge, Info, X } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 
-import { GuideCard } from "@/app/(admin)/templates/_components/GuideCard";
 import { TemplateList } from "@/app/(admin)/templates/_components/template-list";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -28,7 +27,6 @@ export default function TemplatesPage() {
       <div>
         <h2 className="text-2xl font-bold">템플릿 관리</h2>
       </div>
-      <GuideCard />
 
       <Alert
         variant="default"
@@ -54,21 +52,6 @@ export default function TemplatesPage() {
           chartType: filter.selectedChartType,
         }}
       />
-
-      <Alert className="bg-blue-50 border-blue-200 text-blue-800">
-        <Info className="h-4 w-4" />
-        <AlertDescription>
-          <p>
-            <strong>샘플 데이터 안내:</strong> 현재 보이는 데이터는
-            예시용입니다. 실제 구현 시 백엔드 API와 연동하여 실제 데이터를
-            표시해야 합니다.
-          </p>
-          <p className="mt-1">
-            <strong>데이터 모델 참고:</strong> 각 템플릿은 measurementRuleId
-            필드를 통해 치수 규칙과 연결됩니다.
-          </p>
-        </AlertDescription>
-      </Alert>
     </div>
   );
 }

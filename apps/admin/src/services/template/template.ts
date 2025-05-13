@@ -22,7 +22,7 @@ export type GetTemplatesResponse = TemplateType[];
 
 export const getTemplates = async () => {
   const response = await privateInstance
-    .get("template")
+    .get("template/list")
     .json<{ data: GetTemplatesResponse }>();
   return response.data;
 };
