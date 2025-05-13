@@ -101,3 +101,17 @@ export const updateTemplate = async (
   });
   return response.json();
 };
+
+// 템플릿 게시/취소
+export const updateTemplatePublishStatus = async (request: {
+  template_id: string;
+  is_published: boolean;
+}): Promise<{
+  id: "c7b3d7f0-8d6a-4c5d-98e6-678e9a34b7e9";
+  is_published: true;
+}> => {
+  const response = await privateInstance.patch(
+    `template/${request.template_id}/publish?is_published=${request.is_published}`
+  );
+  return response.json();
+};

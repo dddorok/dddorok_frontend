@@ -1,5 +1,5 @@
 "use client";
-import { AlertCircle, Badge, Info, X } from "lucide-react";
+import { AlertCircle } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 
@@ -46,12 +46,7 @@ export default function TemplatesPage() {
         </Button>
       </div>
 
-      <TemplateList
-        filterOptions={{
-          needleType: filter.selectedToolType,
-          chartType: filter.selectedChartType,
-        }}
-      />
+      <TemplateList filterOptions={{ needleType: filter.selectedToolType }} />
     </div>
   );
 }
@@ -90,7 +85,6 @@ function FilterSelect({
   selectedToolType,
   selectedChartType,
   handleToolTypeChange,
-  handleChartTypeChange,
   clearAllFilters,
 }: ReturnType<typeof useFilter>) {
   return (
@@ -104,22 +98,6 @@ function FilterSelect({
         </SelectTrigger>
         <SelectContent>
           {NEEDLE_OPTIONS.map((option) => (
-            <SelectItem key={option.value} value={option.value}>
-              {option.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-
-      <Select
-        value={selectedChartType || ""}
-        onValueChange={handleChartTypeChange}
-      >
-        <SelectTrigger className="w-[100px]">
-          <SelectValue placeholder="도안 유형" />
-        </SelectTrigger>
-        <SelectContent>
-          {CHART_TYPE_OPTIONS.map((option) => (
             <SelectItem key={option.value} value={option.value}>
               {option.label}
             </SelectItem>
