@@ -37,6 +37,7 @@ import {
   CHART_TYPE,
   CHART_TYPE_OPTIONS,
   ChartType,
+  CONSTRUCTION_METHOD,
   // ChartTypeSchema,
   CONSTRUCTION_METHOD_OPTIONS,
   ConstructionMethodSchema,
@@ -72,6 +73,7 @@ interface TemplateFormProps {
   };
   mode: "CREATE" | "EDIT";
   initialTemplate?: Partial<TemplateFormData>;
+  initialTemplateName?: string;
 }
 
 export function TemplateForm({
@@ -80,6 +82,7 @@ export function TemplateForm({
   mode,
   onSubmit,
   initialTemplate,
+  initialTemplateName,
 }: TemplateFormProps) {
   const form = useForm<z.infer<typeof templateFormSchema>>({
     resolver: zodResolver(templateFormSchema),
@@ -124,7 +127,7 @@ export function TemplateForm({
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <TemplateNameField />
+            <TemplateNameField initialTemplateName={initialTemplateName} />
 
             <FormField
               name="needleType"
@@ -262,19 +265,45 @@ export function TemplateForm({
   );
 }
 
-function TemplateNameField() {
+/**
+ ** 필드 값을 조합하여 자동 생성
+ ** “제작방식(방식 1+방식2 …)+넥라인+소매유형+소분류”
+ ** ex) 바텀업 브이넥 셋인 스웨터, 탑다운 라운드넥 래글런 스웨터
+ ** 관리자가 수정 가능하도록 함
+ */
+const generateTemplateName = (formData: Partial<TemplateFormData>) => {
+  const list = formData?.constructionMethods
+    ?.filter(Boolean)
+    .sort((a) => {
+      // 1. 1순위 : 탑다운, 바텀업
+      // 2. 2순위 : 조각잇기, 원통형
+      if (a === "TOP_DOWN" || a === "BOTTOM_UP") return -1;
+      if (a === "PIECED" || a === "ROUND") return 1;
+      return 0;
+    })
+    .map(
+      (item) =>
+        CONSTRUCTION_METHOD[item as keyof typeof CONSTRUCTION_METHOD].label
+    )
+    .join(" ");
+
+  return list;
+};
+
+function TemplateNameField({
+  initialTemplateName,
+}: {
+  initialTemplateName?: string;
+}) {
   const form = useFormContext<TemplateFormData>();
-  const needleType: NeedleType | null = useWatch({ name: "needleType" });
-  const chartType: ChartType | null = useWatch({ name: "chartType" });
+
+  const formValues = useWatch<TemplateFormData>();
+  const templateName =
+    generateTemplateName(formValues) + " " + initialTemplateName;
 
   useEffect(() => {
-    if (!needleType || !chartType) return;
-    form.setValue(
-      "name",
-      `${NEEDLE[needleType].label} ${CHART_TYPE[chartType].label}`,
-      { shouldValidate: true }
-    );
-  }, [needleType, chartType]);
+    form.setValue("name", templateName, { shouldValidate: true });
+  }, [templateName]);
 
   return (
     <FormField

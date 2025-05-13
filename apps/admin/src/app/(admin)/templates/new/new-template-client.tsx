@@ -12,6 +12,7 @@ import {
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { NECKLINE, SLEEVE } from "@/constants/top";
 import { useToast } from "@/hooks/use-toast";
 import { measurementRuleQueries } from "@/queries/measurement-rule";
 import { GetMeasurementRuleListItemType } from "@/services/measurement-rule";
@@ -35,6 +36,18 @@ export default function NewTemplateClient({
     ),
     enabled: !!selectedRule,
   });
+
+  const initialTemplateName = [
+    rule?.neck_line_type
+      ? NECKLINE[rule.neck_line_type as keyof typeof NECKLINE].label
+      : "",
+    rule?.sleeve_type
+      ? SLEEVE[rule.sleeve_type as keyof typeof SLEEVE].label
+      : "",
+    rule?.category_small,
+  ]
+    .filter(Boolean)
+    .join(" ");
 
   // 치수 규칙 선택 처리 함수
   const handleSelectRule = async (rule: GetMeasurementRuleListItemType) => {
@@ -94,6 +107,7 @@ export default function NewTemplateClient({
 
           <TemplateForm
             onSubmit={handleSubmit}
+            initialTemplateName={initialTemplateName}
             measurementRuleId={selectedRule}
             category={{
               level1: rule.category_large,
