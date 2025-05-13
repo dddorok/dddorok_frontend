@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { Suspense } from "react";
 
-import { GuideCard } from "./_components/GuideCard";
 import { MeasurementRuleTable } from "./_components/measurement-rule-table";
 
 import { Button } from "@/components/ui/button";
@@ -12,8 +11,6 @@ export default function MeasurementRulesPage() {
       <div>
         <h2 className="text-2xl font-bold">치수 규칙 설정</h2>
       </div>
-
-      <GuideCard />
 
       <div className="flex justify-end">
         <Link href="/measurement-rules/new">
