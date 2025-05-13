@@ -24,6 +24,7 @@ import {
   Table,
 } from "@/components/ui/table";
 import { toast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
 import {
   measurementRuleQueries,
   measurementRuleQueryKeys,
@@ -164,16 +165,6 @@ function TableItem({ rule }: { rule: GetMeasurementRuleListItemType }) {
                   onOpenChange={close}
                 />
               </Suspense>
-
-              // <ViewTemplatesRuleDialog
-              //   open={isOpen}
-              //   onOpenChange={close}
-              //   viewTemplatesRule={rule}
-              //   onDelete={() => {
-              //     close();
-              //     // TODO: 삭제 처리
-              //   }}
-              // />
             ));
           }}
           disabled={templateCount === 0}
@@ -190,8 +181,18 @@ function TableItem({ rule }: { rule: GetMeasurementRuleListItemType }) {
 
       <TableCell className="text-center">
         <div className="flex flex-wrap justify-center gap-2">
-          <Button variant="outline" size="sm" asChild>
-            <Link href={`/measurement-rules/${rule.id}`}>규칙 수정</Link>
+          <Button
+            variant="outline"
+            size="sm"
+            asChild
+            disabled={!isDeletable}
+            className={cn(
+              !isDeletable ? "text-gray-400 pointer-events-none" : ""
+            )}
+          >
+            <Link href={!isDeletable ? "#" : `/measurement-rules/${rule.id}`}>
+              규칙 수정
+            </Link>
           </Button>
           <Button
             variant="outline"
