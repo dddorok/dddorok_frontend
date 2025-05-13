@@ -37,7 +37,7 @@ import {
   CHART_TYPE,
   CHART_TYPE_OPTIONS,
   ChartType,
-  ChartTypeSchema,
+  // ChartTypeSchema,
   CONSTRUCTION_METHOD_OPTIONS,
   ConstructionMethodSchema,
   NEEDLE,
@@ -52,12 +52,12 @@ const templateFormSchema = z.object({
   name: z.string().min(1, "템플릿 이름을 입력해주세요"),
   measurementRuleId: z.string().min(1, "치수 규칙을 선택해주세요"),
   needleType: NeedleTypeSchema,
-  chartType: ChartTypeSchema,
+  // chartType: ChartTypeSchema,
   constructionMethods: z
     .array(ConstructionMethodSchema)
     .min(1, "최소 1개 이상의 제작 방식을 선택해주세요"),
   isPublished: z.boolean().optional(),
-  chartTypeIds: z.array(z.string()).optional(),
+  // chartTypeIds: z.array(z.string()).optional(),
 });
 
 export type TemplateFormData = z.infer<typeof templateFormSchema>;
@@ -86,10 +86,10 @@ export function TemplateForm({
     defaultValues: {
       name: initialTemplate?.name || "",
       needleType: initialTemplate?.needleType,
-      chartType: initialTemplate?.chartType,
+      // chartType: initialTemplate?.chartType,
       constructionMethods: initialTemplate?.constructionMethods || [],
       measurementRuleId: measurementRuleId,
-      chartTypeIds: initialTemplate?.chartTypeIds || [],
+      // chartTypeIds: initialTemplate?.chartTypeIds || [],
       isPublished: initialTemplate?.isPublished,
     },
     mode: "onSubmit",
@@ -144,7 +144,7 @@ export function TemplateForm({
               )}
             />
 
-            <FormField
+            {/* <FormField
               name="chartType"
               render={({ field }) => (
                 <FormItem>
@@ -167,7 +167,7 @@ export function TemplateForm({
                   <FormMessage />
                 </FormItem>
               )}
-            />
+            /> */}
 
             {/* TODO: 공개 여부 */}
             {mode === "EDIT" && <PublishStatusSelect />}
@@ -187,7 +187,7 @@ export function TemplateForm({
         {/* Section 2: 조건부 속성 입력 */}
         <ConstructionMethodSelect category={category} />
         {/* 차트 유형 */}
-        {showChartFields && (
+        {/* {showChartFields && (
           <Card>
             <CardHeader>
               <CardTitle>차트 유형 설정</CardTitle>
@@ -196,7 +196,6 @@ export function TemplateForm({
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {/* Chart Type - Multi-select */}
               <FormField
                 name="chartTypeIds"
                 render={({ field }) => (
@@ -246,9 +245,9 @@ export function TemplateForm({
               />
             </CardContent>
           </Card>
-        )}
+        )} */}
 
-        <ChartTypeSelect />
+        {/* <ChartTypeSelect /> */}
 
         <div className="flex justify-end gap-4">
           <Button variant="outline" type="button">
@@ -301,78 +300,78 @@ const getCategoryName = (category: {
   return `${category.level1} > ${category.level2} > ${category.level3}`;
 };
 
-const getIsChartBasedPattern = (chartType: ChartType) => {
-  return chartType === "GRID" || chartType === "MIXED";
-};
+// const getIsChartBasedPattern = (chartType: ChartType) => {
+//   return chartType === "GRID" || chartType === "MIXED";
+// };
 
-// TODO: 이건 일단 빈배열로가기, 지금은 서버 준비가 안됨
-function ChartTypeSelect() {
-  const form = useFormContext<TemplateFormData>();
+// // TODO: 이건 일단 빈배열로가기, 지금은 서버 준비가 안됨
+// function ChartTypeSelect() {
+//   const form = useFormContext<TemplateFormData>();
 
-  // TODO: 차트형 또는 혼합형 패턴 -> 차트 유형 활성화
-  // TODO: 필드가 비활성화될 때 값 초기화
+//   // TODO: 차트형 또는 혼합형 패턴 -> 차트 유형 활성화
+//   // TODO: 필드가 비활성화될 때 값 초기화
 
-  const selectedPatternType = useWatch({ name: "chartType" });
-  const chartBasedPattern =
-    selectedPatternType === "GRID" || selectedPatternType === "MIXED";
+//   const selectedPatternType = useWatch({ name: "chartType" });
+//   const chartBasedPattern =
+//     selectedPatternType === "GRID" || selectedPatternType === "MIXED";
 
-  console.log("chartBasedPattern: ", chartBasedPattern);
-  if (!chartBasedPattern) return null;
+//   console.log("chartBasedPattern: ", chartBasedPattern);
+//   if (!chartBasedPattern) return null;
 
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>차트 유형 선택</CardTitle>
-        <CardDescription>차트 유형을 설정해주세요.</CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        <FormField
-          control={form.control}
-          name="chartTypeIds"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>차트 유형</FormLabel>
-              <FormDescription>
-                차트 유형 관리에 등록된 목록에서 선택할 수 있으며, 다중 선택이
-                가능합니다.
-              </FormDescription>
-              <div className="space-y-2 mt-2">
-                {chartTypes.map((chartType) => (
-                  <div
-                    key={chartType.id}
-                    className="flex items-center space-x-2"
-                  >
-                    <Checkbox
-                      id={`chart-type-${chartType.id}`}
-                      checked={(field.value || []).includes(chartType.id)}
-                      onCheckedChange={(checked) => {
-                        const currentValues = field.value || [];
-                        if (checked) {
-                          field.onChange([...currentValues, chartType.id]);
-                        } else {
-                          field.onChange(
-                            currentValues.filter((id) => id !== chartType.id)
-                          );
-                        }
-                      }}
-                    />
-                    <label
-                      htmlFor={`chart-type-${chartType.id}`}
-                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                    >
-                      {chartType.name}
-                    </label>
-                  </div>
-                ))}
-              </div>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-      </CardContent>
-    </Card>
-  );
-}
+//   return (
+//     <Card>
+//       <CardHeader>
+//         <CardTitle>차트 유형 선택</CardTitle>
+//         <CardDescription>차트 유형을 설정해주세요.</CardDescription>
+//       </CardHeader>
+//       <CardContent className="space-y-6">
+//         <FormField
+//           control={form.control}
+//           name="chartTypeIds"
+//           render={({ field }) => (
+//             <FormItem>
+//               <FormLabel>차트 유형</FormLabel>
+//               <FormDescription>
+//                 차트 유형 관리에 등록된 목록에서 선택할 수 있으며, 다중 선택이
+//                 가능합니다.
+//               </FormDescription>
+//               <div className="space-y-2 mt-2">
+//                 {chartTypes.map((chartType) => (
+//                   <div
+//                     key={chartType.id}
+//                     className="flex items-center space-x-2"
+//                   >
+//                     <Checkbox
+//                       id={`chart-type-${chartType.id}`}
+//                       checked={(field.value || []).includes(chartType.id)}
+//                       onCheckedChange={(checked) => {
+//                         const currentValues = field.value || [];
+//                         if (checked) {
+//                           field.onChange([...currentValues, chartType.id]);
+//                         } else {
+//                           field.onChange(
+//                             currentValues.filter((id) => id !== chartType.id)
+//                           );
+//                         }
+//                       }}
+//                     />
+//                     <label
+//                       htmlFor={`chart-type-${chartType.id}`}
+//                       className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+//                     >
+//                       {chartType.name}
+//                     </label>
+//                   </div>
+//                 ))}
+//               </div>
+//               <FormMessage />
+//             </FormItem>
+//           )}
+//         />
+//       </CardContent>
+//     </Card>
+//   );
+// }
 
 const getIsConstructionMethodEnabled = ({
   needleType,
