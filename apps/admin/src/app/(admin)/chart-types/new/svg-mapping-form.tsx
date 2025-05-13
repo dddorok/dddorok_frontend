@@ -1,11 +1,13 @@
 import { AlertCircle } from "lucide-react";
 import React, { useState } from "react";
 
+import { CommonSelect } from "@/components/CommonUI";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select } from "@/components/ui/select";
 
 export default function SvgMappingForm() {
   const [selectedMeasurements, setSelectedMeasurements] = useState({
@@ -19,6 +21,13 @@ export default function SvgMappingForm() {
 
   const [selectedPath, setSelectedPath] = useState("");
   const [pathList, setPathList] = useState<SvgPath[]>([]);
+
+  const [paths, setPaths] = useState<
+    {
+      path: SvgPath;
+      selectItem: string | null;
+    }[]
+  >([]);
 
   const toggleMeasurement = (key: string) => {
     setSelectedMeasurements((prev) => ({
@@ -52,6 +61,7 @@ export default function SvgMappingForm() {
           const paths = extractSvgPaths(newSvg);
 
           setPathList(paths);
+          setPaths(paths.map((path) => ({ path: path, selectItem: null })));
           setSvgPath(newSvg);
         }
       };
@@ -94,11 +104,19 @@ export default function SvgMappingForm() {
             {pathList.map((path) => (
               <div key={path.id} className="flex items-center space-x-2 ml-4">
                 <div
-                  className={`flex-1 ${selectedPath === path.id ? "font-medium" : ""}`}
+                  className={`flex-1 flex flex-col gap-2 ${selectedPath === path.id ? "font-medium" : ""}`}
                   onClick={() => setSelectedPath(path.id)}
                   style={{ cursor: "pointer" }}
                 >
-                  {path.id}
+                  <div>{path.id}</div>
+                  <CommonSelect
+                    options={[
+                      { label: "test", value: "test" },
+                      { label: "test2", value: "test2" },
+                      { label: "test3", value: "test3" },
+                    ]}
+                    onChange={() => {}}
+                  />
                 </div>
               </div>
             ))}

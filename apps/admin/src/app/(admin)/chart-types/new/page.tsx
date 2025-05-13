@@ -5,7 +5,7 @@ import InformationForm from "./information-form";
 import SvgMappingForm from "./svg-mapping-form";
 
 export default function NewChartTypePage() {
-  const [step, setStep] = useState(2);
+  const [step, setStep] = useState(1);
 
   return (
     <>
