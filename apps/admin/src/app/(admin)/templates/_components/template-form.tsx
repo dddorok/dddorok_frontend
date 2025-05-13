@@ -54,12 +54,21 @@ const templateFormSchema = z.object({
   measurementRuleId: z.string().min(1, "치수 규칙을 선택해주세요"),
   needleType: NeedleTypeSchema,
   // chartType: ChartTypeSchema,
-  constructionMethods: z
-    .array(ConstructionMethodSchema)
-    .min(1, "최소 1개 이상의 제작 방식을 선택해주세요"),
+  constructionMethods: z.array(ConstructionMethodSchema),
   isPublished: z.boolean().optional(),
   // chartTypeIds: z.array(z.string()).optional(),
 });
+// .refine(
+//   (data) => {
+//     if (data.needleType === "KNITTING") {
+//       return data.constructionMethods.length > 1;
+//     }
+//     return true;
+//   },
+//   {
+//     message: "상의 제작 방식을 1개 이상 입력해주세요.",
+//   }
+// );
 
 export type TemplateFormData = z.infer<typeof templateFormSchema>;
 
@@ -105,6 +114,21 @@ export function TemplateForm({
   const handleSubmit = async () => {
     try {
       const request = form.getValues();
+      if (!request.needleType) {
+        form.setError("needleType", {
+          message: "도구 유형을 선택해주세요.",
+        });
+        return;
+      }
+      if (request.needleType === "KNITTING") {
+        if (request.constructionMethods.length === 0) {
+          // throw new Error("상의 제작 방식을 1개 이상 입력해주세요.");
+          form.setError("constructionMethods", {
+            message: "상의 제작 방식을 1개 이상 입력해주세요.",
+          });
+          return;
+        }
+      }
       await onSubmit(request);
     } catch (error) {
       console.error("error: ", error);
@@ -267,7 +291,7 @@ export function TemplateForm({
 
 /**
  ** 필드 값을 조합하여 자동 생성
- ** “제작방식(방식 1+방식2 …)+넥라인+소매유형+소분류”
+ ** "제작방식(방식 1+방식2 ...)+넥라인+소매유형+소분류"
  ** ex) 바텀업 브이넥 셋인 스웨터, 탑다운 라운드넥 래글런 스웨터
  ** 관리자가 수정 가능하도록 함
  */

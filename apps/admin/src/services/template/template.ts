@@ -30,7 +30,7 @@ export const getTemplates = async () => {
 interface CreateTemplateRequest {
   name: string;
   needle_type: NeedleType;
-  chart_type: ChartType;
+  chart_type: ChartType | "NONE";
   measurement_rule_id: string;
   construction_methods: string[];
   chart_type_ids: string[];

@@ -60,17 +60,17 @@ export default function NewTemplateClient({
   const handleSubmit = async (data: TemplateFormData) => {
     // setIsSubmitting(true);
 
-    if (!data.needleType || !data.chartType) {
+    if (!data.needleType) {
       throw new Error("입력 필드가 비어있습니다.");
     }
 
     const request = {
       name: data.name,
       needle_type: data.needleType,
-      chart_type: data.chartType,
+      chart_type: "NONE" as const,
       measurement_rule_id: data.measurementRuleId,
       construction_methods: data.constructionMethods,
-      chart_type_ids: data.chartTypeIds || [],
+      chart_type_ids: [],
     };
     const response = await createTemplate(request);
     console.log("response: ", response);
