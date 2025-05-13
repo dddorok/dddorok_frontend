@@ -13,6 +13,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Switch } from "@/components/ui/switch";
 import {
   Table,
   TableBody,
@@ -143,6 +144,9 @@ export function SizeDetailForm({
                         {sizeDetails[size]?.[itemId] || ""}
                       </TableCell>
                     ))}
+                    <TableCell className="border">
+                      <Switch />
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -170,6 +174,7 @@ const useSizeDetails = (
   const [sizeDetails, setSizeDetails] = useState<SizeDetailFormType>(
     convertToSizeRangeTypeRecord(measurementValues)
   );
+  const [rangeToggleList, setRangeToggleList] = useState<string[]>([]);
   const tableRef = useRef<HTMLTableElement>(null);
 
   // 붙여넣기 이벤트 처리
