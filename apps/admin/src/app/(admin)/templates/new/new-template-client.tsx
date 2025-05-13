@@ -17,11 +17,17 @@ import { measurementRuleQueries } from "@/queries/measurement-rule";
 import { GetMeasurementRuleListItemType } from "@/services/measurement-rule";
 import { createTemplate } from "@/services/template/template";
 
-export default function NewTemplateClient() {
+export default function NewTemplateClient({
+  initRuleId,
+}: {
+  initRuleId?: string;
+}) {
   const router = useRouter();
   const { toast } = useToast();
   const [ruleName, setRuleName] = useState<string>("");
-  const [selectedRule, setSelectedRule] = useState<string | null>(null);
+  const [selectedRule, setSelectedRule] = useState<string | null>(
+    initRuleId || null
+  );
 
   const { data: rule } = useQuery({
     ...measurementRuleQueries.getMeasurementRuleByIdQueryOptions(

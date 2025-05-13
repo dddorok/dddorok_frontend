@@ -47,7 +47,9 @@ export default function NewMeasurementRulePage() {
           router.refresh();
           break;
         case "TEMPLATE_NEW":
-          router.push(`/templates/new?ruleId=${encodeURIComponent(res.id)}`);
+          router.push(
+            `/templates/new?ruleId=${encodeURIComponent(res.data.id)}`
+          );
           break;
       }
     } catch (err) {

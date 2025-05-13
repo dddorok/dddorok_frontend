@@ -86,10 +86,9 @@ interface CreateMeasurementRuleResponse {
 export const createMeasurementRule = async (
   request: CreateMeasurementRuleRequest
 ) => {
-  const response = await privateInstance<CreateMeasurementRuleResponse>(
-    "measurement-rule",
-    { json: request, method: "POST" }
-  );
+  const response = await privateInstance<{
+    data: CreateMeasurementRuleResponse;
+  }>("measurement-rule", { json: request, method: "POST" });
   return response.json();
 };
 

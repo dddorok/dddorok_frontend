@@ -171,10 +171,7 @@ function SaveButtons({
   ) => Promise<void>;
 }) {
   const form = useFormContext<MeasurementRuleFormData>();
-  const { isValid, isSubmitting, errors } = useFormState();
-  console.log("isValid: ", isValid);
-  console.log("isSubmitting: ", isSubmitting);
-  console.log("errors: ", errors);
+
   const handleSubmit = async (
     data: MeasurementRuleFormData,
     createTemplate: boolean = false
