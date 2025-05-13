@@ -3,11 +3,11 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Info, CheckSquare } from "lucide-react";
 import { PlusCircle } from "lucide-react";
+import { ComponentProps } from "react";
 import { useForm, useFormContext, useFormState } from "react-hook-form";
 import * as z from "zod";
 
-import { MeasurementRuleDefaultSection } from "./default-section";
-import { MeasurementRuleSelectSection } from "./rule-select-section";
+import { MeasurementRuleSelectSection } from "../_components/measurement-rule-form/rule-select-section";
 
 import { BasicAlert } from "@/components/Alert";
 import { Button } from "@/components/ui/button";
@@ -18,20 +18,34 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Form } from "@/components/ui/form";
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { categories } from "@/constants/category";
-import { getCategoryById } from "@/constants/category";
-import { NecklineTypeSchema, SleeveTypeSchema } from "@/constants/top";
+import {
+  NECKLINE,
+  NecklineTypeSchema,
+  SLEEVE,
+  SleeveTypeSchema,
+} from "@/constants/top";
 import { QueryDevTools } from "@/lib/react-query";
-import { CustomError } from "@/services/instance";
 
 interface MeasurementRuleFormProps {
-  initialValues?: MeasurementRuleFormData;
-  isEdit?: boolean;
-  onSubmit: (
-    data: MeasurementRuleFormData,
-    createTemplate: boolean
-  ) => Promise<void>;
+  initialValues: MeasurementRuleFormData;
+  onSubmit: (data: MeasurementRuleFormData) => Promise<void>;
 }
 
 const measurementRuleSchema = z
@@ -65,22 +79,13 @@ const measurementRuleSchema = z
 
 export type MeasurementRuleFormData = z.infer<typeof measurementRuleSchema>;
 
-/**
- * TODO: edit과 공통 부분은 리팩토링 해야함.
- */
 export function MeasurementRuleForm({
   initialValues,
-  isEdit = false,
   onSubmit,
 }: MeasurementRuleFormProps) {
   const form = useForm<z.infer<typeof measurementRuleSchema>>({
     resolver: zodResolver(measurementRuleSchema),
-    defaultValues: initialValues || {
-      name: "",
-      items: [],
-      level1: categories[0]?.id || "",
-      level2: categories[0]?.children?.[0]?.id || "",
-    },
+    defaultValues: initialValues,
     mode: "onSubmit",
     shouldFocusError: true,
   });
@@ -155,7 +160,7 @@ export function MeasurementRuleForm({
           >
             취소
           </Button>
-          <SaveButtons isEdit={isEdit} onSubmit={onSubmit} />
+          <SaveButtons onSubmit={onSubmit} />
         </div>
       </form>
       <QueryDevTools control={form.control} />
@@ -163,76 +168,132 @@ export function MeasurementRuleForm({
   );
 }
 
+function MeasurementRuleDefaultSection() {
+  const form = useFormContext();
+
+  const formValues = form.getValues();
+
+  return (
+    <div className="space-y-4">
+      <div className="space-y-4">
+        <div>
+          <FormLabel>카테고리 선택</FormLabel>
+          <FormDescription>
+            대분류, 중분류, 소분류를 순서대로 선택해주세요.
+          </FormDescription>
+        </div>
+        <div className="grid grid-cols-3 gap-4">
+          <FixedField label="대분류" value={formValues.level1} />
+          <FixedField label="중분류" value={formValues.level2} />
+          <FixedField label="소분류" value={formValues.level3} />
+        </div>
+      </div>
+      {formValues.sleeveType && (
+        <FixedField
+          label="소매 유형"
+          value={SLEEVE[formValues.sleeveType as keyof typeof SLEEVE].label}
+        />
+      )}
+      {formValues.necklineType && (
+        <FixedField
+          label="넥라인"
+          value={
+            NECKLINE[formValues.necklineType as keyof typeof NECKLINE].label
+          }
+        />
+      )}
+      <FixedField label="규칙 이름" value={formValues.name} />
+    </div>
+  );
+}
+
+function FixedField(props: { label: string; value: string }) {
+  return (
+    <div>
+      <FormLabel>{props.label}</FormLabel>
+      <p className="p-3 bg-gray-50 rounded-md border text-sm mt-1">
+        {props.value}
+      </p>
+    </div>
+  );
+}
+
 function SaveButtons({
-  isEdit,
   onSubmit,
 }: {
-  isEdit: boolean;
-  onSubmit: (
-    data: MeasurementRuleFormData,
-    createTemplate: boolean
-  ) => Promise<void>;
+  onSubmit: (data: MeasurementRuleFormData) => Promise<void>;
 }) {
   const form = useFormContext<MeasurementRuleFormData>();
 
-  const handleSubmit = async (
-    data: MeasurementRuleFormData,
-    createTemplate: boolean = false
-  ) => {
-    // 카테고리 소분류, 중분류, 대분류 선택에 따른 필요 항목 조회
-    const needField = [
-      ...(getCategoryById(data.level3)?.needFields || []),
-      ...(getCategoryById(data.level2)?.needFields || []),
-      ...(getCategoryById(data.level1)?.needFields || []),
-    ];
-
+  const handleSubmit = async (data: MeasurementRuleFormData) => {
     const requestData = {
       ...data,
-      sleeveType: needField?.includes("sleeveType") ? data.sleeveType : "NONE",
-      necklineType: needField?.includes("necklineType")
-        ? data.necklineType
-        : "NONE",
     };
 
     try {
-      await onSubmit(requestData, createTemplate);
-    } catch (error) {
-      if (error instanceof CustomError) {
-        if (error.error === "RULE_NAME_DUPLICATE") {
-          form.setError("root", {
-            message: "이미 존재하는 규칙 이름입니다.",
-          });
-          return;
-        }
-      }
-    }
+      await onSubmit(requestData);
+    } catch (error) {}
   };
 
   return (
-    <>
-      {" "}
-      <Button
-        type="button"
-        onClick={() => {
-          form.trigger();
-          form.handleSubmit((data) => handleSubmit(data, false))();
-        }}
-      >
-        저장
-      </Button>
-      {!isEdit && (
-        <Button
-          type="button"
-          variant="default"
-          onClick={() => {
-            form.trigger();
-            form.handleSubmit((data) => handleSubmit(data, true))();
-          }}
-        >
-          <PlusCircle className="mr-2 h-4 w-4" />
-          저장 후 템플릿 생성
-        </Button>
+    <Button
+      type="button"
+      onClick={() => {
+        form.trigger();
+        form.handleSubmit((data) => handleSubmit(data))();
+      }}
+    >
+      저장
+    </Button>
+  );
+}
+
+function FormSelect({
+  options,
+  label,
+  placeholder,
+  onChange,
+  disabled,
+  ...props
+}: {
+  options: { id: string; name: string }[];
+  label?: string;
+  placeholder?: string;
+  name: ComponentProps<typeof FormField>["name"];
+  onChange?: (value: string) => void;
+  disabled?: boolean;
+}) {
+  return (
+    <FormField
+      {...props}
+      render={({ field }) => (
+        <FormItem>
+          {label && <FormLabel>{label}</FormLabel>}
+          <FormControl>
+            <Select
+              value={field.value}
+              onValueChange={(value) => {
+                field.onChange(value);
+                onChange?.(value);
+                field.onBlur();
+              }}
+              disabled={disabled}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder={placeholder} />
+              </SelectTrigger>
+              <SelectContent>
+                {options.map((option) => (
+                  <SelectItem key={option.id} value={option.id.toString()}>
+                    {option.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </FormControl>
+          <FormMessage />
+        </FormItem>
       )}
-    </>
+    />
   );
 }

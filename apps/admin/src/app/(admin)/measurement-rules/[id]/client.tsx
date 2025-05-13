@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import {
   MeasurementRuleForm,
   MeasurementRuleFormData,
-} from "../_components/measurement-rule-form/measurement-rule-form";
+} from "./measurement-rule-form";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { NecklineType, SleeveType } from "@/constants/top";
@@ -100,7 +100,6 @@ export default function EditMeasurementRuleClient({
             necklineType: rule.neck_line_type as NecklineType,
           }}
           onSubmit={handleSubmit}
-          isEdit={true}
         />
       )}
     </div>
