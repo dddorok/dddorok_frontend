@@ -22,7 +22,7 @@ export type GetTemplatesResponse = TemplateType[];
 
 export const getTemplates = async () => {
   const response = await privateInstance
-    .get("template")
+    .get("template/list")
     .json<{ data: GetTemplatesResponse }>();
   return response.data;
 };
@@ -30,7 +30,7 @@ export const getTemplates = async () => {
 interface CreateTemplateRequest {
   name: string;
   needle_type: NeedleType;
-  chart_type: ChartType;
+  chart_type: ChartType | "NONE";
   measurement_rule_id: string;
   construction_methods: string[];
   chart_type_ids: string[];
@@ -99,5 +99,19 @@ export const updateTemplate = async (
   const response = await privateInstance.patch(`template/${templateId}`, {
     json: template,
   });
+  return response.json();
+};
+
+// 템플릿 게시/취소
+export const updateTemplatePublishStatus = async (request: {
+  template_id: string;
+  is_published: boolean;
+}): Promise<{
+  id: "c7b3d7f0-8d6a-4c5d-98e6-678e9a34b7e9";
+  is_published: true;
+}> => {
+  const response = await privateInstance.patch(
+    `template/${request.template_id}/publish?is_published=${request.is_published}`
+  );
   return response.json();
 };
