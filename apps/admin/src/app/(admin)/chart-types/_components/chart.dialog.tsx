@@ -1,8 +1,10 @@
+import { useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
+  DialogClose,
   DialogContent,
   DialogDefaultProps,
   DialogDescription,
@@ -12,44 +14,35 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
+import { chartTypeQueries } from "@/queries/chart-type";
+import { deleteChartType } from "@/services/chart-type";
 
-export function ChartDeleteDialog(
-  props: DialogDefaultProps & {
-    chartTypeToDelete: any;
-  }
-) {
+export function ChartDeleteDialog(props: {
+  chartId: string;
+  chartName: string;
+}) {
+  const queryClient = useQueryClient();
   // 차트 유형 삭제 함수
   const handleDeleteChartType = () => {
-    if (deleteChartTypeId) {
-      // 현재 chartTypesList 배열에서 해당 ID를 가진 항목을 제외한 새 배열 생성
-      const updatedChartTypes = chartTypesList.filter(
-        (ct) => ct.id !== deleteChartTypeId
-      );
-
-      // 상태 업데이트
-      setChartTypesList(updatedChartTypes);
-      setIsDeleteDialogOpen(false);
-      setDeleteChartTypeId(null);
-
-      // 성공 메시지 표시
-      toast({
-        title: "삭제 완료",
-        description: `"${props.chartTypeToDelete?.name}" 차트 유형이 삭제되었습니다.`,
+    deleteChartType(props.chartId).then(() => {
+      queryClient.invalidateQueries({
+        queryKey: chartTypeQueries.getChartTypeListQueryOptions().queryKey,
       });
-    }
+    });
+
+    toast({
+      title: "삭제 완료",
+      description: `"${props.chartName}" 차트 유형이 삭제되었습니다.`,
+    });
   };
 
   return (
-    <Dialog open={props.open} onOpenChange={props.onOpenChange}>
+    <Dialog>
       <DialogTrigger asChild>
         <Button
           variant="outline"
           size="sm"
           className="text-red-500 hover:text-red-700 hover:bg-red-50"
-          onClick={() => {
-            // setDeleteChartTypeId(chartType.id);
-            // setIsDeleteDialogOpen(true);
-          }}
         >
           삭제
         </Button>
@@ -58,18 +51,20 @@ export function ChartDeleteDialog(
         <DialogHeader>
           <DialogTitle>차트 유형 삭제</DialogTitle>
           <DialogDescription>
-            '{props.chartTypeToDelete?.name}' 차트 유형을 정말 삭제하시겠습니까?
-            이 작업은 되돌릴 수 없으며, 이 차트 유형을 사용하는 템플릿에 영향을
-            줄 수 있습니다.
+            '{props.chartName}' 차트 유형을 정말 삭제하시겠습니까? 이 작업은
+            되돌릴 수 없으며, 이 차트 유형을 사용하는 템플릿에 영향을 줄 수
+            있습니다.
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>
-          <Button variant="outline" onClick={() => props.onOpenChange(false)}>
-            취소
-          </Button>
-          <Button variant="destructive" onClick={handleDeleteChartType}>
-            삭제
-          </Button>
+          <DialogClose asChild>
+            <Button variant="outline">취소</Button>
+          </DialogClose>
+          <DialogClose asChild>
+            <Button variant="destructive" onClick={handleDeleteChartType}>
+              삭제
+            </Button>
+          </DialogClose>
         </DialogFooter>
       </DialogContent>
     </Dialog>

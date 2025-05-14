@@ -1,5 +1,6 @@
 "use client";
 
+import { useQuery } from "@tanstack/react-query";
 import { Info } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
@@ -8,16 +9,6 @@ import { ChartDeleteDialog, ChartTypeDetailsDialog } from "./chart.dialog";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Dialog,
-  DialogTrigger,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from "@/components/ui/dialog";
 import {
   Table,
   TableBody,
@@ -26,42 +17,16 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useToast } from "@/hooks/use-toast";
 import { chartTypes, type ChartType } from "@/lib/data";
+import { chartTypeQueries } from "@/queries/chart-type";
 
 export function ChartTypeList() {
-  const [chartTypesList, setChartTypesList] = useState<ChartType[]>(chartTypes);
-  const [deleteChartTypeId, setDeleteChartTypeId] = useState<string | null>(
-    null
+  const { data: chartTypesList } = useQuery(
+    chartTypeQueries.getChartTypeListQueryOptions()
   );
+  console.log("chartTypesList: ", chartTypesList);
+
   const [viewChartType, setViewChartType] = useState<ChartType | null>(null);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const { toast } = useToast();
-
-  const chartTypeToDelete = chartTypesList.find(
-    (ct) => ct.id === deleteChartTypeId
-  );
-
-  // 차트 유형 삭제 함수
-  const handleDeleteChartType = () => {
-    if (deleteChartTypeId) {
-      // 현재 chartTypesList 배열에서 해당 ID를 가진 항목을 제외한 새 배열 생성
-      const updatedChartTypes = chartTypesList.filter(
-        (ct) => ct.id !== deleteChartTypeId
-      );
-
-      // 상태 업데이트
-      setChartTypesList(updatedChartTypes);
-      setIsDeleteDialogOpen(false);
-      setDeleteChartTypeId(null);
-
-      // 성공 메시지 표시
-      toast({
-        title: "삭제 완료",
-        description: `"${chartTypeToDelete?.name}" 차트 유형이 삭제되었습니다.`,
-      });
-    }
-  };
 
   return (
     <div className="space-y-6">
@@ -83,22 +48,22 @@ export function ChartTypeList() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>차트 유형 ID</TableHead>
+              {/* <TableHead>차트 유형 ID</TableHead> */}
               <TableHead>차트 유형 이름</TableHead>
               <TableHead className="text-right">작업</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {chartTypesList.length === 0 ? (
+            {chartTypesList?.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={3} className="text-center py-10">
                   차트 유형이 없습니다. 새 차트 유형을 추가해주세요.
                 </TableCell>
               </TableRow>
             ) : (
-              chartTypesList.map((chartType) => (
+              chartTypesList?.map((chartType) => (
                 <TableRow key={chartType.id}>
-                  <TableCell className="font-medium">{chartType.id}</TableCell>
+                  {/* <TableCell className="font-medium">{chartType.id}</TableCell> */}
                   <TableCell>{chartType.name}</TableCell>
                   <TableCell className="text-right">
                     <div className="flex flex-wrap justify-end gap-2">
@@ -114,7 +79,10 @@ export function ChartTypeList() {
                           수정
                         </Button>
                       </Link>
-                      <ChartDeleteDialog />
+                      <ChartDeleteDialog
+                        chartId={chartType.id}
+                        chartName={chartType.name}
+                      />
                     </div>
                   </TableCell>
                 </TableRow>

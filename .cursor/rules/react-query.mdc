@@ -1,0 +1,100 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# React Query 사용 규칙
+
+## 1. 쿼리 사용 방식
+
+### 1.1 일반 쿼리 사용
+```typescript
+import { useQuery } from "@tanstack/react-query";
+import { chartTypeQueries } from "@/queries/chart-type";
+
+// 컴포넌트 내부
+const { data } = useQuery(chartTypeQueries.getChartTypeListQueryOptions());
+```
+
+### 1.2 Suspense 쿼리 사용
+```typescript
+import { useSuspenseQuery } from "@tanstack/react-query";
+import { measurementRuleQueries } from "@/queries/measurement-rule";
+
+// 컴포넌트 내부
+const { data } = useSuspenseQuery({
+  ...measurementRuleQueries.getMeasurementRuleListQueryOptions(),
+});
+```
+
+## 2. 쿼리 무효화 (Invalidation)
+
+### 2.1 쿼리 클라이언트 사용
+```typescript
+import { useQueryClient } from "@tanstack/react-query";
+import { templateQueries } from "@/queries/template";
+
+// 컴포넌트 내부
+const queryClient = useQueryClient();
+
+// 특정 쿼리 무효화
+queryClient.invalidateQueries(templateQueries.getTemplatesQueryOptions());
+
+// 특정 키로 시작하는 모든 쿼리 무효화
+queryClient.invalidateQueries({
+  predicate: (query) => query.queryKey[0] === "template",
+});
+```
+
+## 3. 사용 규칙
+
+1. 쿼리 옵션은 항상 `queries` 디렉토리의 파일에서 정의
+2. 쿼리 키는 계층 구조로 구성 (all -> list/byId -> 세부 키)
+3. Suspense를 사용하는 경우 `useSuspenseQuery` 사용
+4. 일반적인 경우 `useQuery` 사용
+5. 쿼리 무효화는 `useQueryClient`를 통해 수행
+6. 쿼리 무효화 시 가능한 한 구체적인 쿼리 키 사용
+
+## 4. 예시
+
+### 4.1 컴포넌트에서의 사용
+```typescript
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { chartTypeQueries } from "@/queries/chart-type";
+
+export const ChartTypeList = () => {
+  const queryClient = useQueryClient();
+  const { data } = useQuery(chartTypeQueries.getChartTypeListQueryOptions());
+
+  const handleRefresh = () => {
+    queryClient.invalidateQueries(chartTypeQueries.getChartTypeListQueryOptions());
+  };
+
+  return (
+    // ... 컴포넌트 렌더링
+  );
+};
+```
+
+### 4.2 Suspense와 함께 사용
+```typescript
+import { useSuspenseQuery } from "@tanstack/react-query";
+import { measurementRuleQueries } from "@/queries/measurement-rule";
+
+export const MeasurementRuleList = () => {
+  const { data } = useSuspenseQuery({
+    ...measurementRuleQueries.getMeasurementRuleListQueryOptions(),
+  });
+
+  return (
+    // ... 컴포넌트 렌더링
+  );
+};
+```
+
+## 5. 주의사항
+
+1. Suspense 사용 시 상위 컴포넌트에 `<Suspense>` 래퍼 필요
+2. 쿼리 무효화는 필요한 경우에만 수행
+3. 쿼리 키는 가능한 한 구체적으로 지정
+4. 에러 처리는 각 컴포넌트에서 적절히 구현

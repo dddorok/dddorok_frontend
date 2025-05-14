@@ -1,7 +1,7 @@
 ---
 description: 
 globs: 
-alwaysApply: false
+alwaysApply: true
 ---
 # API 핸들러와 쿼리 옵션 생성 규칙
 
