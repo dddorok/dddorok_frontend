@@ -1,6 +1,6 @@
 import { apiInstance, privateInstance } from "./instance";
 
-interface ChartTypeItemType {
+export interface ChartTypeItemType {
   id: string;
   name: string;
   category_large: string;

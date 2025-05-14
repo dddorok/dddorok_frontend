@@ -6,7 +6,6 @@ import {
   Dialog,
   DialogClose,
   DialogContent,
-  DialogDefaultProps,
   DialogDescription,
   DialogFooter,
   DialogHeader,
@@ -15,7 +14,7 @@ import {
 } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
 import { chartTypeQueries } from "@/queries/chart-type";
-import { deleteChartType } from "@/services/chart-type";
+import { ChartTypeItemType, deleteChartType } from "@/services/chart-type";
 
 export function ChartDeleteDialog(props: {
   chartId: string;
@@ -71,14 +70,19 @@ export function ChartDeleteDialog(props: {
   );
 }
 
-export function ChartTypeDetailsDialog(
-  props: DialogDefaultProps & { viewChartType: any }
-) {
+export function ChartTypeDetailsDialog(props: {
+  chartType: ChartTypeItemType;
+}) {
   return (
-    <Dialog open={props.open} onOpenChange={props.onOpenChange}>
+    <Dialog>
+      <DialogTrigger asChild>
+        <Button variant="outline" size="sm">
+          상세보기
+        </Button>
+      </DialogTrigger>
       <DialogContent className="max-w-4xl">
         <DialogHeader>
-          <DialogTitle>{props.viewChartType.name}</DialogTitle>
+          <DialogTitle>{props.chartType.name}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
           <div>
@@ -86,11 +90,11 @@ export function ChartTypeDetailsDialog(
             <div className="grid grid-cols-2 gap-4 mt-2">
               <div>
                 <p className="text-sm text-muted-foreground">차트 유형 ID</p>
-                <p>{props.viewChartType.id}</p>
+                <p>{props.chartType.id}</p>
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">차트 유형 이름</p>
-                <p>{props.viewChartType.name}</p>
+                <p>{props.chartType.name}</p>
               </div>
             </div>
           </div>
@@ -102,7 +106,7 @@ export function ChartTypeDetailsDialog(
           </div>
         </div>
         <DialogFooter>
-          <Link href={`/chart-types/${props.viewChartType.id}`}>
+          <Link href={`/chart-types/${props.chartType.id}`}>
             <Button>차트 유형 수정</Button>
           </Link>
         </DialogFooter>

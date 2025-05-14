@@ -3,7 +3,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { Info } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
 
 import { ChartDeleteDialog, ChartTypeDetailsDialog } from "./chart.dialog";
 
@@ -17,16 +16,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { chartTypes, type ChartType } from "@/lib/data";
 import { chartTypeQueries } from "@/queries/chart-type";
 
 export function ChartTypeList() {
   const { data: chartTypesList } = useQuery(
     chartTypeQueries.getChartTypeListQueryOptions()
   );
-  console.log("chartTypesList: ", chartTypesList);
-
-  const [viewChartType, setViewChartType] = useState<ChartType | null>(null);
 
   return (
     <div className="space-y-6">
@@ -67,13 +62,7 @@ export function ChartTypeList() {
                   <TableCell>{chartType.name}</TableCell>
                   <TableCell className="text-right">
                     <div className="flex flex-wrap justify-end gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setViewChartType(chartType)}
-                      >
-                        상세보기
-                      </Button>
+                      <ChartTypeDetailsDialog chartType={chartType} />
                       <Link href={`/chart-types/${chartType.id}`}>
                         <Button variant="outline" size="sm">
                           수정
@@ -109,15 +98,6 @@ export function ChartTypeList() {
           </p>
         </AlertDescription>
       </Alert>
-
-      {/* Chart Type Details Dialog */}
-      {viewChartType && (
-        <ChartTypeDetailsDialog
-          open={!!viewChartType}
-          onOpenChange={() => setViewChartType(null)}
-          viewChartType={viewChartType}
-        />
-      )}
     </div>
   );
 }
