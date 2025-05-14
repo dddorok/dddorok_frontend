@@ -1,0 +1,123 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# API 핸들러와 쿼리 옵션 생성 규칙
+
+## 1. API 핸들러 구조
+
+```typescript
+// services/[feature]/[feature].ts
+import { privateInstance } from "../instance";
+
+// 1. Response 타입 정의
+export interface GetFeatureResponse {
+  id: string;
+  // ... 기타 필드
+}
+
+// 2. Request 타입 정의 (필요한 경우)
+export interface CreateFeatureRequest {
+  name: string;
+  // ... 기타 필드
+}
+
+// 3. API 함수 정의
+export const getFeature = async () => {
+  const response = await privateInstance
+    .get("feature/endpoint")
+    .json<{ data: GetFeatureResponse }>();
+  return response.data;
+};
+
+export const createFeature = async (data: CreateFeatureRequest) => {
+  const response = await privateInstance.post("feature", {
+    json: data,
+  });
+  return response.json();
+};
+```
+
+## 2. 쿼리 옵션 구조
+
+```typescript
+// queries/[feature].ts
+import { queryOptions } from "@tanstack/react-query";
+import { getFeature, GetFeatureResponse } from "@/services/[feature]/[feature]";
+
+// 1. 쿼리 키 정의
+export const featureQueryKeys = {
+  all: () => ["feature"],
+  list: () => [...featureQueryKeys.all(), "list"],
+  byId: (id: string) => [...featureQueryKeys.all(), id],
+};
+
+// 2. 쿼리 옵션 함수 정의
+const getFeatureQueryOptions = () => {
+  return queryOptions<GetFeatureResponse>({
+    queryKey: featureQueryKeys.list(),
+    queryFn: getFeature,
+  });
+};
+
+// 3. 쿼리 옵션 객체 내보내기
+export const featureQueries = {
+  getFeatureQueryOptions,
+};
+```
+
+## 3. 사용 규칙
+
+- API 엔드포인트는 `services` 디렉토리에 위치
+- 쿼리 옵션은 `queries` 디렉토리에 위치
+- 타입은 각각의 파일에서 정의하고 필요한 경우 별도 타입 파일로 분리
+- 쿼리 키는 계층 구조로 구성 (all -> list/byId -> 세부 키)
+- API 응답은 `{ data: T }` 형태로 래핑
+- 에러 처리는 상위 레벨에서 통합 관리
+- **URL 앞에 `/`를 붙이지 않음** (ky 라이브러리 사용 시)
+
+## 4. 네이밍 규칙
+
+- API 함수: `get[Feature]`, `create[Feature]`, `update[Feature]`, `delete[Feature]`
+- 쿼리 옵션: `get[Feature]QueryOptions`
+- 타입: `Get[Feature]Response`, `Create[Feature]Request`, `Update[Feature]Request`
+
+## 5. 예시
+
+### API 핸들러 예시
+```typescript
+// services/template/template.ts
+export interface GetTemplateByIdResponse {
+  id: string;
+  name: string;
+  // ... 기타 필드
+}
+
+export const getTemplateById = async (templateId: string) => {
+  const response = await privateInstance
+    .get<{ data: GetTemplateByIdResponse }>(`template/${templateId}`)
+    .json();
+  return response.data;
+};
+```
+
+### 쿼리 옵션 예시
+```typescript
+// queries/template.ts
+export const templateQueryKeys = {
+  all: () => ["templates"],
+  templates: () => [...templateQueryKeys.all(), "list"],
+  templateById: (templateId: string) => [
+    ...templateQueryKeys.all(),
+    templateId,
+  ],
+};
+
+const getTemplateByIdQueryOptions = (templateId: string) => {
+  return queryOptions<GetTemplateByIdResponse>({
+    queryKey: templateQueryKeys.templateById(templateId),
+    queryFn: () => getTemplateById(templateId),
+  });
+};
+```

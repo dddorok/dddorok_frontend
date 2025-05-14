@@ -1,0 +1,190 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# Cursor Rules
+
+## 1. 코드 스타일 규칙
+
+### 1.1 파일 구조
+- 컴포넌트는 `components` 디렉토리에 위치
+- 페이지는 `app` 디렉토리에 위치
+- API 관련 코드는 `services` 디렉토리에 위치
+- 쿼리 관련 코드는 `queries` 디렉토리에 위치
+- 타입은 `types` 디렉토리에 위치
+
+### 1.2 네이밍 규칙
+- 컴포넌트: PascalCase (예: `Button.tsx`)
+- 훅: camelCase, 'use' 접두사 (예: `useAuth.ts`)
+- 유틸리티: camelCase (예: `formatDate.ts`)
+- 타입: PascalCase, 'Type' 접미사 (예: `UserType.ts`, `AuthResponseType.ts`)
+- 상수: UPPER_SNAKE_CASE, `as const` 사용 (예: `API_ENDPOINTS = { ... } as const`)
+
+### 1.3 컴포넌트 구조
+```typescript
+// 1. imports
+import { useState } from "react";
+
+// 2. types
+interface Props {
+  // ...
+}
+
+// 3. component
+export function Component({ prop1, prop2 }: Props) {
+  // 4. hooks
+  const [state, setState] = useState();
+
+  // 5. handlers
+  const handleClick = () => {
+    // ...
+  };
+
+  // 6. render
+  return (
+    // ...
+  );
+}
+```
+
+### 1.4 타입 정의 예시
+```typescript
+// types/user.ts
+export interface UserType {
+  id: string;
+  name: string;
+  email: string;
+}
+
+export type UserRoleType = 'ADMIN' | 'USER' | 'GUEST';
+
+// types/api.ts
+export interface ApiResponseType<T> {
+  data: T;
+  status: number;
+  message: string;
+}
+```
+
+### 1.5 상수 정의 예시
+```typescript
+// constants/api.ts
+export const API_ENDPOINTS = {
+  USER: '/api/user',
+  AUTH: '/api/auth',
+  SETTINGS: '/api/settings',
+} as const;
+
+export const USER_ROLES = {
+  ADMIN: 'ADMIN',
+  USER: 'USER',
+  GUEST: 'GUEST',
+} as const;
+```
+
+## 2. API 통신 규칙
+
+### 2.1 API 핸들러
+- `services` 디렉토리에 위치
+- 각 기능별로 분리된 파일 구조
+- 타입은 별도 파일로 분리 가능
+- 에러 처리는 상위 레벨에서 통합 관리
+
+### 2.2 쿼리 옵션
+- `queries` 디렉토리에 위치
+- React Query 사용
+- 쿼리 키는 계층 구조로 구성
+- 타입 안전성 보장
+
+## 3. 상태 관리 규칙
+
+### 3.1 전역 상태
+- Zustand 사용
+- 스토어는 `stores` 디렉토리에 위치
+- 각 기능별로 분리된 스토어 구조
+
+### 3.2 로컬 상태
+- React의 `useState`, `useReducer` 사용
+- 복잡한 상태는 커스텀 훅으로 분리
+
+## 4. 스타일링 규칙
+
+### 4.1 Tailwind CSS
+- 유틸리티 클래스 우선
+- 커스텀 스타일은 `@apply` 사용
+- 반응형 디자인은 Tailwind 브레이크포인트 사용
+
+### 4.2 컴포넌트 스타일
+- shadcn/ui 컴포넌트 사용
+- 커스텀 스타일은 `components/ui` 디렉토리에 위치
+
+## 5. 테스트 규칙
+
+### 5.1 단위 테스트
+- Jest + React Testing Library 사용
+- 테스트 파일은 `__tests__` 디렉토리에 위치
+- 컴포넌트 테스트는 사용자 관점에서 작성
+
+### 5.2 E2E 테스트
+- Cypress 사용
+- 테스트 파일은 `cypress/e2e` 디렉토리에 위치
+
+## 6. 성능 최적화 규칙
+
+### 6.1 렌더링 최적화
+- React.memo 사용
+- useMemo, useCallback 적절히 사용
+- 불필요한 리렌더링 방지
+
+### 6.2 번들 최적화
+- 동적 임포트 사용
+- 이미지 최적화
+- 코드 스플리팅 적용
+
+## 7. 접근성 규칙
+
+### 7.1 ARIA
+- 적절한 ARIA 속성 사용
+- 시맨틱 HTML 사용
+- 키보드 접근성 보장
+
+### 7.2 색상 대비
+- WCAG 2.1 기준 준수
+- 다크 모드 지원
+
+## 8. 보안 규칙
+
+### 8.1 인증/인가
+- JWT 사용
+- 토큰 갱신 메커니즘 구현
+- 권한 기반 접근 제어
+
+### 8.2 데이터 보안
+- 민감 정보 암호화
+- XSS 방지
+- CSRF 방지
+
+## 9. 에러 처리 규칙
+
+### 9.1 API 에러
+- 전역 에러 핸들러 구현
+- 사용자 친화적인 에러 메시지
+- 에러 로깅 시스템 구축
+
+### 9.2 클라이언트 에러
+- Error Boundary 사용
+- 에러 복구 메커니즘 구현
+- 사용자 피드백 제공
+
+## 10. 문서화 규칙
+
+### 10.1 코드 문서화
+- JSDoc 사용
+- 복잡한 로직에 주석 추가
+- 타입 정의 명확히
+
+### 10.2 README
+- 프로젝트 설정 방법
+- 개발 가이드라인
+- 배포 프로세스
