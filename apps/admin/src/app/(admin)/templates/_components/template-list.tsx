@@ -1,8 +1,11 @@
 "use client";
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useOverlay } from "@toss/use-overlay";
+import { MoreHorizontal } from "lucide-react";
 import Link from "next/link";
 
+import { ConfirmDialog } from "@/components/Dialog/ConfirmDialog";
 import { Badge } from "@/components/ui/badge"; // Assuming Badge component is imported
 import { Button } from "@/components/ui/button";
 import {
@@ -23,37 +26,30 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  CHART_TYPE,
-  ChartType,
-  NEEDLE,
-  NeedleType,
-} from "@/constants/template";
+import { NEEDLE, NeedleType } from "@/constants/template";
 import { toast } from "@/hooks/use-toast";
-import { templateQueries } from "@/queries/template";
-import { deleteTemplate, TemplateType } from "@/services/template/template";
+import { templateQueries, templateQueryKeys } from "@/queries/template";
+import {
+  deleteTemplate,
+  TemplateType,
+  updateTemplatePublishStatus,
+} from "@/services/template/template";
 
 export function TemplateList({
   filterOptions,
 }: {
   filterOptions: {
     needleType: NeedleType | null;
-    chartType: ChartType | null;
   };
 }) {
   const { data: templates } = useQuery(
     templateQueries.getTemplatesQueryOptions()
   );
 
-  const viewTemplateList = templates
-    ?.filter((template) => {
-      if (filterOptions.needleType === null) return true;
-      return template.needle_type === filterOptions.needleType;
-    })
-    .filter((template) => {
-      if (filterOptions.chartType === null) return true;
-      return template.chart_type === filterOptions.chartType;
-    });
+  const viewTemplateList = templates?.filter((template) => {
+    if (filterOptions.needleType === null) return true;
+    return template.needle_type === filterOptions.needleType;
+  });
 
   return (
     <div className="border rounded-md">
@@ -61,8 +57,7 @@ export function TemplateList({
         <TableHeader>
           <TableRow>
             <TableHead className="w-1/3">템플릿명</TableHead>
-            {/* <TableHead className="w-1/6">도구 유형</TableHead>
-            <TableHead className="w-1/6">차트 유형</TableHead> */}
+            <TableHead className="w-1/6">도구 유형</TableHead>
             <TableHead className="w-1/6">게시 상태</TableHead>
             <TableHead className="text-center w-1/6">작업</TableHead>
           </TableRow>
@@ -94,11 +89,13 @@ export function TemplateList({
 }
 
 function TemplateItem({ template }: { template: TemplateType }) {
+  const overlay = useOverlay();
+  const queryClient = useQueryClient();
   return (
     <TableRow key={template.id}>
       <TableCell className="font-medium">{template.name}</TableCell>
-      {/* <TableCell>{NEEDLE[template.needle_type].label ?? "-"}</TableCell>
-      <TableCell>{CHART_TYPE[template.chart_type]?.label ?? "-"}</TableCell> */}
+      <TableCell>{NEEDLE[template.needle_type].label ?? "-"}</TableCell>
+
       <TableCell>
         <Badge variant={template.is_published ? "default" : "secondary"}>
           {template.is_published ? "공개" : "비공개"}
@@ -115,6 +112,48 @@ function TemplateItem({ template }: { template: TemplateType }) {
           <DeleteTemplateButton template={template} />
         </div>
       </TableCell>
+      <TableCell>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => {
+            overlay.open(({ close, isOpen }) => (
+              <ConfirmDialog
+                title={
+                  template.is_published ? "템플릿 게시 취소" : "템플릿 게시"
+                }
+                description={
+                  template.is_published
+                    ? "템플릿을 게시 취소 하시겠습니까?"
+                    : "템플릿을 게시 하시겠습니까?"
+                }
+                open={isOpen}
+                onOpenChange={close}
+                actionVariant="default"
+                actionText={template.is_published ? "게시 취소" : "게시"}
+                onAction={() => {
+                  console.log("template: ", template);
+                  updateTemplatePublishStatus({
+                    template_id: template.id,
+                    is_published: !template.is_published,
+                  }).then(() => {
+                    toast({
+                      title: "템플릿 게시/취소 성공",
+                      description: "템플릿이 성공적으로 게시/취소되었습니다.",
+                    });
+                    queryClient.invalidateQueries(
+                      templateQueries.getTemplatesQueryOptions()
+                    );
+                    close();
+                  });
+                }}
+              />
+            ));
+          }}
+        >
+          <MoreHorizontal />
+        </Button>
+      </TableCell>
     </TableRow>
   );
 }
@@ -129,7 +168,7 @@ function DeleteTemplateButton({ template }: { template: TemplateType }) {
         title: "템플릿 삭제 성공",
         description: "템플릿이 성공적으로 삭제되었습니다.",
       });
-      queryClient.invalidateQueries(templateQueries.getTemplatesQueryOptions());
+      queryClient.invalidateQueries({ queryKey: templateQueryKeys.all() });
     } catch (error) {
       console.error("error: ", error);
     }

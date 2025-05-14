@@ -13,6 +13,8 @@ interface ConfirmDialogProps extends DialogDefaultProps {
   title: string | React.ReactNode;
   description: string | React.ReactNode;
   onAction: () => void;
+  actionVariant?: "default" | "destructive";
+  actionText?: string;
 }
 
 export function ConfirmDialog({
@@ -21,6 +23,8 @@ export function ConfirmDialog({
   onAction,
   title,
   description,
+  actionVariant = "destructive",
+  actionText = "확인",
 }: ConfirmDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -33,8 +37,8 @@ export function ConfirmDialog({
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             취소
           </Button>
-          <Button variant="destructive" onClick={onAction}>
-            삭제
+          <Button variant={actionVariant} onClick={onAction}>
+            {actionText}
           </Button>
         </DialogFooter>
       </DialogContent>

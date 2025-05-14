@@ -12,16 +12,23 @@ import {
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { NECKLINE, SLEEVE } from "@/constants/top";
 import { useToast } from "@/hooks/use-toast";
 import { measurementRuleQueries } from "@/queries/measurement-rule";
 import { GetMeasurementRuleListItemType } from "@/services/measurement-rule";
 import { createTemplate } from "@/services/template/template";
 
-export default function NewTemplateClient() {
+export default function NewTemplateClient({
+  initRuleId,
+}: {
+  initRuleId?: string;
+}) {
   const router = useRouter();
   const { toast } = useToast();
   const [ruleName, setRuleName] = useState<string>("");
-  const [selectedRule, setSelectedRule] = useState<string | null>(null);
+  const [selectedRule, setSelectedRule] = useState<string | null>(
+    initRuleId || null
+  );
 
   const { data: rule } = useQuery({
     ...measurementRuleQueries.getMeasurementRuleByIdQueryOptions(
@@ -29,6 +36,18 @@ export default function NewTemplateClient() {
     ),
     enabled: !!selectedRule,
   });
+
+  const initialTemplateName = [
+    rule?.neck_line_type
+      ? NECKLINE[rule.neck_line_type as keyof typeof NECKLINE].label
+      : "",
+    rule?.sleeve_type
+      ? SLEEVE[rule.sleeve_type as keyof typeof SLEEVE].label
+      : "",
+    rule?.category_small,
+  ]
+    .filter(Boolean)
+    .join(" ");
 
   // 치수 규칙 선택 처리 함수
   const handleSelectRule = async (rule: GetMeasurementRuleListItemType) => {
@@ -41,17 +60,17 @@ export default function NewTemplateClient() {
   const handleSubmit = async (data: TemplateFormData) => {
     // setIsSubmitting(true);
 
-    if (!data.needleType || !data.chartType) {
+    if (!data.needleType) {
       throw new Error("입력 필드가 비어있습니다.");
     }
 
     const request = {
       name: data.name,
       needle_type: data.needleType,
-      chart_type: data.chartType,
+      chart_type: "NONE" as const,
       measurement_rule_id: data.measurementRuleId,
       construction_methods: data.constructionMethods,
-      chart_type_ids: data.chartTypeIds || [],
+      chart_type_ids: [],
     };
     const response = await createTemplate(request);
     console.log("response: ", response);
@@ -88,6 +107,7 @@ export default function NewTemplateClient() {
 
           <TemplateForm
             onSubmit={handleSubmit}
+            initialTemplateName={initialTemplateName}
             measurementRuleId={selectedRule}
             category={{
               level1: rule.category_large,

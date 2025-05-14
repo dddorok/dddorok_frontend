@@ -13,6 +13,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Switch } from "@/components/ui/switch";
 import {
   Table,
   TableBody,
@@ -143,6 +144,9 @@ export function SizeDetailForm({
                         {sizeDetails[size]?.[itemId] || ""}
                       </TableCell>
                     ))}
+                    <TableCell className="border">
+                      <Switch />
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -170,6 +174,7 @@ const useSizeDetails = (
   const [sizeDetails, setSizeDetails] = useState<SizeDetailFormType>(
     convertToSizeRangeTypeRecord(measurementValues)
   );
+  const [rangeToggleList, setRangeToggleList] = useState<string[]>([]);
   const tableRef = useRef<HTMLTableElement>(null);
 
   // 붙여넣기 이벤트 처리
@@ -280,7 +285,7 @@ function convertToTemplateMeasurementValueType(
     const obj: any = { id };
     SIZE_RANGE_KEYS.forEach((range) => {
       const value = input[range]?.[id];
-      obj[range] = value !== undefined ? Number(value) : undefined;
+      obj[range] = value ? Number(value) : undefined;
     });
     result.push(obj);
   });
@@ -300,10 +305,8 @@ function convertToSizeRangeTypeRecord(
   arr.forEach((item) => {
     SIZE_RANGE_KEYS.forEach((range) => {
       const key = item.id;
-      // 값이 undefined/null이어도 string으로 변환
-      result[range][key] = String(
-        item[range as keyof GetTemplateMeasurementValuesItemType]
-      );
+      const value = item[range as keyof GetTemplateMeasurementValuesItemType];
+      result[range][key] = value === null ? "" : String(value);
     });
   });
 

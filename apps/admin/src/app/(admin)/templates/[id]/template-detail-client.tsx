@@ -31,6 +31,15 @@ export default function TemplateDetailClient({
       ...templateMeasurementValuesQueries.getTemplateMeasurementValues(
         templateId
       ),
+      // select: (data) => {
+      //   return data.map((item) =>
+      //     Object.fromEntries(
+      //       Object.entries(item).map(([key, value]) => {
+      //         return [key, value ?? ""];
+      //       })
+      //     )
+      //   );
+      // },
     });
 
   // 세부 치수 저장 처리

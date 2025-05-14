@@ -147,7 +147,6 @@ function FormSelect({
 }
 
 function TopNeedFieldForm() {
-  const form = useFormContext();
   const categoryLevel2 = useWatch({ name: "level2" });
 
   if (categoryLevel2 !== CATEGORY_ID.상의) return null;
@@ -156,6 +155,7 @@ function TopNeedFieldForm() {
     <>
       <FormSelect
         label="소매 유형"
+        placeholder="소매 유형 선택"
         name="sleeveType"
         options={SLEEVE_OPTIONS.map((type) => ({
           id: type.value,
@@ -164,6 +164,7 @@ function TopNeedFieldForm() {
       />
       <FormSelect
         label="넥라인"
+        placeholder="넥라인 선택"
         name="necklineType"
         options={NECKLINE_OPTIONS.map((type) => ({
           id: type.value,
