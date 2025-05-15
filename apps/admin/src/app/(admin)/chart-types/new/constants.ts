@@ -320,14 +320,16 @@ export const MEASUREMENT = {
   },
 } as const;
 
+export type Measurement = keyof typeof MEASUREMENT;
+
 export const GROUPPING_MEASUREMENT = Object.entries(MEASUREMENT).reduce(
   (acc, [key, value]) => {
     const { 부위 } = value;
     if (!acc[부위]) {
       acc[부위] = [];
     }
-    acc[부위].push(key);
+    acc[부위].push(key as Measurement);
     return acc;
   },
-  {} as Record<string, string[]>
+  {} as Record<string, Measurement[]>
 );

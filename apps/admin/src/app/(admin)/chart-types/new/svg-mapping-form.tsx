@@ -1,22 +1,19 @@
-import { AlertCircle } from "lucide-react";
 import React, { useState } from "react";
+
+import { Measurement, MEASUREMENT } from "./constants";
 
 import { CommonSelect } from "@/components/CommonUI";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select } from "@/components/ui/select";
+import { cn } from "@/lib/utils";
 
-export default function SvgMappingForm() {
-  const [selectedMeasurements, setSelectedMeasurements] = useState({
-    앞품길이: true,
-    어깨끝점거리: true,
-    어깨사선길이: true,
-    진동길이: false,
-    허리길이: false,
-  });
+export default function SvgMappingForm({
+  measurementList,
+}: {
+  measurementList: Measurement[];
+}) {
   const [svgPath, setSvgPath] = useState<HTMLElement | null>(null);
 
   const [selectedPath, setSelectedPath] = useState("");
@@ -25,16 +22,14 @@ export default function SvgMappingForm() {
   const [paths, setPaths] = useState<
     {
       path: SvgPath;
-      selectItem: string | null;
+      selectedMeasurement: Measurement | null;
     }[]
   >([]);
 
-  const toggleMeasurement = (key: string) => {
-    setSelectedMeasurements((prev) => ({
-      ...prev,
-      [key]: !prev[key as keyof typeof selectedMeasurements],
-    }));
-  };
+  const measurementOptionList = measurementList.map((measurement) => ({
+    label: MEASUREMENT[measurement].측정_항목,
+    value: measurement,
+  }));
 
   const onUpload = () => {
     // SVG 파일 업로드 처리
@@ -56,12 +51,13 @@ export default function SvgMappingForm() {
         const svgContainer = document.querySelector(".w-full.h-full.relative");
         if (svgContainer) {
           const newSvg = svgDoc.documentElement;
-          console.log("newSvg: ", newSvg);
 
           const paths = extractSvgPaths(newSvg);
 
           setPathList(paths);
-          setPaths(paths.map((path) => ({ path: path, selectItem: null })));
+          setPaths(
+            paths.map((path) => ({ path: path, selectedMeasurement: null }))
+          );
           setSvgPath(newSvg);
         }
       };
@@ -79,11 +75,14 @@ export default function SvgMappingForm() {
         {/* 왼쪽 SVG 미리보기 패널 */}
         <div className="space-y-4">
           <Card className="p-4 border flex items-center justify-center h-fit">
-            <div className="w-full h-full relative pt-10">
-              <div className="text-lg font-medium absolute top-2 left-4">
-                미리보기 패널
-              </div>
+            <div className="w-full h-full relative">
+              <div className="text-lg font-medium mb-4">미리보기 패널</div>
 
+              {!svgPath && (
+                <div className="text-center text-gray-500">
+                  파일을 업로드 해주세요
+                </div>
+              )}
               {/* SVG 미리보기 */}
               {svgPath && (
                 <div dangerouslySetInnerHTML={{ __html: svgPath.outerHTML }} />
@@ -98,69 +97,74 @@ export default function SvgMappingForm() {
             </Button>
           </div>
 
-          {/* Path ID 리스트 */}
           <div className="space-y-2">
-            <div className="text-sm font-medium">Path ID</div>
-            {pathList.map((path) => (
-              <div key={path.id} className="flex items-center space-x-2 ml-4">
-                <div
-                  className={`flex-1 flex flex-col gap-2 ${selectedPath === path.id ? "font-medium" : ""}`}
-                  onClick={() => setSelectedPath(path.id)}
-                  style={{ cursor: "pointer" }}
-                >
-                  <div>{path.id}</div>
-                  <CommonSelect
-                    options={[
-                      { label: "test", value: "test" },
-                      { label: "test2", value: "test2" },
-                      { label: "test3", value: "test3" },
-                    ]}
-                    onChange={() => {}}
-                  />
-                </div>
-              </div>
-            ))}
+            <Label className="text-base">선택된 측정항목</Label>
+            <div className="grid grid-cols-2 gap-2">
+              {measurementOptionList.map(({ value, label }) => {
+                const checked = Boolean(
+                  paths.find((path) => path.selectedMeasurement === value)
+                    ?.selectedMeasurement
+                );
+
+                console.log("checked: ", checked);
+                return (
+                  <div key={value} className="flex items-start space-x-2">
+                    <Checkbox id={value} checked={checked} />
+                    <Label htmlFor={value} className="text-sm cursor-pointer">
+                      {label}
+                    </Label>
+                    {/* {key === "앞품길이" && (
+                      <span className="text-xs text-gray-500 ml-2">
+                        ← 선택 불가 (이대로 놔두세요)
+                      </span>
+                    )} */}
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </div>
 
         {/* 오른쪽 측정항목 패널 */}
         <div className="space-y-6">
           <div className="space-y-2">
-            <Label className="text-base">측정항목</Label>
-            <div className="space-y-2">
-              {Object.entries(selectedMeasurements).map(([key, checked]) => (
-                <div key={key} className="flex items-start space-x-2">
-                  <Checkbox
-                    id={key}
-                    checked={checked}
-                    onCheckedChange={() => toggleMeasurement(key)}
-                  />
-                  <Label htmlFor={key} className="text-sm cursor-pointer">
-                    {key}
-                  </Label>
-                  {key === "앞품길이" && (
-                    <span className="text-xs text-gray-500 ml-2">
-                      ← 선택 불가 (이대로 놔두세요)
-                    </span>
+            <div className="text-sm font-medium">Path ID</div>
+            {pathList.map((path) => (
+              <div key={path.id} className="flex items-center space-x-2 ml-4">
+                <div
+                  className={cn(
+                    `flex-1 flex flex-col gap-2`,
+                    selectedPath === path.id ? "font-medium" : ""
                   )}
+                  onClick={() => setSelectedPath(path.id)}
+                  style={{ cursor: "pointer" }}
+                >
+                  <div>{path.id}</div>
+                  <CommonSelect
+                    options={measurementOptionList}
+                    onChange={(value) => {
+                      setPaths((prev) => {
+                        return prev.map((item) => {
+                          if (item.path.id === path.id) {
+                            return { ...item, selectedMeasurement: value };
+                          }
+                          return item;
+                        });
+                      });
+                      console.log("value: ", value);
+                    }}
+                  />
                 </div>
-              ))}
-            </div>
-
-            <div className="text-sm text-gray-500 mt-4">
-              필터타입, 디자인 유형... 바뀌는
-              <br />
-              파라미터
-            </div>
+              </div>
+            ))}
           </div>
 
           {/* 측정 항목 선택 리스트 */}
-          <div className="space-y-3 mt-6">
+          {/* <div className="space-y-3 mt-6">
             <Input value="앞품길이" readOnly className="bg-gray-100" />
             <Input value="어깨끝점거리" readOnly className="bg-gray-100" />
             <Input value="어깨사선길이" readOnly className="bg-gray-100" />
 
-            {/* 경고 메시지가 포함된 입력 필드 */}
             <div className="relative">
               <Input
                 value="어깨사선 잘못 측정됨"
@@ -169,12 +173,7 @@ export default function SvgMappingForm() {
               />
               <AlertCircle className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-red-500" />
             </div>
-
-            {/* <div className="text-sm text-gray-500 text-center mt-2">
-              <span className="block">↑</span>
-              <span>매핑시 잘못 측정 원인가 제일 안안하게할</span>
-            </div> */}
-          </div>
+          </div> */}
 
           {/* 버튼 영역 */}
           <div className="flex justify-end space-x-3 mt-10">
