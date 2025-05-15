@@ -63,7 +63,11 @@ type BodyFormValues = z.infer<typeof bodyFormSchema>;
 type RetailFormValues = z.infer<typeof retailFormSchema>;
 type FormValues = z.infer<typeof formSchema>;
 
-export default function InformationForm() {
+export default function InformationForm({
+  onSubmit,
+}: {
+  onSubmit: (data: FormValues) => void;
+}) {
   const [selectedTab, setSelectedTab] = useState<"몸판" | "소매">("몸판");
   const [activeTab, setActiveTab] = useState("case1");
 
@@ -110,10 +114,6 @@ export default function InformationForm() {
     [form]
   );
 
-  const onSubmit = useCallback((data: FormValues) => {
-    console.log(data);
-  }, []);
-
   return (
     <Form {...form}>
       <form
@@ -123,21 +123,22 @@ export default function InformationForm() {
         <div className="space-y-2">
           <h2 className="text-2xl font-bold">Step 1. 자동운영 선택</h2>
 
-          <div className="flex items-center space-x-2 mb-6">
+          <div className="flex space-x-2 mb-6 flex-col gap-2">
             <p className="text-lg">제품군별 선택</p>
-            <div className="flex ml-8 space-x-4">
-              <RadioGroup defaultValue="comfortable">
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="default" id="r1" />
-                  <Label htmlFor="r1">Default</Label>
+            <div className="flex space-x-4 ml-0">
+              <RadioGroup
+                defaultValue="몸판"
+                onValueChange={(value) =>
+                  handleProductTypeChange(value as "몸판" | "소매")
+                }
+              >
+                <div className="flex items-center gap-2">
+                  <RadioGroupItem value="몸판" id="r1" />
+                  <Label htmlFor="r1">몸판</Label>
                 </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="comfortable" id="r2" />
-                  <Label htmlFor="r2">Comfortable</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="compact" id="r3" />
-                  <Label htmlFor="r3">Compact</Label>
+                <div className="flex items-center gap-2">
+                  <RadioGroupItem value="소매" id="r2" />
+                  <Label htmlFor="r2">소매</Label>
                 </div>
               </RadioGroup>
 
@@ -174,14 +175,12 @@ export default function InformationForm() {
           </TabsList>
 
           <TabsContent value="case1" className="space-y-6">
-            <h3 className="text-lg font-medium">Case 1. 몸판 선택 시</h3>
             <Suspense fallback={<div>Loading...</div>}>
               <BodyChart />
             </Suspense>
           </TabsContent>
 
           <TabsContent value="case2" className="space-y-6">
-            <h3 className="text-lg font-medium">Case 2. 소매 선택 시</h3>
             <RetailChart />
           </TabsContent>
         </Tabs>
