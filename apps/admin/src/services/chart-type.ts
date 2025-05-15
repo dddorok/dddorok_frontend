@@ -23,3 +23,25 @@ export const deleteChartType = async (id: string) => {
   const response = await privateInstance.delete(`chart-type/${id}`).json();
   return response;
 };
+
+export interface GetChartTypeResponse {
+  id: string;
+  name: string;
+  category_large: string;
+  category_medium: string;
+  section: string;
+  detail_type: string;
+  created_date: string;
+  updated_date: string;
+  measurement_maps: {
+    measurement_code: string;
+    path_id: string;
+  }[];
+}
+
+export const getChartType = async (id: string) => {
+  const response = await privateInstance
+    .get<{ data: GetChartTypeResponse }>(`chart-type/${id}`)
+    .json();
+  return response.data;
+};
