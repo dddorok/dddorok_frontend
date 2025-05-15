@@ -1,5 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import React, { useCallback, useEffect, useState } from "react";
+import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
+import React, { Suspense, useCallback, useEffect, useState } from "react";
 import { useForm, useFormContext, useWatch } from "react-hook-form";
 import { z } from "zod";
 
@@ -31,6 +32,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { getMeasurementRuleList } from "@/services/measurement-rule";
 
 // 몸판 폼 스키마
 const bodyFormSchema = z.object({
@@ -41,6 +43,7 @@ const bodyFormSchema = z.object({
   measurementRule: z.string({
     required_error: "치수규칙을 선택해주세요",
   }),
+  measurementRuleName: z.string().optional(),
   chartName: z.string().min(1, "차트 이름을 입력해주세요"),
 });
 
@@ -163,7 +166,9 @@ export default function InformationForm() {
 
           <TabsContent value="case1" className="space-y-6">
             <h3 className="text-lg font-medium">Case 1. 몸판 선택 시</h3>
-            <BodyChart />
+            <Suspense fallback={<div>Loading...</div>}>
+              <BodyChart />
+            </Suspense>
           </TabsContent>
 
           <TabsContent value="case2" className="space-y-6">
@@ -188,20 +193,24 @@ function ChartNameForm() {
   const form = useFormContext<FormValues>();
   const type = useWatch({ name: "type" });
   const bodyDetailType = useWatch({ name: "bodyDetailType" });
+  const measurementRuleName = useWatch({ name: "measurementRuleName" });
   const retailDetailType = useWatch({ name: "retailDetailType" });
 
   useEffect(() => {
     if (type === "몸판" && bodyDetailType) {
       // {치수규칙명} {세부유형} 형식으로 자동 생성
       // ex) 래글런형 브이넥 스웨터 상단 전개도
-      form.setValue("chartName", `${bodyDetailType} 상단 전개도`);
+      form.setValue(
+        "chartName",
+        `${measurementRuleName} ${bodyDetailType} 상단 전개도`
+      );
     }
     if (type === "소매" && retailDetailType) {
       // {세부유형} 소매 형식으로 자동 생성
       // ex)셋인형 소매
       form.setValue("chartName", `${retailDetailType} 소매`);
     }
-  }, [bodyDetailType, retailDetailType, type]);
+  }, [bodyDetailType, retailDetailType, type, measurementRuleName]);
 
   return (
     <FormField
@@ -221,6 +230,10 @@ function ChartNameForm() {
 
 function BodyChart() {
   const form = useFormContext<FormValues>();
+  const { data: measurementRuleList } = useSuspenseQuery({
+    queryKey: ["measurementRuleList"],
+    queryFn: () => getMeasurementRuleList(),
+  });
 
   return (
     <div className="space-y-4">
@@ -254,8 +267,17 @@ function BodyChart() {
             <FormLabel>치수규칙 선택</FormLabel>
             <FormControl>
               <CommonSelect
-                options={[]}
-                onChange={field.onChange}
+                options={measurementRuleList.data.map((item) => ({
+                  label: item.rule_name,
+                  value: item.id,
+                }))}
+                onChange={(value) => {
+                  const selectedRule = measurementRuleList.data.find(
+                    (item) => item.id === value
+                  );
+                  form.setValue("measurementRuleName", selectedRule?.rule_name);
+                  field.onChange(value);
+                }}
                 placeholder="선택하세요"
                 value={field.value}
               />

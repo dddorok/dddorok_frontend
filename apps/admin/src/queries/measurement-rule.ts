@@ -9,7 +9,6 @@ import {
   GetMeasurementRuleListResponse,
   getMeasurementRuleTemplateList,
   GetMeasurementRuleTemplateListItemType,
-  GetMeasurementRuleTemplateListResponse,
 } from "@/services/measurement-rule";
 
 export const measurementRuleQueryKeys = {
