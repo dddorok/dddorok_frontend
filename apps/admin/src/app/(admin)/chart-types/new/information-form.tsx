@@ -1,5 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
+import { useSuspenseQuery } from "@tanstack/react-query";
 import React, { Suspense, useCallback, useEffect, useState } from "react";
 import { useForm, useFormContext, useWatch } from "react-hook-form";
 import { z } from "zod";
@@ -24,13 +24,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { getMeasurementRuleList } from "@/services/measurement-rule";
 
@@ -132,7 +126,22 @@ export default function InformationForm() {
           <div className="flex items-center space-x-2 mb-6">
             <p className="text-lg">제품군별 선택</p>
             <div className="flex ml-8 space-x-4">
-              <div
+              <RadioGroup defaultValue="comfortable">
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="default" id="r1" />
+                  <Label htmlFor="r1">Default</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="comfortable" id="r2" />
+                  <Label htmlFor="r2">Comfortable</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="compact" id="r3" />
+                  <Label htmlFor="r3">Compact</Label>
+                </div>
+              </RadioGroup>
+
+              {/* <div
                 className="flex items-center space-x-2 cursor-pointer"
                 onClick={() => handleProductTypeChange("몸판")}
               >
@@ -153,7 +162,7 @@ export default function InformationForm() {
                   ○
                 </div>
                 <span>소매</span>
-              </div>
+              </div> */}
             </div>
           </div>
         </div>
