@@ -21,6 +21,7 @@ export async function createSession({
   const expiresAt = new Date(Date.now() + sessionExpiresAt);
   const session = await encrypt({ accessToken, refreshToken, expiresAt });
   console.log("session: ", session);
+  console.log("------------: ");
   const cookieStore = await cookies();
 
   cookieStore.set(sessionCookieName, session, {
@@ -33,7 +34,9 @@ export async function createSession({
 }
 
 export async function updateSession() {
-  console.log("updateSession: ");
+  console.log(
+    "updateSession:ㅁㅁㅁㅁㅁㅁㅁㅁㅁㅁㅁㅁㅁㅁㅁㅁㅁㅁㅁㅁㅁㅁㅁㅁ "
+  );
   const cookieStore = await cookies();
   const session = cookieStore.get(sessionCookieName)?.value;
 
@@ -50,6 +53,8 @@ export async function updateSession() {
   if (!payload) {
     return null;
   }
+  console.log("refreshToken: ", payload.refreshToken);
+  console.log("------------: ");
 
   const data = await refreshToken(payload.refreshToken);
 

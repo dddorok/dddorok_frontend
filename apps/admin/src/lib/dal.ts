@@ -16,7 +16,6 @@ export const verifySession = async () => {
     cookie = (await getCookie(sessionCookieName)) as string | null;
   }
 
-  console.log("cookie: ", cookie);
   if (!cookie) {
     console.log("no cookie");
     redirect("/oauth/login");

@@ -44,6 +44,7 @@ export const privateInstance = ky.create({
   hooks: {
     beforeRequest: [
       async (request) => {
+        console.log("beforeRequest window: ", typeof window);
         const session = await verifySession();
         if (session) {
           request.headers.set("Authorization", `Bearer ${session.accessToken}`);
@@ -58,6 +59,7 @@ export const privateInstance = ky.create({
 
           if (data.code === 40101) {
             try {
+              console.log("updateSession window: ", typeof window);
               await updateSession();
               const session = await verifySession();
 

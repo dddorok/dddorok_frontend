@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -8,6 +10,9 @@ import {
   CardDescription,
   CardContent,
 } from "@/components/ui/card";
+import { createTestSession, updateSession } from "@/lib/auth";
+import { getMeasurementRules } from "@/services/measurement-rule";
+import { userTestLogin } from "@/services/user";
 
 export default function LoginPage() {
   return (
@@ -21,6 +26,9 @@ export default function LoginPage() {
         </CardHeader>
         <CardContent className="space-y-4">
           <NaverLogin />
+          <RefreshToken />
+          <TestSession />
+          <TestLogin />
         </CardContent>
       </Card>
     </div>
@@ -44,5 +52,42 @@ function NaverLogin() {
     >
       네이버 로그인
     </Button>
+  );
+}
+
+function RefreshToken() {
+  const onRefreshToken = async () => {
+    await updateSession();
+  };
+
+  return <button onClick={onRefreshToken}>Refresh Token</button>;
+}
+
+function TestSession() {
+  const onTestSession = async () => {
+    await createTestSession();
+  };
+
+  return <button onClick={onTestSession}>Test Session</button>;
+}
+
+function TestLogin() {
+  const [test, setTest] = useState(false);
+
+  const checkTestLogin = async () => {
+    try {
+      await getMeasurementRules();
+      setTest(true);
+    } catch (error) {
+      console.log("error: ", error);
+      setTest(false);
+    }
+  };
+
+  return (
+    <div>
+      TestLogin Status: {test ? "Success" : "Failed"}
+      <Button onClick={checkTestLogin}>Re Check</Button>
+    </div>
   );
 }

@@ -46,11 +46,13 @@ export async function updateSession() {
     expiresAt: Date;
   }>(session);
 
+  console.log("payload: ", payload);
   if (!payload) {
     return null;
   }
 
   const data = await refreshToken(payload.refreshToken);
+  console.log("data: ", data);
 
   const expires = new Date(Date.now() + sessionExpiresAt);
   const newSession = await encrypt({
