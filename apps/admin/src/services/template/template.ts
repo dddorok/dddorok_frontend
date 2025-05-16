@@ -89,7 +89,10 @@ interface UpdateTemplateRequest {
   chart_type: ChartType;
   construction_methods: ConstructionMethodType[];
   is_published: boolean;
-  chart_type_ids?: string[];
+  chart_type_maps?: {
+    chart_type_id: string;
+    order: number;
+  }[];
 }
 
 export const updateTemplate = async (

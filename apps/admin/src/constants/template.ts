@@ -74,3 +74,9 @@ export const CONSTRUCTION_METHOD: Record<
 export const CONSTRUCTION_METHOD_OPTIONS = Object.values(
   CONSTRUCTION_METHOD
 ).filter((constructionMethod) => constructionMethod.value !== "NONE");
+
+export const ChartTypeMapSchema = z.object({
+  chart_type_id: z.string(),
+  order: z.number(),
+});
+export type ChartTypeMap = z.infer<typeof ChartTypeMapSchema>;

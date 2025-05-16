@@ -41,7 +41,7 @@ export default function EditTemplateClient({
       chart_type: data.chartType,
       construction_methods: data.constructionMethods,
       is_published: data.isPublished,
-      chart_type_ids: data.chartTypeIds,
+      chart_type_maps: data.chartTypeMaps,
     });
 
     toast({
