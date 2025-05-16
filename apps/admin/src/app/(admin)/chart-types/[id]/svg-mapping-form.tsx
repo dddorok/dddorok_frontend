@@ -1,5 +1,4 @@
-import { useSuspenseQuery } from "@tanstack/react-query";
-import React, { useRef, useState } from "react";
+import React, { useState } from "react";
 
 import { CommonSelect } from "@/components/CommonUI";
 import { Button } from "@/components/ui/button";
@@ -7,7 +6,6 @@ import { Card } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
-import { measurementRuleQueries } from "@/queries/measurement-rule";
 
 export default function SvgMappingForm({
   measurementCodeList,
