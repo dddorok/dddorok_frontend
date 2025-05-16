@@ -80,24 +80,6 @@ export function ChartTypeList() {
           </TableBody>
         </Table>
       </div>
-
-      <Alert
-        variant="default"
-        className="bg-blue-50 border-blue-200 text-blue-800"
-      >
-        <Info className="h-4 w-4" />
-        <AlertDescription>
-          <p>
-            <strong>샘플 데이터 안내:</strong> 현재 보이는 데이터는
-            예시용입니다. 실제 구현 시 백엔드 API와 연동하여 실제 데이터를
-            표시해야 합니다.
-          </p>
-          <p className="mt-1">
-            <strong>연관 관계:</strong> 차트 유형은 템플릿의 chartTypeIds 배열
-            필드에서 참조됩니다.
-          </p>
-        </AlertDescription>
-      </Alert>
     </div>
   );
 }

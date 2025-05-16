@@ -1,4 +1,4 @@
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
@@ -73,6 +73,12 @@ export function ChartDeleteDialog(props: {
 export function ChartTypeDetailsDialog(props: {
   chartType: ChartTypeItemType;
 }) {
+  const { data: chartData } = useQuery(
+    chartTypeQueries.getChartTypeQueryOptions(props.chartType.id)
+  );
+
+  if (!chartData) return null;
+
   return (
     <Dialog>
       <DialogTrigger asChild>
@@ -87,7 +93,7 @@ export function ChartTypeDetailsDialog(props: {
         <div className="space-y-4">
           <div>
             <h3 className="font-medium">기본 정보</h3>
-            <div className="grid grid-cols-2 gap-4 mt-2">
+            <div className="grid grid-cols-1 gap-4 mt-2">
               <div>
                 <p className="text-sm text-muted-foreground">차트 유형 ID</p>
                 <p>{props.chartType.id}</p>
@@ -96,20 +102,36 @@ export function ChartTypeDetailsDialog(props: {
                 <p className="text-sm text-muted-foreground">차트 유형 이름</p>
                 <p>{props.chartType.name}</p>
               </div>
+              <div>
+                <p className="text-sm text-muted-foreground">
+                  차트 유형 카테고리
+                </p>
+                <div className="p-3 bg-gray-50 rounded-md border text-sm mt-1">
+                  <p>
+                    {chartData?.category_large} &gt;{" "}
+                    {chartData?.category_medium}
+                  </p>
+                </div>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">차트 유형 설명</p>
+                <p>
+                  {chartData.section} / {chartData.detail_type}
+                </p>
+              </div>
             </div>
           </div>
           <div>
-            <p className="text-sm text-muted-foreground">
-              <strong>개발 참고:</strong> 실제 구현 시 이 다이얼로그에 차트
-              유형을 사용하는 템플릿 목록 표시 기능 추가 필요
-            </p>
+            <p className="text-sm text-muted-foreground">연결된 템플릿</p>
+            {chartData?.templates.map((template) => (
+              <p key={template.id}>{template.name}</p>
+            ))}
+            {chartData?.templates.length === 0 && (
+              <p className="text-sm ">연결된 템플릿이 없습니다.</p>
+            )}
           </div>
         </div>
-        <DialogFooter>
-          <Link href={`/chart-types/${props.chartType.id}`}>
-            <Button>차트 유형 수정</Button>
-          </Link>
-        </DialogFooter>
+        <DialogFooter></DialogFooter>
       </DialogContent>
     </Dialog>
   );

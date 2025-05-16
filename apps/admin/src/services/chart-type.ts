@@ -10,6 +10,11 @@ export interface ChartTypeItemType {
   created_date: string;
   updated_date: string;
   svg_file_id: string;
+  measurement_code_maps: {
+    measurement_code: string;
+    path_id: string;
+  }[];
+  template_count: number;
 }
 
 export const getChartTypeList = async () => {
@@ -36,6 +41,10 @@ export interface GetChartTypeResponse {
   measurement_maps: {
     measurement_code: string;
     path_id: string;
+  }[];
+  templates: {
+    id: string;
+    name: string;
   }[];
 }
 
