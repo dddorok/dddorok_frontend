@@ -1,5 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useSuspenseQuery } from "@tanstack/react-query";
+import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import React, { Suspense, useCallback, useEffect, useState } from "react";
 import { useForm, useFormContext, useWatch } from "react-hook-form";
 import { z } from "zod";
@@ -26,6 +26,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { measurementRuleQueries } from "@/queries/measurement-rule";
 import { getMeasurementRuleList } from "@/services/measurement-rule";
 
 // 몸판 폼 스키마
@@ -118,11 +119,10 @@ export default function InformationForm({
     <Form {...form}>
       <form
         onSubmit={form.handleSubmit(onSubmit)}
-        className="w-full max-w-3xl mx-auto p-6 space-y-6"
+        className="w-full  mx-auto p-6 space-y-6"
       >
+        <h2 className="text-2xl font-bold">Step 1. 기본 정보 입력</h2>
         <div className="space-y-2">
-          <h2 className="text-2xl font-bold">Step 1. 자동운영 선택</h2>
-
           <div className="flex space-x-2 mb-6 flex-col gap-2">
             <p className="text-lg">제품군별 선택</p>
             <div className="flex space-x-4 ml-0">
@@ -278,11 +278,17 @@ function BodyChart() {
 function RetailChart() {
   const form = useFormContext<FormValues>();
 
+  const { data: measurementRuleItemCodeList } = useQuery({
+    ...measurementRuleQueries.getMeasurementRuleItemCodeQueryOptions(),
+  });
+
   const sleeveOptions =
-    GROUPPING_MEASUREMENT["소매"]?.map((item) => ({
-      label: MEASUREMENT[item as keyof typeof MEASUREMENT]?.측정_항목 ?? "",
-      value: item,
-    })) ?? [];
+    measurementRuleItemCodeList
+      ?.filter((item) => item.section === "소매")
+      .map((item) => ({
+        label: item.label,
+        value: item.code,
+      })) ?? [];
 
   return (
     <div className="space-y-4">

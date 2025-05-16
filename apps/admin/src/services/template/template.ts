@@ -33,7 +33,10 @@ interface CreateTemplateRequest {
   chart_type: ChartType | "NONE";
   measurement_rule_id: string;
   construction_methods: string[];
-  chart_type_ids: string[];
+  chart_type_maps: {
+    chart_type_id: string;
+    order: number;
+  }[];
 }
 
 export const createTemplate = async (template: CreateTemplateRequest) => {

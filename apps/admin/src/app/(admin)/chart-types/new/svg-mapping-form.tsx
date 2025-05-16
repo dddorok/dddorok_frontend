@@ -1,8 +1,6 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
 import React, { useRef, useState } from "react";
 
-import { Measurement } from "./constants";
-
 import { CommonSelect } from "@/components/CommonUI";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -13,18 +11,12 @@ import { measurementRuleQueries } from "@/queries/measurement-rule";
 import { GetMeasurementRuleItemCodeResponse } from "@/services/measurement-rule";
 
 export default function SvgMappingForm({
-  // measurementList,
-  measurementRuleId,
   measurementCodeList,
   onSubmit,
 }: {
-  // measurementList: GetMeasurementRuleItemCodeResponse[];
   measurementCodeList: GetMeasurementRuleItemCodeResponse[];
-  measurementRuleId: string;
   onSubmit: (data: any) => void;
 }) {
-  useItemCodeList(measurementRuleId);
-
   const [svgPath, setSvgPath] = useState<HTMLElement | null>(null);
   const fileRef = useRef<File | null>(null);
 
@@ -180,23 +172,6 @@ export default function SvgMappingForm({
             ))}
           </div>
 
-          {/* 측정 항목 선택 리스트 */}
-          {/* <div className="space-y-3 mt-6">
-            <Input value="앞품길이" readOnly className="bg-gray-100" />
-            <Input value="어깨끝점거리" readOnly className="bg-gray-100" />
-            <Input value="어깨사선길이" readOnly className="bg-gray-100" />
-
-            <div className="relative">
-              <Input
-                value="어깨사선 잘못 측정됨"
-                readOnly
-                className="pr-10 border-red-500 bg-red-50 text-red-600"
-              />
-              <AlertCircle className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-red-500" />
-            </div>
-          </div> */}
-
-          {/* 버튼 영역 */}
           <div className="flex justify-end space-x-3 mt-10">
             <Button variant="outline">취소</Button>
             <Button onClick={handleSubmit}>저장</Button>
@@ -217,7 +192,6 @@ interface SvgPath {
 const extractSvgPaths = (svgElement: HTMLElement): SvgPath[] => {
   const paths: SvgPath[] = [];
 
-  // SVG 내의 모든 path 요소를 찾습니다
   const pathElements = svgElement.querySelectorAll("path");
 
   pathElements.forEach((path) => {

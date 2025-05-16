@@ -64,16 +64,21 @@ export default function NewTemplateClient({
       throw new Error("입력 필드가 비어있습니다.");
     }
 
+    if (data.chartType === "GRID" || data.chartType === "MIXED") {
+      if (!data.chartTypeMaps?.length || data.chartTypeMaps.length === 0) {
+        throw new Error("차트 유형을 선택해주세요.");
+      }
+    }
+
     const request = {
       name: data.name,
       needle_type: data.needleType,
       chart_type: "NONE" as const,
       measurement_rule_id: data.measurementRuleId,
       construction_methods: data.constructionMethods,
-      chart_type_ids: [],
+      chart_type_maps: data.chartTypeMaps ?? [],
     };
-    const response = await createTemplate(request);
-    console.log("response: ", response);
+    await createTemplate(request);
 
     toast({
       title: "템플릿 저장 성공",
@@ -107,7 +112,9 @@ export default function NewTemplateClient({
 
           <TemplateForm
             onSubmit={handleSubmit}
-            initialTemplateName={initialTemplateName}
+            initialTemplate={{
+              name: initialTemplateName,
+            }}
             measurementRuleId={selectedRule}
             category={{
               level1: rule.category_large,
