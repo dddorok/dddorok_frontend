@@ -1,15 +1,26 @@
-import { EditChartTypeClient } from "./edit-chart-type-client";
+"use client";
+import { useQuery } from "@tanstack/react-query";
+import { useParams } from "next/navigation";
 
-export const metadata = {
-  title: "차트 유형 수정 | 관리자 페이지",
-};
+import { EditChartTypeForm } from "./edit-chart-type-client";
 
-export default async function EditChartTypePage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
-  const { id } = await params;
+import { chartTypeQueries } from "@/queries/chart-type";
 
-  return <EditChartTypeClient id={id} />;
+export default function EditChartTypePage() {
+  const { id } = useParams();
+
+  const { data: chartType } = useQuery({
+    ...chartTypeQueries.getChartTypeQueryOptions(id as string),
+    enabled: !!id,
+  });
+
+  if (!chartType) {
+    return <div>Chart type not found</div>;
+  }
+
+  return (
+    <>
+      <EditChartTypeForm chartType={chartType} />
+    </>
+  );
 }

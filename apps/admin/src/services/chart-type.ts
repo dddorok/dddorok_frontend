@@ -38,7 +38,7 @@ export interface GetChartTypeResponse {
   detail_type: string;
   created_date: string;
   updated_date: string;
-  measurement_maps: {
+  measurement_code_maps: {
     measurement_code: string;
     path_id: string;
   }[];
@@ -46,6 +46,7 @@ export interface GetChartTypeResponse {
     id: string;
     name: string;
   }[];
+  svg_file_url: string;
 }
 
 export const getChartType = async (id: string) => {
@@ -117,4 +118,25 @@ export const uploadSvg = async (file: File) => {
     })
     .json();
   return response.data.resource_id;
+};
+
+interface UpdateMeasurementCodeMapsRequest {
+  id: string;
+  measurement_code_maps: {
+    measurement_code: string;
+    path_id: string;
+  }[];
+}
+
+export const updateMeasurementCodeMaps = async (
+  request: UpdateMeasurementCodeMapsRequest
+) => {
+  const response = await privateInstance
+    .patch(`chart-type/${request.id}/measurement-code-maps`, {
+      json: {
+        measurement_code_maps: request.measurement_code_maps,
+      },
+    })
+    .json();
+  return response;
 };

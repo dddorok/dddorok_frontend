@@ -27,6 +27,7 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { measurementRuleQueries } from "@/queries/measurement-rule";
+import { GetChartTypeResponse } from "@/services/chart-type";
 import { getMeasurementRuleList } from "@/services/measurement-rule";
 
 // 몸판 폼 스키마
@@ -66,8 +67,10 @@ type FormValues = z.infer<typeof formSchema>;
 
 export default function InformationForm({
   onSubmit,
+  initialChartType,
 }: {
   onSubmit: (data: FormValues) => void;
+  initialChartType?: any;
 }) {
   const [selectedTab, setSelectedTab] = useState<"몸판" | "소매">("몸판");
   const [activeTab, setActiveTab] = useState("case1");
@@ -75,18 +78,19 @@ export default function InformationForm({
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      type: "몸판",
+      type: selectedTab,
       chartName: "",
       ...(selectedTab === "몸판"
         ? {
-            bodyDetailType: "",
-            measurementRule: "",
+            bodyDetailType: initialChartType?.bodyDetailType || "",
+            measurementRule: initialChartType?.measurementRule || "",
+            measurementRuleName: initialChartType?.measurementRuleName || "",
           }
         : {
-            retailDetailType: "",
-            selectedMeasurements: [],
+            retailDetailType: initialChartType?.retailDetailType || "",
+            selectedMeasurements: initialChartType?.selectedMeasurements || [],
           }),
-    },
+    } as any,
   });
 
   const handleProductTypeChange = useCallback(

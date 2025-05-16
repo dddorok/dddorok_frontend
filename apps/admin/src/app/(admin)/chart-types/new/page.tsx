@@ -20,7 +20,6 @@ type FormDataType = {
 export default function NewChartTypePage() {
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState<FormDataType | null>(null);
-  console.log("formData: ", formData);
 
   const onSubmit = async (data: any) => {
     if (!formData || !data) return;
@@ -91,8 +90,6 @@ function SvgMappingFormWrapper({
     enabled: formData.type === "소매",
   });
 
-  console.log("measurementRuleItemCodeList: ", measurementRuleItemCodeList);
-  console.log("formData: ", formData);
   const measurementList =
     formData?.type === "몸판"
       ? measurementRuleList?.items
