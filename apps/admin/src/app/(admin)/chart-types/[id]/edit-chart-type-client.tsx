@@ -40,17 +40,26 @@ export function EditChartTypeForm({
   const onSubmit = async (data: {
     paths: { pathId: string; selectedMeasurement: string }[];
   }) => {
-    await updateMeasurementCodeMaps({
-      id: initialChartType.id,
-      measurement_code_maps: data.paths.map((item) => ({
-        measurement_code: item.selectedMeasurement,
-        path_id: item.pathId,
-      })),
-    });
-    toast({
-      title: "측정항목 매핑 업데이트 완료",
-    });
-    router.push(`/chart-types`);
+    try {
+      await updateMeasurementCodeMaps({
+        id: initialChartType.id,
+        measurement_code_maps: data.paths.map((item) => ({
+          measurement_code: item.selectedMeasurement,
+          path_id: item.pathId,
+        })),
+      });
+      toast({
+        title: "측정항목 매핑 업데이트 완료",
+      });
+      router.push(`/chart-types`);
+    } catch (error) {
+      console.error(error);
+      toast({
+        variant: "destructive",
+        title: "측정항목 매핑 업데이트 실패",
+        description: error instanceof Error ? error.message : "알 수 없는 오류",
+      });
+    }
   };
   const { data: measurementRuleItemCodeList } = useQuery({
     ...measurementRuleQueries.getMeasurementRuleItemCodeQueryOptions(),
