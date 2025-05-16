@@ -1,14 +1,27 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
+import { UploadIcon } from "lucide-react";
 import React, { Dispatch, SetStateAction, useRef, useState } from "react";
 
 import { CommonSelect } from "@/components/CommonUI";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
-import { measurementRuleQueries } from "@/queries/measurement-rule";
 import { GetMeasurementRuleItemCodeResponse } from "@/services/measurement-rule";
+
+interface SvgPath {
+  id: string;
+  path: string;
+  stroke?: string;
+  strokeLinecap?: string;
+}
 
 export default function SvgMappingForm({
   measurementCodeList,
@@ -17,18 +30,12 @@ export default function SvgMappingForm({
   measurementCodeList: GetMeasurementRuleItemCodeResponse[];
   onSubmit: (data: any) => void;
 }) {
-  const [svgPath, setSvgPath] = useState<HTMLElement | null>(null);
+  const [svgContent, setSvgContent] = useState<string>("");
   const fileRef = useRef<File | null>(null);
-
   const [pathList, setPathList] = useState<SvgPath[]>([]);
-
   const [paths, setPaths] = useState<
-    {
-      path: SvgPath;
-      selectedMeasurement: string | null;
-    }[]
+    { path: SvgPath; selectedMeasurement: string | null }[]
   >([]);
-  console.log("paths: ", paths);
 
   const handleSubmit = () => {
     onSubmit({
@@ -42,58 +49,36 @@ export default function SvgMappingForm({
     value: measurement.code,
   }));
 
-  const onUpload = () => {
-    // SVG 파일 업로드 처리
-    const input = document.createElement("input");
-    input.type = "file";
-    input.accept = ".svg";
+  const handleFileChange = (file: File | null) => {
+    if (!file) return;
 
-    input.onchange = (e) => {
-      const file = (e.target as HTMLInputElement).files?.[0];
-      if (!file) return;
+    fileRef.current = file;
 
-      fileRef.current = file;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const content = e.target?.result as string;
+      setSvgContent(content);
 
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const svgContent = e.target?.result as string;
-        const parser = new DOMParser();
-        const svgDoc = parser.parseFromString(svgContent, "image/svg+xml");
+      const parser = new DOMParser();
+      const svgDoc = parser.parseFromString(content, "image/svg+xml");
+      const paths = extractSvgPaths(svgDoc.documentElement);
 
-        // SVG 요소를 찾아서 현재 SVG를 대체
-        const svgContainer = document.querySelector(".w-full.h-full.relative");
-        if (svgContainer) {
-          const newSvg = svgDoc.documentElement;
-
-          const paths = extractSvgPaths(newSvg);
-
-          setPathList(paths);
-          setPaths(
-            paths.map((path) => ({ path: path, selectedMeasurement: null }))
-          );
-          setSvgPath(newSvg);
-        }
-      };
-      reader.readAsText(file);
+      setPathList(paths);
+      setPaths(
+        paths.map((path) => ({ path: path, selectedMeasurement: null }))
+      );
     };
-
-    input.click();
+    reader.readAsText(file);
   };
 
   return (
     <div className="w-full mx-auto p-6 space-y-6">
       <h2 className="text-2xl font-bold">Step 2. SVG 영역과 매핑</h2>
 
+      <UploadFileForm file={fileRef.current} setFile={handleFileChange} />
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <SvgPanel svgPath={svgPath} />
+        <SvgPanel svgContent={svgContent} />
         <div className="space-y-4">
-          {/* 파일 업로드 버튼 */}
-          <div>
-            <Button variant="outline" className="w-full" onClick={onUpload}>
-              파일 업로드 영역 (알파벳 .svg)
-            </Button>
-          </div>
-
           <SelectedMeasurementList
             measurementOptionList={measurementOptionList}
             paths={paths}
@@ -115,13 +100,6 @@ export default function SvgMappingForm({
       </div>
     </div>
   );
-}
-
-interface SvgPath {
-  id: string;
-  path: string;
-  stroke?: string;
-  strokeLinecap?: string;
 }
 
 const extractSvgPaths = (svgElement: HTMLElement): SvgPath[] => {
@@ -148,35 +126,18 @@ const extractSvgPaths = (svgElement: HTMLElement): SvgPath[] => {
   return paths;
 };
 
-const useItemCodeList = (measurementRuleId: string) => {
-  const {
-    data: { items: measurementRuleList },
-  } = useSuspenseQuery(
-    measurementRuleQueries.getMeasurementRuleByIdQueryOptions(measurementRuleId)
-  );
-  // console.log("measurementRuleList: ", measurementRuleList);
-
-  // const { data: measurementRuleItemCodeList } = useSuspenseQuery(
-  //   measurementRuleQueries.getMeasurementRuleItemCodeQueryOptions()
-  // );
-  // console.log("measurementRuleItemCodeList: ", measurementRuleItemCodeList);
-};
-
-function SvgPanel({ svgPath }: { svgPath: HTMLElement | null }) {
+function SvgPanel({ svgContent }: { svgContent: string }) {
   return (
     <Card className="p-4 border flex items-center justify-center h-fit">
       <div className="w-full h-full relative">
         <div className="text-lg font-medium mb-4">미리보기 패널</div>
 
-        {!svgPath && (
+        {!svgContent && (
           <div className="text-center text-gray-500">
             파일을 업로드 해주세요
           </div>
         )}
-        {/* SVG 미리보기 */}
-        {svgPath && (
-          <div dangerouslySetInnerHTML={{ __html: svgPath.outerHTML }} />
-        )}
+        {svgContent && <div dangerouslySetInnerHTML={{ __html: svgContent }} />}
       </div>
     </Card>
   );
@@ -230,6 +191,16 @@ function PathSelectList({
   >;
   pathList: SvgPath[];
 }) {
+  const onChange = (value: string, pathId: string) => {
+    setPaths((prev) => {
+      return prev.map((item) => {
+        if (item.path.id === pathId) {
+          return { ...item, selectedMeasurement: value };
+        }
+        return item;
+      });
+    });
+  };
   return (
     <div className="space-y-2">
       <div className="text-sm font-medium">Path ID</div>
@@ -239,20 +210,83 @@ function PathSelectList({
             <div>{path.id}</div>
             <CommonSelect
               options={measurementOptionList}
-              onChange={(value) => {
-                setPaths((prev) => {
-                  return prev.map((item) => {
-                    if (item.path.id === path.id) {
-                      return { ...item, selectedMeasurement: value };
-                    }
-                    return item;
-                  });
-                });
-              }}
+              onChange={(value) => onChange(value, path.id)}
             />
           </div>
         </div>
       ))}
     </div>
+  );
+}
+
+export function UploadFileForm({
+  file,
+  setFile,
+}: {
+  file: File | null;
+  setFile: (file: File | null) => void;
+}) {
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFile(e.target.files?.[0] || null);
+  };
+
+  if (file) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Upload a File</CardTitle>
+          <CardDescription>
+            Select a file to upload and click the submit button.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="font-medium">{file.name}</p>
+              <p className="text-sm text-muted-foreground">
+                {(file.size / 1024).toFixed(2)} KB
+              </p>
+            </div>
+            <Button onClick={() => setFile(null)}>Remove</Button>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Upload a File</CardTitle>
+        <CardDescription>
+          Select a file to upload and click the submit button.
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="flex items-center justify-center w-full">
+          <label
+            htmlFor="dropzone-file"
+            className="flex flex-col items-center justify-center w-full h-64 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 dark:hover:bg-bray-800 dark:bg-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:hover:border-gray-500 dark:hover:bg-gray-600"
+          >
+            <div className="flex flex-col items-center justify-center pt-5 pb-6">
+              <UploadIcon className="w-10 h-10 text-gray-400" />
+              <p className="mb-2 text-sm text-gray-500 dark:text-gray-400">
+                <span className="font-semibold">Click to upload</span> or drag
+                and drop
+              </p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                SVG, PNG, JPG or GIF (MAX. 800x400px)
+              </p>
+            </div>
+            <input
+              id="dropzone-file"
+              type="file"
+              className="hidden"
+              onChange={handleFileChange}
+            />
+          </label>
+        </div>
+      </CardContent>
+    </Card>
   );
 }

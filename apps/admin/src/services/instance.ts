@@ -81,9 +81,7 @@ export const privateInstance = ky.create({
               }
             } catch (refreshError) {
               console.error("토큰 갱신 실패:", refreshError);
-              throw new Error(
-                "인증 세션이 만료되었습니다. 다시 로그인해주세요."
-              );
+              redirect("/oauth/login");
             }
           }
           // else {

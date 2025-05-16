@@ -1,6 +1,7 @@
 "use server";
 
 import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 import { cache } from "react";
 
 import { decrypt, encrypt } from "./jose";
@@ -34,44 +35,49 @@ export async function createSession({
 }
 
 export async function updateSession() {
-  console.log(
-    "updateSession:ㅁㅁㅁㅁㅁㅁㅁㅁㅁㅁㅁㅁㅁㅁㅁㅁㅁㅁㅁㅁㅁㅁㅁㅁ "
-  );
-  const cookieStore = await cookies();
-  const session = cookieStore.get(sessionCookieName)?.value;
+  try {
+    console.log(
+      "updateSession:ㅁㅁㅁㅁㅁㅁㅁㅁㅁㅁㅁㅁㅁㅁㅁㅁㅁㅁㅁㅁㅁㅁㅁㅁ "
+    );
+    const cookieStore = await cookies();
+    const session = cookieStore.get(sessionCookieName)?.value;
 
-  if (!session) {
-    return null;
+    if (!session) {
+      return null;
+    }
+
+    const payload = await decrypt<{
+      accessToken: string;
+      refreshToken: string;
+      expiresAt: Date;
+    }>(session);
+
+    if (!payload) {
+      return null;
+    }
+    console.log("refreshToken: ", payload.refreshToken);
+    console.log("------------: ");
+
+    const data = await refreshToken(payload.refreshToken);
+
+    const expires = new Date(Date.now() + sessionExpiresAt);
+    const newSession = await encrypt({
+      accessToken: data.access_token,
+      refreshToken: data.refresh_token,
+      expiresAt: expires,
+    });
+    console.log("newSession: ", newSession);
+    cookieStore.set(sessionCookieName, newSession, {
+      httpOnly: false,
+      secure: true,
+      // expires: expires,
+      sameSite: "lax",
+      path: "/",
+    });
+  } catch (error) {
+    console.error("updateSession error: ", error);
+    redirect("/oauth/login");
   }
-
-  const payload = await decrypt<{
-    accessToken: string;
-    refreshToken: string;
-    expiresAt: Date;
-  }>(session);
-
-  if (!payload) {
-    return null;
-  }
-  console.log("refreshToken: ", payload.refreshToken);
-  console.log("------------: ");
-
-  const data = await refreshToken(payload.refreshToken);
-
-  const expires = new Date(Date.now() + sessionExpiresAt);
-  const newSession = await encrypt({
-    accessToken: data.access_token,
-    refreshToken: data.refresh_token,
-    expiresAt: expires,
-  });
-  console.log("newSession: ", newSession);
-  cookieStore.set(sessionCookieName, newSession, {
-    httpOnly: false,
-    secure: true,
-    // expires: expires,
-    sameSite: "lax",
-    path: "/",
-  });
 }
 
 export async function getSession() {
