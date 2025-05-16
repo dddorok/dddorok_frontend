@@ -7,6 +7,8 @@ import { useState, useEffect } from "react";
 import { useForm, useFormContext, useWatch } from "react-hook-form";
 import * as z from "zod";
 
+import { ChartTypeOrderDialog } from "./ChartTypeOrderDialog";
+
 import { BasicAlert } from "@/components/Alert";
 import { CommonSelect } from "@/components/CommonUI";
 import { Button } from "@/components/ui/button";
@@ -318,6 +320,18 @@ function ChartTypeSelect() {
     chartTypeQueries.getChartTypeListQueryOptions()
   );
 
+  const [dialogOpen, setDialogOpen] = useState(false);
+
+  const selectedChartTypes = (form.watch("chartTypeMaps") || [])
+    .map((map) => ({
+      ...chartTypeList?.find((ct) => ct.id === map.chart_type_id),
+      chart_type_id: map.chart_type_id,
+      order: map.order,
+      name:
+        chartTypeList?.find((ct) => ct.id === map.chart_type_id)?.name ?? "",
+    }))
+    .sort((a, b) => a.order - b.order);
+
   if (!chartBasedPattern) return null;
 
   return (
@@ -376,6 +390,30 @@ function ChartTypeSelect() {
               <FormMessage />
             </FormItem>
           )}
+        />
+        <Button
+          type="button"
+          variant="secondary"
+          className="mt-2"
+          disabled={selectedChartTypes.length < 2}
+          onClick={() => setDialogOpen(true)}
+        >
+          선택한 차트 유형 순서 변경
+        </Button>
+        <ChartTypeOrderDialog
+          open={dialogOpen}
+          onOpenChange={setDialogOpen}
+          chartTypes={selectedChartTypes}
+          onSave={(newOrder: { chart_type_id: string; order: number }[]) => {
+            // order만 반영, 기타 정보는 기존 chartTypeMaps에서 유지
+            const merged = newOrder.map((o) => ({
+              ...form
+                .watch("chartTypeMaps")
+                ?.find((m) => m.chart_type_id === o.chart_type_id),
+              order: o.order,
+            }));
+            form.setValue("chartTypeMaps", merged as any);
+          }}
         />
       </CardContent>
     </Card>
