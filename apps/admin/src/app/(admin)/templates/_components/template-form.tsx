@@ -31,13 +31,6 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
   CHART_TYPE_OPTIONS,
   ChartType,
   ChartTypeMapSchema,
@@ -50,7 +43,6 @@ import {
   NeedleTypeSchema,
 } from "@/constants/template";
 import { toast } from "@/hooks/use-toast";
-import { chartTypes } from "@/lib/data";
 import { chartTypeQueries } from "@/queries/chart-type";
 
 const templateFormSchema = z.object({
@@ -59,7 +51,6 @@ const templateFormSchema = z.object({
   needleType: NeedleTypeSchema,
   chartType: ChartTypeSchema,
   constructionMethods: z.array(ConstructionMethodSchema),
-  isPublished: z.boolean().optional(),
   chartTypeMaps: z.array(ChartTypeMapSchema).optional(),
 });
 // .refine(
@@ -104,14 +95,10 @@ export function TemplateForm({
       constructionMethods: initialTemplate?.constructionMethods || [],
       measurementRuleId: measurementRuleId,
       chartTypeMaps: initialTemplate?.chartTypeMaps || [],
-      isPublished: initialTemplate?.isPublished,
     },
     mode: "onSubmit",
     shouldFocusError: true,
   });
-
-  // 조건부 UI 표시를 위한 상태들
-  const [showChartFields] = useState(false); // 차트 유형
 
   const handleSubmit = async () => {
     try {
@@ -197,9 +184,6 @@ export function TemplateForm({
                 </FormItem>
               )}
             />
-
-            {/* TODO: 공개 여부 */}
-            {mode === "EDIT" && <PublishStatusSelect />}
 
             <div>
               <FormLabel>카테고리</FormLabel>
@@ -331,6 +315,8 @@ function ChartTypeSelect() {
         chartTypeList?.find((ct) => ct.id === map.chart_type_id)?.name ?? "",
     }))
     .sort((a, b) => a.order - b.order);
+
+  console.log("selectedChartTypes: ", selectedChartTypes);
 
   if (!chartBasedPattern) return null;
 
@@ -520,34 +506,5 @@ function ConstructionMethodSelect({
         </div>
       </CardContent>
     </Card>
-  );
-}
-
-function PublishStatusSelect() {
-  return (
-    <FormField
-      name="isPublished"
-      render={({ field }) => (
-        <FormItem>
-          <FormLabel>게시 상태</FormLabel>
-          <Select
-            onValueChange={(value) => field.onChange(value === "true")}
-            defaultValue={field.value ? "true" : "false"}
-            value={field.value ? "true" : "false"}
-          >
-            <FormControl>
-              <SelectTrigger>
-                <SelectValue placeholder="게시 상태를 선택하세요" />
-              </SelectTrigger>
-            </FormControl>
-            <SelectContent>
-              <SelectItem value="true">공개</SelectItem>
-              <SelectItem value="false">비공개</SelectItem>
-            </SelectContent>
-          </Select>
-          <FormMessage />
-        </FormItem>
-      )}
-    />
   );
 }

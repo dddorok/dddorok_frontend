@@ -74,6 +74,11 @@ export interface GetTemplateByIdResponse {
   is_published: boolean;
   construction_methods: ConstructionMethodType[];
   measurement_rule: TemplateMeasurementRule;
+  chart_types: {
+    id: string;
+    name: string;
+    order: number;
+  }[];
 }
 // 단일 템플릿 조회
 export const getTemplateById = async (templateId: string) => {
@@ -88,7 +93,7 @@ interface UpdateTemplateRequest {
   needle_type: NeedleType;
   chart_type: ChartType;
   construction_methods: ConstructionMethodType[];
-  is_published: boolean;
+  // is_published: boolean;
   chart_type_maps?: {
     chart_type_id: string;
     order: number;

@@ -30,17 +30,23 @@ export default function EditTemplateClient({
       !data.name ||
       !data.needleType ||
       !data.chartType ||
-      !data.constructionMethods ||
-      data.isPublished === undefined
+      !data.constructionMethods
     ) {
       throw new Error("모든 필드를 입력해주세요.");
     }
-    updateTemplate(templateId, {
+
+    if (data.chartType === "GRID" || data.chartType === "MIXED") {
+      if (!data.chartTypeMaps?.length || data.chartTypeMaps.length === 0) {
+        throw new Error("차트 유형을 선택해주세요.");
+      }
+    }
+
+    await updateTemplate(templateId, {
       name: data.name,
       needle_type: data.needleType,
       chart_type: data.chartType,
       construction_methods: data.constructionMethods,
-      is_published: data.isPublished,
+      // is_published: data.isPublished,
       chart_type_maps: data.chartTypeMaps,
     });
 
@@ -86,8 +92,10 @@ export default function EditTemplateClient({
             constructionMethods: template.construction_methods.filter(
               (method) => method !== "NONE"
             ),
-            isPublished: template.is_published || false,
-            // chartTypeIds: template.chart_types,
+            chartTypeMaps: template.chart_types?.map((map) => ({
+              chart_type_id: map.id,
+              order: map.order,
+            })),
           }}
         />
       </div>
