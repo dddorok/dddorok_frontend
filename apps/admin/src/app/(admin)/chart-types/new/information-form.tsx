@@ -141,29 +141,6 @@ export default function InformationForm({
                   <Label htmlFor="r2">소매</Label>
                 </div>
               </RadioGroup>
-
-              {/* <div
-                className="flex items-center space-x-2 cursor-pointer"
-                onClick={() => handleProductTypeChange("몸판")}
-              >
-                <div
-                  className={`w-5 h-5 rounded-full ${selectedTab === "몸판" ? "bg-black" : "border border-gray-300"} flex items-center justify-center text-white text-xs`}
-                >
-                  ○
-                </div>
-                <span>몸판</span>
-              </div>
-              <div
-                className="flex items-center space-x-2 cursor-pointer"
-                onClick={() => handleProductTypeChange("소매")}
-              >
-                <div
-                  className={`w-5 h-5 rounded-full ${selectedTab === "소매" ? "bg-black" : "border border-gray-300"} flex items-center justify-center text-white text-xs`}
-                >
-                  ○
-                </div>
-                <span>소매</span>
-              </div> */}
             </div>
           </div>
         </div>

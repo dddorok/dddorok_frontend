@@ -1,6 +1,7 @@
-import React, { useState } from "react";
+import { useSuspenseQuery } from "@tanstack/react-query";
+import React, { useRef, useState } from "react";
 
-import { Measurement, MEASUREMENT } from "./constants";
+import { Measurement } from "./constants";
 
 import { CommonSelect } from "@/components/CommonUI";
 import { Button } from "@/components/ui/button";
@@ -8,13 +9,24 @@ import { Card } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
+import { measurementRuleQueries } from "@/queries/measurement-rule";
+import { GetMeasurementRuleItemCodeResponse } from "@/services/measurement-rule";
 
 export default function SvgMappingForm({
-  measurementList,
+  // measurementList,
+  measurementRuleId,
+  measurementCodeList,
+  onSubmit,
 }: {
-  measurementList: Measurement[];
+  // measurementList: GetMeasurementRuleItemCodeResponse[];
+  measurementCodeList: GetMeasurementRuleItemCodeResponse[];
+  measurementRuleId: string;
+  onSubmit: (data: any) => void;
 }) {
+  useItemCodeList(measurementRuleId);
+
   const [svgPath, setSvgPath] = useState<HTMLElement | null>(null);
+  const fileRef = useRef<File | null>(null);
 
   const [selectedPath, setSelectedPath] = useState("");
   const [pathList, setPathList] = useState<SvgPath[]>([]);
@@ -22,13 +34,21 @@ export default function SvgMappingForm({
   const [paths, setPaths] = useState<
     {
       path: SvgPath;
-      selectedMeasurement: Measurement | null;
+      selectedMeasurement: string | null;
     }[]
   >([]);
+  console.log("paths: ", paths);
 
-  const measurementOptionList = measurementList.map((measurement) => ({
-    label: MEASUREMENT[measurement].측정_항목,
-    value: measurement,
+  const handleSubmit = () => {
+    onSubmit({
+      paths,
+      file: fileRef.current,
+    });
+  };
+
+  const measurementOptionList = measurementCodeList.map((measurement) => ({
+    label: measurement.label,
+    value: measurement.code,
   }));
 
   const onUpload = () => {
@@ -40,6 +60,8 @@ export default function SvgMappingForm({
     input.onchange = (e) => {
       const file = (e.target as HTMLInputElement).files?.[0];
       if (!file) return;
+
+      fileRef.current = file;
 
       const reader = new FileReader();
       reader.onload = (e) => {
@@ -125,7 +147,6 @@ export default function SvgMappingForm({
           </div>
         </div>
 
-        {/* 오른쪽 측정항목 패널 */}
         <div className="space-y-6">
           <div className="space-y-2">
             <div className="text-sm font-medium">Path ID</div>
@@ -178,7 +199,7 @@ export default function SvgMappingForm({
           {/* 버튼 영역 */}
           <div className="flex justify-end space-x-3 mt-10">
             <Button variant="outline">취소</Button>
-            <Button>저장</Button>
+            <Button onClick={handleSubmit}>저장</Button>
           </div>
         </div>
       </div>
@@ -216,4 +237,18 @@ const extractSvgPaths = (svgElement: HTMLElement): SvgPath[] => {
   });
 
   return paths;
+};
+
+const useItemCodeList = (measurementRuleId: string) => {
+  const {
+    data: { items: measurementRuleList },
+  } = useSuspenseQuery(
+    measurementRuleQueries.getMeasurementRuleByIdQueryOptions(measurementRuleId)
+  );
+  // console.log("measurementRuleList: ", measurementRuleList);
+
+  // const { data: measurementRuleItemCodeList } = useSuspenseQuery(
+  //   measurementRuleQueries.getMeasurementRuleItemCodeQueryOptions()
+  // );
+  // console.log("measurementRuleItemCodeList: ", measurementRuleItemCodeList);
 };

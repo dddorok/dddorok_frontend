@@ -12,7 +12,7 @@ export const RETAIL_DETAIL_TYPE = [
 ] as const;
 
 export const MEASUREMENT = {
-  BD_SH_W: {
+  BODY_SHOULDER_WIDTH: {
     부위: "몸통",
     속성: "어깨",
     측정_유형: "너비",
@@ -39,7 +39,7 @@ export const MEASUREMENT = {
     조정_여부: "FALSE",
     자동계산: "FALSE",
   },
-  BD_WST_W: {
+  BODY_WAIST_WIDTH: {
     부위: "몸통",
     속성: "허리",
     측정_유형: "너비",
@@ -246,7 +246,7 @@ export const MEASUREMENT = {
     조정_여부: "FALSE",
     자동계산: "FALSE",
   },
-  SL_FAH_L: {
+  SLEEVE_FRONT_ARM_HOLE_LENGTH: {
     부위: "소매",
     속성: "앞진동",
     측정_유형: "길이",
