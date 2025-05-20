@@ -8,6 +8,7 @@ import { useForm, useFormContext, useWatch } from "react-hook-form";
 import * as z from "zod";
 
 import { ChartTypeOrderDialog } from "./ChartTypeOrderDialog";
+import { ChartTypeSelect } from "./ChartTypeSelect";
 
 import { BasicAlert } from "@/components/Alert";
 import { CommonSelect } from "@/components/CommonUI";
@@ -200,7 +201,10 @@ export function TemplateForm({
         {/* Section 2: 조건부 속성 입력 */}
         <ConstructionMethodSelect category={category} />
 
-        <ChartTypeSelect />
+        <ChartTypeSelect
+          selectedPatternType={form.watch("chartType")}
+          chartTypeMapsName="chartTypeMaps"
+        />
 
         <div className="flex justify-end gap-4">
           <Button variant="outline" type="button">
@@ -288,121 +292,6 @@ const getCategoryName = (category: {
 const getIsChartBasedPattern = (chartType: ChartType) => {
   return chartType === "GRID" || chartType === "MIXED";
 };
-
-// // TODO: 이건 일단 빈배열로가기, 지금은 서버 준비가 안됨
-function ChartTypeSelect() {
-  const form = useFormContext<TemplateFormData>();
-
-  // TODO: 차트형 또는 혼합형 패턴 -> 차트 유형 활성화
-  // TODO: 필드가 비활성화될 때 값 초기화
-
-  const selectedPatternType = useWatch({ name: "chartType" });
-  const chartBasedPattern =
-    selectedPatternType === "GRID" || selectedPatternType === "MIXED";
-
-  const { data: chartTypeList } = useQuery(chartTypeQueries.list());
-
-  const [dialogOpen, setDialogOpen] = useState(false);
-
-  const selectedChartTypes = (form.watch("chartTypeMaps") || [])
-    .map((map) => ({
-      ...chartTypeList?.find((ct) => ct.id === map.chart_type_id),
-      chart_type_id: map.chart_type_id,
-      order: map.order,
-      name:
-        chartTypeList?.find((ct) => ct.id === map.chart_type_id)?.name ?? "",
-    }))
-    .sort((a, b) => a.order - b.order);
-
-  console.log("selectedChartTypes: ", selectedChartTypes);
-
-  if (!chartBasedPattern) return null;
-
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>차트 유형 선택</CardTitle>
-        <CardDescription>차트 유형을 설정해주세요.</CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        <FormField
-          control={form.control}
-          name="chartTypeMaps"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>차트 유형</FormLabel>
-              <FormDescription>
-                차트 유형 관리에 등록된 목록에서 선택할 수 있으며, 다중 선택이
-                가능합니다.
-              </FormDescription>
-              <div className="space-y-2 mt-2">
-                {chartTypeList?.map((chartType) => (
-                  <div
-                    key={chartType.id}
-                    className="flex items-center space-x-2"
-                  >
-                    <Checkbox
-                      id={`chart-type-${chartType.id}`}
-                      checked={(field.value || []).some(
-                        (map) => map.chart_type_id === chartType.id
-                      )}
-                      onCheckedChange={(checked) => {
-                        const currentValues = field.value || [];
-                        if (checked) {
-                          field.onChange([
-                            ...currentValues,
-                            { chart_type_id: chartType.id, order: 0 },
-                          ]);
-                        } else {
-                          field.onChange(
-                            currentValues.filter(
-                              (map) => map.chart_type_id !== chartType.id
-                            )
-                          );
-                        }
-                      }}
-                    />
-                    <label
-                      htmlFor={`chart-type-${chartType.id}`}
-                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                    >
-                      {chartType.name}
-                    </label>
-                  </div>
-                ))}
-              </div>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <Button
-          type="button"
-          variant="secondary"
-          className="mt-2"
-          disabled={selectedChartTypes.length < 2}
-          onClick={() => setDialogOpen(true)}
-        >
-          선택한 차트 유형 순서 변경
-        </Button>
-        <ChartTypeOrderDialog
-          open={dialogOpen}
-          onOpenChange={setDialogOpen}
-          chartTypes={selectedChartTypes}
-          onSave={(newOrder: { chart_type_id: string; order: number }[]) => {
-            // order만 반영, 기타 정보는 기존 chartTypeMaps에서 유지
-            const merged = newOrder.map((o) => ({
-              ...form
-                .watch("chartTypeMaps")
-                ?.find((m) => m.chart_type_id === o.chart_type_id),
-              order: o.order,
-            }));
-            form.setValue("chartTypeMaps", merged as any);
-          }}
-        />
-      </CardContent>
-    </Card>
-  );
-}
 
 const getIsConstructionMethodEnabled = ({
   needleType,

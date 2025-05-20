@@ -175,9 +175,6 @@ function SelectMeasurementRule({
                       {rule.sleeve_type && ` • 소매 유형: ${rule.sleeve_type}`}
                     </p>
                   </div>
-                  {/* {(selectedRule as any)?.id === rule.id && (
-                    <Check className="h-5 w-5 text-blue-500" />
-                  )} */}
                 </CardContent>
               </Card>
             ))}

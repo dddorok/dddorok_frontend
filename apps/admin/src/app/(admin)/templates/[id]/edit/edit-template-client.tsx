@@ -89,7 +89,7 @@ export default function EditTemplateClient({
                 : template.needle_type,
             chartType:
               template.chart_type === "NONE" ? undefined : template.chart_type,
-            constructionMethods: template.construction_methods.filter(
+            constructionMethods: template.construction_methods?.filter(
               (method) => method !== "NONE"
             ),
             chartTypeMaps: template.chart_types?.map((map) => ({
