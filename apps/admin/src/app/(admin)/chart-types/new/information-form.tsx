@@ -12,6 +12,7 @@ import {
 } from "./constants";
 
 import {
+  CommonCheckboxListField,
   CommonInputField,
   CommonSelectField,
 } from "@/components/CommonFormField";
@@ -245,36 +246,10 @@ function RetailChart() {
         placeholder="선택하세요"
       />
 
-      <FormField
-        control={form.control}
+      <CommonCheckboxListField
         name="selectedMeasurements"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>측정항목 선택</FormLabel>
-            <div className="grid grid-cols-2 gap-4">
-              {sleeveOptions.map(({ label, value }) => (
-                <div className="flex items-center space-x-2" key={value}>
-                  <Checkbox
-                    id={value}
-                    checked={field.value?.includes(value)}
-                    onCheckedChange={(checked) => {
-                      const currentValue = field.value || [];
-                      if (checked) {
-                        field.onChange([...currentValue, value]);
-                      } else {
-                        field.onChange(currentValue.filter((v) => v !== value));
-                      }
-                    }}
-                  />
-                  <Label htmlFor={value} className="cursor-pointer">
-                    {label}
-                  </Label>
-                </div>
-              ))}
-            </div>
-            <FormMessage />
-          </FormItem>
-        )}
+        label="측정항목 선택"
+        options={sleeveOptions}
       />
     </div>
   );

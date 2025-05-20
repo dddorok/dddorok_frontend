@@ -1,6 +1,7 @@
 import { ComponentProps } from "react";
 
 import { CommonSelect } from "./CommonUI";
+import { Checkbox } from "./ui/checkbox";
 import {
   FormControl,
   FormField,
@@ -9,6 +10,9 @@ import {
   FormMessage,
 } from "./ui/form";
 import { Input } from "./ui/input";
+import { Label } from "./ui/label";
+
+import { cn } from "@/lib/utils";
 
 interface CommonFieldProps {
   name: string;
@@ -57,6 +61,48 @@ export function CommonInputField(
           <FormControl>
             <Input {...field} placeholder={props.placeholder} />
           </FormControl>
+          <FormMessage />
+        </FormItem>
+      )}
+    />
+  );
+}
+
+export function CommonCheckboxListField(
+  props: CommonFieldProps & {
+    options: { label: string; value: string }[];
+    className?: string;
+  }
+) {
+  return (
+    <FormField
+      name={props.name}
+      render={({ field }) => (
+        <FormItem>
+          <FormLabel>{props.label}</FormLabel>
+          <div className={cn("flex flex-col gap-2", props.className)}>
+            {props.options.map(({ label, value }) => (
+              <div className="flex items-center space-x-2" key={value}>
+                <Checkbox
+                  id={value}
+                  checked={field.value?.includes(value)}
+                  onCheckedChange={(checked) => {
+                    const currentValue = field.value || [];
+                    if (checked) {
+                      field.onChange([...currentValue, value]);
+                    } else {
+                      field.onChange(
+                        currentValue.filter((v: string) => v !== value)
+                      );
+                    }
+                  }}
+                />
+                <Label htmlFor={value} className="cursor-pointer">
+                  {label}
+                </Label>
+              </div>
+            ))}
+          </div>
           <FormMessage />
         </FormItem>
       )}
