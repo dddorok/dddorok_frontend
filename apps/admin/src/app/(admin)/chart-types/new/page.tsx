@@ -100,12 +100,10 @@ function SvgMappingFormWrapper({
   const { data: measurementRuleList } = useQuery({
     enabled:
       Boolean(formData?.measurementRuleId) && formData?.section === "BODY",
-    ...measurementRuleQueries.getMeasurementRuleByIdQueryOptions(
-      formData.measurementRuleId ?? ""
-    ),
+    ...measurementRuleQueries.ruleById(formData.measurementRuleId ?? ""),
   });
   const { data: measurementRuleItemCodeList } = useQuery({
-    ...measurementRuleQueries.getMeasurementRuleItemCodeQueryOptions(),
+    ...measurementRuleQueries.itemCode(),
     enabled: formData.section === "SLEEVE",
   });
 

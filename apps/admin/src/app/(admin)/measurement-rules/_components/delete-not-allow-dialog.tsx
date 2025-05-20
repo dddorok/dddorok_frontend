@@ -94,9 +94,7 @@ export function MeasurementRuleRelatedTemplateDialog({
   onDelete?: () => void;
 }) {
   const { data: relatedTemplates } = useSuspenseQuery({
-    ...measurementRuleQueries.getMeasurementRuleTemplateListQueryOptions(
-      ruleId
-    ),
+    ...measurementRuleQueries.templateListByRuleId(ruleId),
   });
 
   return (

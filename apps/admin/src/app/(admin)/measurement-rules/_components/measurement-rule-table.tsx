@@ -36,7 +36,7 @@ import {
 
 export function MeasurementRuleTable() {
   const { data } = useSuspenseQuery({
-    ...measurementRuleQueries.getMeasurementRuleListQueryOptions(),
+    ...measurementRuleQueries.list(),
   });
 
   const measurementRules = data?.data || [];

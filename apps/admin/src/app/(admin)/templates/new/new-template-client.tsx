@@ -31,9 +31,7 @@ export default function NewTemplateClient({
   );
 
   const { data: rule } = useQuery({
-    ...measurementRuleQueries.getMeasurementRuleByIdQueryOptions(
-      selectedRule || ""
-    ),
+    ...measurementRuleQueries.ruleById(selectedRule || ""),
     enabled: !!selectedRule,
   });
 
@@ -135,7 +133,7 @@ function SelectMeasurementRule({
   handleSelectRule: (rule: GetMeasurementRuleListItemType) => void;
 }) {
   const { data } = useSuspenseQuery({
-    ...measurementRuleQueries.getMeasurementRuleListQueryOptions(),
+    ...measurementRuleQueries.list(),
   });
 
   const measurementRules = data?.data || [];

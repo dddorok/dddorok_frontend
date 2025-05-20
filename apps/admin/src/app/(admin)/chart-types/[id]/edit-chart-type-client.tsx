@@ -35,7 +35,7 @@ export function EditChartTypeForm({
     router.push(`/chart-types`);
   };
   const { data: measurementRuleItemCodeList } = useQuery({
-    ...measurementRuleQueries.getMeasurementRuleItemCodeQueryOptions(),
+    ...measurementRuleQueries.itemCode(),
   });
 
   const codeObj =

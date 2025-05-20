@@ -27,9 +27,7 @@ export default function EditMeasurementRuleClient({
   const router = useRouter();
   const { toast } = useToast();
 
-  const { data: rule } = useQuery(
-    measurementRuleQueries.getMeasurementRuleByIdQueryOptions(id)
-  );
+  const { data: rule } = useQuery(measurementRuleQueries.ruleById(id));
 
   const handleSubmit = async (data: MeasurementRuleFormData) => {
     try {

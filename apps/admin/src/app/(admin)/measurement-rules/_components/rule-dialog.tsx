@@ -22,7 +22,7 @@ export function RuleDialog({
   close: () => void;
 }) {
   const { data } = useQuery({
-    ...measurementRuleQueries.getMeasurementRuleByIdQueryOptions(ruleId),
+    ...measurementRuleQueries.ruleById(ruleId),
   });
   console.log("data: ", data);
 

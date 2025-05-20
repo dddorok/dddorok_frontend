@@ -25,7 +25,7 @@ export const measurementRuleQueryKeys = {
 };
 
 // 치수 규칙 항목 코드 조회
-const getMeasurementRuleItemCodeQueryOptions = () => {
+const itemCodeQueryOptions = () => {
   return queryOptions<GetMeasurementRuleItemCodeResponse[]>({
     queryKey: measurementRuleQueryKeys.measurementRuleItemCode(),
     queryFn: () => getMeasurementRuleItemCode(),
@@ -33,7 +33,7 @@ const getMeasurementRuleItemCodeQueryOptions = () => {
 };
 
 // 치수 규칙 목록 조회
-const getMeasurementRuleListQueryOptions = () => {
+const listQueryOptions = () => {
   return queryOptions<GetMeasurementRuleListResponse>({
     queryKey: measurementRuleQueryKeys.measurementRuleList(),
     queryFn: () => getMeasurementRuleList(),
@@ -41,7 +41,7 @@ const getMeasurementRuleListQueryOptions = () => {
 };
 
 // 치수 규칙 단일 조회
-const getMeasurementRuleByIdQueryOptions = (id: string) => {
+const ruleByIdQueryOptions = (id: string) => {
   return queryOptions<GetMeasurementRuleByIdResponse>({
     queryKey: measurementRuleQueryKeys.measurementRuleById(id),
     queryFn: () => getMeasurementRuleById(id),
@@ -49,7 +49,7 @@ const getMeasurementRuleByIdQueryOptions = (id: string) => {
 };
 
 // 치수 규칙 id로 템플릿 조회
-const getMeasurementRuleTemplateListQueryOptions = (id: string) => {
+const templateListByRuleIdQueryOptions = (id: string) => {
   return queryOptions<GetMeasurementRuleTemplateListItemType[]>({
     queryKey: measurementRuleQueryKeys.measurementRuleTemplateList(id),
     queryFn: () => getMeasurementRuleTemplateList(id),
@@ -57,8 +57,8 @@ const getMeasurementRuleTemplateListQueryOptions = (id: string) => {
 };
 
 export const measurementRuleQueries = {
-  getMeasurementRuleItemCodeQueryOptions,
-  getMeasurementRuleListQueryOptions,
-  getMeasurementRuleByIdQueryOptions,
-  getMeasurementRuleTemplateListQueryOptions,
+  itemCode: itemCodeQueryOptions,
+  list: listQueryOptions,
+  ruleById: ruleByIdQueryOptions,
+  templateListByRuleId: templateListByRuleIdQueryOptions,
 };

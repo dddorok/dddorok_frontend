@@ -18,17 +18,7 @@ import {
 } from "@/components/CommonFormField";
 import { CommonRadioGroup } from "@/components/CommonUI";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Form } from "@/components/ui/form";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { measurementRuleQueries } from "@/queries/measurement-rule";
 import { getMeasurementRuleList } from "@/services/measurement-rule";
@@ -185,8 +175,7 @@ function ChartNameForm() {
 function BodyChart() {
   const form = useFormContext<FormValues>();
   const { data: measurementRuleList } = useSuspenseQuery({
-    queryKey: ["measurementRuleList"],
-    queryFn: () => getMeasurementRuleList(),
+    ...measurementRuleQueries.list(),
   });
 
   return (
@@ -223,7 +212,7 @@ function RetailChart() {
   const form = useFormContext<FormValues>();
 
   const { data: measurementRuleItemCodeList } = useQuery({
-    ...measurementRuleQueries.getMeasurementRuleItemCodeQueryOptions(),
+    ...measurementRuleQueries.itemCode(),
   });
 
   const sleeveOptions =

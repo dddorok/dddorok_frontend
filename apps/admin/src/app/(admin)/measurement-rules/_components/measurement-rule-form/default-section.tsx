@@ -189,7 +189,7 @@ function MeasurementRuleName() {
   const selectedNecklineType: NecklineType = useWatch({ name: "necklineType" });
 
   const { data: measurementRulesData } = useQuery({
-    ...measurementRuleQueries.getMeasurementRuleListQueryOptions(),
+    ...measurementRuleQueries.list(),
   });
   const measurementRules = measurementRulesData?.data || [];
   console.log("measurementRules: ", measurementRules);

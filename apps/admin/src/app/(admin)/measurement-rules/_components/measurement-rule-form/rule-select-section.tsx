@@ -10,9 +10,7 @@ import { measurementRuleQueries } from "@/queries/measurement-rule";
 import { GetMeasurementRuleItemCodeResponse } from "@/services/measurement-rule";
 
 export function MeasurementRuleSelectSection() {
-  const { data: itemCodes } = useQuery(
-    measurementRuleQueries.getMeasurementRuleItemCodeQueryOptions()
-  );
+  const { data: itemCodes } = useQuery(measurementRuleQueries.itemCode());
 
   const groupedItems = transformMeasurementItems(itemCodes ?? []);
   const [activeTab, setActiveTab] = useState<string>("상의");
