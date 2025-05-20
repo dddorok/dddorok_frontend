@@ -1,6 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
-import React, { Suspense, useCallback, useEffect, useState } from "react";
+import React, { Suspense, useCallback, useEffect } from "react";
 import { useForm, useFormContext, useWatch } from "react-hook-form";
 import { z } from "zod";
 
@@ -11,7 +11,8 @@ import {
   ChartSectionSchema,
 } from "./constants";
 
-import { CommonRadioGroup, CommonSelect } from "@/components/CommonUI";
+import { CommonSelectField } from "@/components/CommonFormField";
+import { CommonRadioGroup } from "@/components/CommonUI";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -24,12 +25,10 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { measurementRuleQueries } from "@/queries/measurement-rule";
 import { getMeasurementRuleList } from "@/services/measurement-rule";
 
-// 기본 폼 스키마
 const baseFormSchema = z.object({
   section: ChartSectionSchema,
   measurementRuleId: z.string().optional(),
@@ -45,13 +44,11 @@ const baseFormSchema = z.object({
   detailType: z.string(),
 });
 
-// 몸판 폼 스키마
 const bodyFormSchema = baseFormSchema.extend({
   section: z.literal("BODY"),
   measurementRuleName: z.string().optional(),
 });
 
-// 소매 폼 스키마
 const retailFormSchema = baseFormSchema.extend({
   section: z.literal("SLEEVE"),
   selectedMeasurements: z
@@ -59,47 +56,25 @@ const retailFormSchema = baseFormSchema.extend({
     .min(1, "최소 1개 이상의 측정항목을 선택해주세요"),
 });
 
-// 통합 폼 스키마
 const formSchema = z.discriminatedUnion("section", [
   bodyFormSchema,
   retailFormSchema,
 ]);
 
-type BodyFormValues = z.infer<typeof bodyFormSchema>;
-type RetailFormValues = z.infer<typeof retailFormSchema>;
 type FormValues = z.infer<typeof formSchema>;
 
 export default function InformationForm({
   onSubmit,
-  initialChartType,
 }: {
   onSubmit: (data: FormValues) => void;
-  initialChartType?: any;
 }) {
-  const [selectedTab, setSelectedTab] = useState<SectionType>("BODY");
-
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
-      section: selectedTab,
-      // chartName: "",
-      // ...(selectedTab === "BODY"
-      //   ? {
-      //       bodyDetailType: initialChartType?.bodyDetailType || "",
-      //       measurementRule: initialChartType?.measurementRule || "",
-      //       measurementRuleName: initialChartType?.measurementRuleName || "",
-      //     }
-      //   : {
-      //       retailDetailType: initialChartType?.retailDetailType || "",
-      //       selectedMeasurements: initialChartType?.selectedMeasurements || [],
-      //     }),
-    } as any,
+    defaultValues: { section: "BODY" } as any,
   });
 
   const handleProductTypeChange = useCallback(
     (type: SectionType) => {
-      setSelectedTab(type);
-
       const currentChartName = form.getValues("chartName");
 
       if (type === "BODY") {
@@ -108,14 +83,14 @@ export default function InformationForm({
           chartName: currentChartName,
           detailType: "",
           measurementRuleId: "",
-        } as BodyFormValues);
+        });
       } else {
         form.reset({
           section: "SLEEVE",
           chartName: currentChartName,
           detailType: "",
           selectedMeasurements: [],
-        } as RetailFormValues);
+        });
       }
     },
     [form]
@@ -147,16 +122,7 @@ export default function InformationForm({
           </div>
         </div>
 
-        <Tabs
-          value={selectedTab}
-          onValueChange={(value) => setSelectedTab(value as SectionType)}
-          className="w-full"
-        >
-          <TabsList className="hidden">
-            <TabsTrigger value="BODY">몸판 선택 시</TabsTrigger>
-            <TabsTrigger value="SLEEVE">소매 선택 시</TabsTrigger>
-          </TabsList>
-
+        <Tabs value={form.watch("section")} className="w-full">
           <TabsContent value="BODY" className="space-y-6">
             <Suspense fallback={<div>Loading...</div>}>
               <BodyChart />
@@ -187,7 +153,6 @@ function ChartNameForm() {
   const measurementRuleName = useWatch({ name: "measurementRuleName" });
 
   useEffect(() => {
-    console.log("section: ", section);
     if (section === "BODY" && detailType) {
       // {치수규칙명} {세부유형} 형식으로 자동 생성
       // ex) 래글런형 브이넥 스웨터 상단 전개도
@@ -229,54 +194,29 @@ function BodyChart() {
 
   return (
     <div className="space-y-4">
-      <FormField
-        control={form.control}
+      <CommonSelectField
         name="detailType"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>몸판 세부유형 선택</FormLabel>
-            <FormControl>
-              <CommonSelect
-                options={BODY_DETAIL_TYPE.map((type) => ({
-                  label: type,
-                  value: type,
-                }))}
-                onChange={field.onChange}
-                placeholder="선택하세요"
-                value={field.value}
-              />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
+        label="몸판 세부유형 선택"
+        placeholder="선택하세요"
+        options={BODY_DETAIL_TYPE.map((type) => ({
+          label: type,
+          value: type,
+        }))}
       />
-
-      <FormField
-        control={form.control}
+      <CommonSelectField
         name="measurementRuleId"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>치수규칙 선택</FormLabel>
-            <FormControl>
-              <CommonSelect
-                options={measurementRuleList.data.map((item) => ({
-                  label: item.rule_name,
-                  value: item.id,
-                }))}
-                onChange={(value) => {
-                  const selectedRule = measurementRuleList.data.find(
-                    (item) => item.id === value
-                  );
-                  form.setValue("measurementRuleName", selectedRule?.rule_name);
-                  field.onChange(value);
-                }}
-                placeholder="선택하세요"
-                value={field.value}
-              />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
+        label="치수규칙 선택"
+        options={measurementRuleList.data.map((item) => ({
+          label: item.rule_name,
+          value: item.id,
+        }))}
+        onChange={(value) => {
+          const selectedRule = measurementRuleList.data.find(
+            (item) => item.id === value
+          );
+          form.setValue("measurementRuleName", selectedRule?.rule_name);
+        }}
+        placeholder="선택하세요"
       />
     </div>
   );
@@ -299,26 +239,14 @@ function RetailChart() {
 
   return (
     <div className="space-y-4">
-      <FormField
-        control={form.control}
+      <CommonSelectField
         name="detailType"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>소매 서브유형 선택</FormLabel>
-            <FormControl>
-              <CommonSelect
-                options={RETAIL_DETAIL_TYPE.map((type) => ({
-                  label: type,
-                  value: type,
-                }))}
-                onChange={field.onChange}
-                placeholder="선택하세요"
-                value={field.value}
-              />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
+        label="소매 서브유형 선택"
+        options={RETAIL_DETAIL_TYPE.map((type) => ({
+          label: type,
+          value: type,
+        }))}
+        placeholder="선택하세요"
       />
 
       <FormField
