@@ -11,7 +11,10 @@ import {
   ChartSectionSchema,
 } from "./constants";
 
-import { CommonSelectField } from "@/components/CommonFormField";
+import {
+  CommonInputField,
+  CommonSelectField,
+} from "@/components/CommonFormField";
 import { CommonRadioGroup } from "@/components/CommonUI";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -170,17 +173,10 @@ function ChartNameForm() {
   }, [detailType, section, measurementRuleName]);
 
   return (
-    <FormField
+    <CommonInputField
       name="chartName"
-      render={({ field }) => (
-        <FormItem>
-          <FormLabel>차트이름</FormLabel>
-          <FormControl>
-            <Input {...field} placeholder="자동생성, 수정가능" />
-          </FormControl>
-          <FormMessage />
-        </FormItem>
-      )}
+      label="차트이름"
+      placeholder="자동생성, 수정가능"
     />
   );
 }

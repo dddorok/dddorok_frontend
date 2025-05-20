@@ -8,6 +8,7 @@ import {
   FormLabel,
   FormMessage,
 } from "./ui/form";
+import { Input } from "./ui/input";
 
 interface CommonFieldProps {
   name: string;
@@ -36,6 +37,25 @@ export function CommonSelectField(props: CommonSelectFieldProps) {
               }}
               value={field.value}
             />
+          </FormControl>
+          <FormMessage />
+        </FormItem>
+      )}
+    />
+  );
+}
+
+export function CommonInputField(
+  props: CommonFieldProps & ComponentProps<typeof Input>
+) {
+  return (
+    <FormField
+      name={props.name}
+      render={({ field }) => (
+        <FormItem>
+          <FormLabel>{props.label}</FormLabel>
+          <FormControl>
+            <Input {...field} placeholder={props.placeholder} />
           </FormControl>
           <FormMessage />
         </FormItem>
