@@ -11,7 +11,7 @@ import {
   ChartSectionSchema,
 } from "./constants";
 
-import { CommonSelect } from "@/components/CommonUI";
+import { CommonRadioGroup, CommonSelect } from "@/components/CommonUI";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -48,21 +48,12 @@ const baseFormSchema = z.object({
 // 몸판 폼 스키마
 const bodyFormSchema = baseFormSchema.extend({
   section: z.literal("BODY"),
-  // bodyDetailType: z.string({
-  //   required_error: "몸판 세부유형을 선택해주세요",
-  // }),
-  // measurementRule: z.string({
-  //   required_error: "치수규칙을 선택해주세요",
-  // }),
   measurementRuleName: z.string().optional(),
 });
 
 // 소매 폼 스키마
 const retailFormSchema = baseFormSchema.extend({
   section: z.literal("SLEEVE"),
-  // retailDetailType: z.string({
-  //   required_error: "소매 서브유형을 선택해주세요",
-  // }),
   selectedMeasurements: z
     .array(z.string())
     .min(1, "최소 1개 이상의 측정항목을 선택해주세요"),
@@ -141,21 +132,17 @@ export default function InformationForm({
           <div className="flex space-x-2 mb-6 flex-col gap-2">
             <p className="text-lg">제품군별 선택</p>
             <div className="flex space-x-4 ml-0">
-              <RadioGroup
-                defaultValue="BODY"
-                onValueChange={(value) =>
+              <CommonRadioGroup
+                options={[
+                  { label: "몸판", value: "BODY" },
+                  { label: "소매", value: "SLEEVE" },
+                ]}
+                onChange={(value) =>
                   handleProductTypeChange(value as SectionType)
                 }
-              >
-                <div className="flex items-center gap-2">
-                  <RadioGroupItem value="BODY" id="r1" />
-                  <Label htmlFor="r1">몸판</Label>
-                </div>
-                <div className="flex items-center gap-2">
-                  <RadioGroupItem value="SLEEVE" id="r2" />
-                  <Label htmlFor="r2">소매</Label>
-                </div>
-              </RadioGroup>
+                defaultValue="BODY"
+                className="w-full flex gap-2"
+              />
             </div>
           </div>
         </div>
