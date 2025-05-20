@@ -1,17 +1,18 @@
 "use client";
+
 import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { Suspense, useState } from "react";
 
+import { SectionType } from "./constants";
 import InformationForm from "./information-form";
 import SvgMappingForm from "./svg-mapping-form";
 
 import { toast } from "@/hooks/use-toast";
 import { measurementRuleQueries } from "@/queries/measurement-rule";
 import { createChartType, uploadSvg } from "@/services/chart-type";
-
 type FormDataType = {
-  type: "몸판" | "소매";
+  type: SectionType;
   detailType: string;
   chartName: string;
   measurementRule?: string;
@@ -20,9 +21,11 @@ type FormDataType = {
 };
 
 export default function NewChartTypePage() {
+  const router = useRouter();
+
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState<FormDataType | null>(null);
-  const router = useRouter();
+
   const onSubmit = async (data: {
     file: File | null;
     paths: { path: string; selectedMeasurement: string }[];
@@ -37,16 +40,14 @@ export default function NewChartTypePage() {
       await createChartType({
         category_large: "의류",
         category_medium: "상의",
-        section: formData.type === "몸판" ? "BODY" : "SLEEVE",
+        section: formData.type,
         detail_type: formData.detailType,
         name: formData.chartName,
         measurement_rule_id: formData.measurementRule ?? "",
-        measurement_code_maps: data.paths.map(
-          (item: { path: string; selectedMeasurement: string }) => ({
-            measurement_code: item.selectedMeasurement,
-            path_id: item.path,
-          })
-        ),
+        measurement_code_maps: data.paths.map((item) => ({
+          measurement_code: item.selectedMeasurement,
+          path_id: item.path,
+        })),
         resource_id: resourceId,
       });
 
@@ -73,7 +74,7 @@ export default function NewChartTypePage() {
               ...data,
               type: data.type,
               detailType:
-                data.type === "몸판"
+                data.type === "BODY"
                   ? data.bodyDetailType
                   : data.retailDetailType,
             });
@@ -99,18 +100,18 @@ function SvgMappingFormWrapper({
   onSubmit: (data: any) => void;
 }) {
   const { data: measurementRuleList } = useQuery({
-    enabled: Boolean(formData?.measurementRule) && formData?.type === "몸판",
+    enabled: Boolean(formData?.measurementRule) && formData?.type === "BODY",
     ...measurementRuleQueries.getMeasurementRuleByIdQueryOptions(
       formData.measurementRule ?? ""
     ),
   });
   const { data: measurementRuleItemCodeList } = useQuery({
     ...measurementRuleQueries.getMeasurementRuleItemCodeQueryOptions(),
-    enabled: formData.type === "소매",
+    enabled: formData.type === "SLEEVE",
   });
 
   const measurementList =
-    formData?.type === "몸판"
+    formData?.type === "BODY"
       ? measurementRuleList?.items
       : measurementRuleItemCodeList?.filter((item) =>
           formData.selectedMeasurements?.includes(item.code)

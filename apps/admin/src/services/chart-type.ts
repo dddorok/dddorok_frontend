@@ -1,5 +1,7 @@
 import { apiInstance, privateInstance } from "./instance";
 
+import { SectionType } from "@/app/(admin)/chart-types/new/constants";
+
 export interface ChartTypeItemType {
   id: string;
   name: string;
@@ -34,7 +36,7 @@ export interface GetChartTypeResponse {
   name: string;
   category_large: string;
   category_medium: string;
-  section: string;
+  section: SectionType;
   detail_type: string;
   created_date: string;
   updated_date: string;

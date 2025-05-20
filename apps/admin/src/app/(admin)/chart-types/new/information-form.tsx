@@ -4,12 +4,7 @@ import React, { Suspense, useCallback, useEffect, useState } from "react";
 import { useForm, useFormContext, useWatch } from "react-hook-form";
 import { z } from "zod";
 
-import {
-  BODY_DETAIL_TYPE,
-  GROUPPING_MEASUREMENT,
-  MEASUREMENT,
-  RETAIL_DETAIL_TYPE,
-} from "./constants";
+import { BODY_DETAIL_TYPE, SectionType, RETAIL_DETAIL_TYPE } from "./constants";
 
 import { CommonSelect } from "@/components/CommonUI";
 import { Button } from "@/components/ui/button";
@@ -27,12 +22,11 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { measurementRuleQueries } from "@/queries/measurement-rule";
-import { GetChartTypeResponse } from "@/services/chart-type";
 import { getMeasurementRuleList } from "@/services/measurement-rule";
 
 // 몸판 폼 스키마
 const bodyFormSchema = z.object({
-  type: z.literal("몸판"),
+  type: z.literal("BODY"),
   bodyDetailType: z.string({
     required_error: "몸판 세부유형을 선택해주세요",
   }),
@@ -45,7 +39,7 @@ const bodyFormSchema = z.object({
 
 // 소매 폼 스키마
 const retailFormSchema = z.object({
-  type: z.literal("소매"),
+  type: z.literal("SLEEVE"),
   retailDetailType: z.string({
     required_error: "소매 서브유형을 선택해주세요",
   }),
@@ -72,15 +66,14 @@ export default function InformationForm({
   onSubmit: (data: FormValues) => void;
   initialChartType?: any;
 }) {
-  const [selectedTab, setSelectedTab] = useState<"몸판" | "소매">("몸판");
-  const [activeTab, setActiveTab] = useState("case1");
+  const [selectedTab, setSelectedTab] = useState<SectionType>("BODY");
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       type: selectedTab,
       chartName: "",
-      ...(selectedTab === "몸판"
+      ...(selectedTab === "BODY"
         ? {
             bodyDetailType: initialChartType?.bodyDetailType || "",
             measurementRule: initialChartType?.measurementRule || "",
@@ -94,22 +87,21 @@ export default function InformationForm({
   });
 
   const handleProductTypeChange = useCallback(
-    (type: "몸판" | "소매") => {
+    (type: SectionType) => {
       setSelectedTab(type);
-      setActiveTab(type === "몸판" ? "case1" : "case2");
 
       const currentChartName = form.getValues("chartName");
 
-      if (type === "몸판") {
+      if (type === "BODY") {
         form.reset({
-          type: "몸판",
+          type: "BODY",
           chartName: currentChartName,
           bodyDetailType: "",
           measurementRule: "",
         } as BodyFormValues);
       } else {
         form.reset({
-          type: "소매",
+          type: "SLEEVE",
           chartName: currentChartName,
           retailDetailType: "",
           selectedMeasurements: [],
@@ -131,17 +123,17 @@ export default function InformationForm({
             <p className="text-lg">제품군별 선택</p>
             <div className="flex space-x-4 ml-0">
               <RadioGroup
-                defaultValue="몸판"
+                defaultValue="BODY"
                 onValueChange={(value) =>
-                  handleProductTypeChange(value as "몸판" | "소매")
+                  handleProductTypeChange(value as SectionType)
                 }
               >
                 <div className="flex items-center gap-2">
-                  <RadioGroupItem value="몸판" id="r1" />
+                  <RadioGroupItem value="BODY" id="r1" />
                   <Label htmlFor="r1">몸판</Label>
                 </div>
                 <div className="flex items-center gap-2">
-                  <RadioGroupItem value="소매" id="r2" />
+                  <RadioGroupItem value="SLEEVE" id="r2" />
                   <Label htmlFor="r2">소매</Label>
                 </div>
               </RadioGroup>
@@ -149,19 +141,23 @@ export default function InformationForm({
           </div>
         </div>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <Tabs
+          value={selectedTab}
+          onValueChange={(value) => setSelectedTab(value as SectionType)}
+          className="w-full"
+        >
           <TabsList className="hidden">
-            <TabsTrigger value="case1">몸판 선택 시</TabsTrigger>
-            <TabsTrigger value="case2">소매 선택 시</TabsTrigger>
+            <TabsTrigger value="BODY">몸판 선택 시</TabsTrigger>
+            <TabsTrigger value="SLEEVE">소매 선택 시</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="case1" className="space-y-6">
+          <TabsContent value="BODY" className="space-y-6">
             <Suspense fallback={<div>Loading...</div>}>
               <BodyChart />
             </Suspense>
           </TabsContent>
 
-          <TabsContent value="case2" className="space-y-6">
+          <TabsContent value="SLEEVE" className="space-y-6">
             <RetailChart />
           </TabsContent>
         </Tabs>
@@ -186,7 +182,7 @@ function ChartNameForm() {
   const retailDetailType = useWatch({ name: "retailDetailType" });
 
   useEffect(() => {
-    if (type === "몸판" && bodyDetailType) {
+    if (type === "BODY" && bodyDetailType) {
       // {치수규칙명} {세부유형} 형식으로 자동 생성
       // ex) 래글런형 브이넥 스웨터 상단 전개도
       form.setValue(
@@ -194,11 +190,12 @@ function ChartNameForm() {
         `${measurementRuleName} ${bodyDetailType} 상단 전개도`
       );
     }
-    if (type === "소매" && retailDetailType) {
+    if (type === "SLEEVE" && retailDetailType) {
       // {세부유형} 소매 형식으로 자동 생성
       // ex)셋인형 소매
       form.setValue("chartName", `${retailDetailType} 소매`);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [bodyDetailType, retailDetailType, type, measurementRuleName]);
 
   return (

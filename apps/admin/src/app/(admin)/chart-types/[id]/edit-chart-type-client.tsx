@@ -1,9 +1,11 @@
 "use client";
+
 import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { Suspense, useState } from "react";
 
 import SvgMappingForm from "./svg-mapping-form";
+import { SectionType } from "../new/constants";
 
 import { toast } from "@/hooks/use-toast";
 import { measurementRuleQueries } from "@/queries/measurement-rule";
@@ -13,7 +15,7 @@ import {
 } from "@/services/chart-type";
 
 type FormDataType = {
-  type: "몸판" | "소매";
+  type: SectionType;
   detailType: string;
   chartName: string;
   measurementRule?: string;
@@ -28,7 +30,7 @@ export function EditChartTypeForm({
 }) {
   const router = useRouter();
   const [formData, setFormData] = useState<FormDataType | null>({
-    type: initialChartType.section === "BODY" ? "몸판" : "소매",
+    type: initialChartType.section,
     detailType: initialChartType.detail_type,
     chartName: initialChartType.name,
     measurementRule: undefined,
