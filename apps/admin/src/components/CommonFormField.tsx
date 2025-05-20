@@ -1,6 +1,6 @@
 import { ComponentProps } from "react";
 
-import { CommonSelect } from "./CommonUI";
+import { CommonRadioGroup, CommonSelect } from "./CommonUI";
 import { Checkbox } from "./ui/checkbox";
 import {
   FormControl,
@@ -11,6 +11,7 @@ import {
 } from "./ui/form";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
+import { RadioGroup, RadioGroupItem } from "./ui/radio-group";
 
 import { cn } from "@/lib/utils";
 
@@ -109,3 +110,29 @@ export function CommonCheckboxListField(
     />
   );
 }
+
+export const CommonRadioListField = (
+  props: CommonFieldProps &
+    Omit<ComponentProps<typeof CommonRadioGroup>, "onChange"> & {
+      onChange?: (value: string) => void;
+    }
+) => {
+  return (
+    <FormField
+      name={props.name}
+      render={({ field }) => (
+        <FormItem>
+          <FormLabel>{props.label}</FormLabel>
+          <CommonRadioGroup
+            {...props}
+            onChange={(value) => {
+              props.onChange?.(value);
+              field.onChange(value);
+            }}
+          />
+          <FormMessage />
+        </FormItem>
+      )}
+    />
+  );
+};

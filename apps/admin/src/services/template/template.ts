@@ -32,7 +32,9 @@ interface CreateTemplateRequest {
   needle_type: NeedleType;
   chart_type: ChartType | "NONE";
   measurement_rule_id: string;
-  construction_methods: string[];
+  // construction_methods: string[];
+  construction_primary: ConstructionMethodType | "NONE";
+  construction_secondary: ConstructionMethodType | "NONE";
   chart_type_maps: {
     chart_type_id: string;
     order: number;

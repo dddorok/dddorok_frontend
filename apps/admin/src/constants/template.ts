@@ -56,6 +56,7 @@ export const ConstructionMethodSchema = z.enum([
   "PIECED",
   "ROUND",
 ]);
+
 export type ConstructionMethodType =
   | z.infer<typeof ConstructionMethodSchema>
   | "NONE";

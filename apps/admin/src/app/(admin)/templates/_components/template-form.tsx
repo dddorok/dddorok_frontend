@@ -7,12 +7,12 @@ import { useState, useEffect } from "react";
 import { useForm, useFormContext, useWatch } from "react-hook-form";
 import * as z from "zod";
 
-import { ChartTypeOrderDialog } from "./ChartTypeOrderDialog";
 import { ChartTypeSelect } from "./ChartTypeSelect";
 
-import { BasicAlert } from "@/components/Alert";
-import { CommonSelectField } from "@/components/CommonFormField";
-import { CommonSelect } from "@/components/CommonUI";
+import {
+  CommonRadioListField,
+  CommonSelectField,
+} from "@/components/CommonFormField";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -48,7 +48,11 @@ const templateFormSchema = z.object({
   name: z.string().min(1, "템플릿 이름을 입력해주세요"),
   measurementRuleId: z.string().min(1, "치수 규칙을 선택해주세요"),
   needleType: NeedleTypeSchema,
-  constructionMethods: z.array(ConstructionMethodSchema),
+  constructionPrimary: ConstructionMethodSchema.extract([
+    "TOP_DOWN",
+    "BOTTOM_UP",
+  ]),
+  constructionSecondary: ConstructionMethodSchema.extract(["PIECED", "ROUND"]),
   chartTypeMaps: z.array(ChartTypeMapSchema).min(1, "차트 유형을 선택해주세요"),
 });
 
@@ -76,8 +80,8 @@ export function TemplateForm({
     resolver: zodResolver(templateFormSchema),
     defaultValues: {
       name: initialTemplate?.name || "",
-      needleType: initialTemplate?.needleType,
-      constructionMethods: initialTemplate?.constructionMethods || [],
+      needleType: "KNITTING",
+      // constructionMethods: initialTemplate?.constructionMethods || [],
       measurementRuleId: measurementRuleId,
       chartTypeMaps: initialTemplate?.chartTypeMaps || [],
     },
@@ -95,13 +99,13 @@ export function TemplateForm({
         return;
       }
       if (request.needleType === "KNITTING") {
-        if (request.constructionMethods.length === 0) {
-          // throw new Error("상의 제작 방식을 1개 이상 입력해주세요.");
-          form.setError("constructionMethods", {
-            message: "상의 제작 방식을 1개 이상 입력해주세요.",
-          });
-          return;
-        }
+        // if (request.constructionMethods.length === 0) {
+        //   // throw new Error("상의 제작 방식을 1개 이상 입력해주세요.");
+        //   form.setError("constructionMethods", {
+        //     message: "상의 제작 방식을 1개 이상 입력해주세요.",
+        //   });
+        //   return;
+        // }
       }
       await onSubmit(request);
     } catch (error) {
@@ -172,15 +176,8 @@ export function TemplateForm({
  ** 관리자가 수정 가능하도록 함
  */
 const generateTemplateName = (formData: Partial<TemplateFormData>) => {
-  const list = formData?.constructionMethods
+  const list = [formData.constructionPrimary, formData.constructionSecondary]
     ?.filter(Boolean)
-    .sort((a) => {
-      // 1. 1순위 : 탑다운, 바텀업
-      // 2. 2순위 : 조각잇기, 원통형
-      if (a === "TOP_DOWN" || a === "BOTTOM_UP") return -1;
-      if (a === "PIECED" || a === "ROUND") return 1;
-      return 0;
-    })
     .map(
       (item) =>
         CONSTRUCTION_METHOD[item as keyof typeof CONSTRUCTION_METHOD].label
@@ -234,10 +231,6 @@ const getCategoryName = (category: {
   return `${category.level1} > ${category.level2} > ${category.level3}`;
 };
 
-const getIsChartBasedPattern = (chartType: ChartType) => {
-  return chartType === "GRID" || chartType === "MIXED";
-};
-
 const getIsConstructionMethodEnabled = ({
   needleType,
   category,
@@ -273,13 +266,13 @@ function ConstructionMethodSelect({
     category,
   });
 
-  useEffect(() => {
-    // 필드가 비활성화될 때 값 초기화
-    if (!isConstructionMethodEnabled) {
-      form.setValue("constructionMethods", []);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isConstructionMethodEnabled]);
+  // useEffect(() => {
+  //   // 필드가 비활성화될 때 값 초기화
+  //   // if (!isConstructionMethodEnabled) {
+  //   //   form.setValue("constructionPrimary", "NONE");
+  //   //   form.setValue("constructionSecondary", "NONE");
+  //   // }
+  // }, [isConstructionMethodEnabled]);
 
   if (!isConstructionMethodEnabled) return null;
 
@@ -292,19 +285,22 @@ function ConstructionMethodSelect({
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-        {/* Construction Methods (Multi-select) */}
-        {form.formState.errors.constructionMethods && (
-          <BasicAlert variant="destructive">
-            상의 제작 방식을 1개 이상 입력해주세요.
-          </BasicAlert>
-        )}
-        <div>
-          <FormLabel>제작 방식 (다중 선택 가능)</FormLabel>
-          <FormDescription>
-            적용 가능한 제작 방식을 모두 선택해주세요.
-          </FormDescription>
-          <div className="grid grid-cols-2 gap-4 mt-2">
-            {Object.values(CONSTRUCTION_METHOD_OPTIONS).map((option) => (
+        <CommonRadioListField
+          name="constructionPrimary"
+          label="제작 방식 1"
+          options={[
+            CONSTRUCTION_METHOD.TOP_DOWN,
+            CONSTRUCTION_METHOD.BOTTOM_UP,
+          ]}
+          className="flex"
+        />
+        <CommonRadioListField
+          name="constructionSecondary"
+          label="제작 방식 2"
+          options={[CONSTRUCTION_METHOD.PIECED, CONSTRUCTION_METHOD.ROUND]}
+          className="flex "
+        />
+        {/* {Object.values(CONSTRUCTION_METHOD_OPTIONS).map((option) => (
               <FormField
                 key={option.value}
                 name="constructionMethods"
@@ -333,9 +329,7 @@ function ConstructionMethodSelect({
                   );
                 }}
               />
-            ))}
-          </div>
-        </div>
+            ))} */}
       </CardContent>
     </Card>
   );

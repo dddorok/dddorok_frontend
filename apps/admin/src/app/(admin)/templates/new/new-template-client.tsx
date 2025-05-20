@@ -62,18 +62,20 @@ export default function NewTemplateClient({
       throw new Error("입력 필드가 비어있습니다.");
     }
 
-    if (data.chartType === "GRID" || data.chartType === "MIXED") {
-      if (!data.chartTypeMaps?.length || data.chartTypeMaps.length === 0) {
-        throw new Error("차트 유형을 선택해주세요.");
-      }
-    }
+    // if (data.chartType === "GRID" || data.chartType === "MIXED") {
+    //   if (!data.chartTypeMaps?.length || data.chartTypeMaps.length === 0) {
+    //     throw new Error("차트 유형을 선택해주세요.");
+    //   }
+    // }
 
     const request = {
       name: data.name,
       needle_type: data.needleType,
-      chart_type: "NONE" as const,
+      // chart_type: "NONE" as const,
       measurement_rule_id: data.measurementRuleId,
-      construction_methods: data.constructionMethods,
+      // construction_methods: data.constructionMethods,
+      construction_primary: data.constructionPrimary,
+      construction_secondary: data.constructionSecondary,
       chart_type_maps: data.chartTypeMaps ?? [],
     };
     await createTemplate(request);
