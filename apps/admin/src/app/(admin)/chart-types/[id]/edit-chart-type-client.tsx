@@ -20,12 +20,12 @@ export function EditChartTypeForm({
 }) {
   const router = useRouter();
   const onSubmit = async (data: {
-    paths: { pathId: string; selectedMeasurement: string }[];
+    paths: { pathId: string; selectedMeasurement: string | null }[];
   }) => {
     await updateMeasurementCodeMaps({
       id: initialChartType.id,
       measurement_code_maps: data.paths.map((item) => ({
-        measurement_code: item.selectedMeasurement,
+        measurement_code: item.selectedMeasurement ?? "",
         path_id: item.pathId,
       })),
     });
