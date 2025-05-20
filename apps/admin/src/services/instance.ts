@@ -1,6 +1,7 @@
 import ky, { HTTPError, Options } from "ky";
 import { redirect } from "next/navigation";
 
+import { toast } from "@/hooks/use-toast";
 import { updateSession } from "@/lib/auth";
 import { verifySession } from "@/lib/dal";
 
@@ -99,6 +100,12 @@ export const privateInstance = ky.create({
         if (response) {
           const data = (await response.json()) as ErrorResponse;
           error.message = data.message || "알 수 없는 에러가 발생했습니다.";
+          toast({
+            variant: "destructive",
+            description:
+              error instanceof Error ? error.message : "알 수 없는 오류",
+          });
+
           throw new CustomError(data);
         }
 

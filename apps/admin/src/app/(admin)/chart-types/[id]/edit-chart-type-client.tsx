@@ -2,10 +2,9 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
-import { Suspense, useState } from "react";
+import { Suspense } from "react";
 
 import SvgMappingForm from "./svg-mapping-form";
-import { SectionType } from "../new/constants";
 
 import { toast } from "@/hooks/use-toast";
 import { measurementRuleQueries } from "@/queries/measurement-rule";
@@ -14,54 +13,26 @@ import {
   updateMeasurementCodeMaps,
 } from "@/services/chart-type";
 
-type FormDataType = {
-  type: SectionType;
-  detailType: string;
-  chartName: string;
-  measurementRule?: string;
-  selectedMeasurements?: string[];
-  measurementRuleName?: string;
-};
-
 export function EditChartTypeForm({
   chartType: initialChartType,
 }: {
   chartType: GetChartTypeResponse;
 }) {
   const router = useRouter();
-  const [formData, setFormData] = useState<FormDataType | null>({
-    type: initialChartType.section,
-    detailType: initialChartType.detail_type,
-    chartName: initialChartType.name,
-    measurementRule: undefined,
-    selectedMeasurements: initialChartType.measurement_code_maps?.map(
-      (map) => map.measurement_code
-    ),
-  });
-
   const onSubmit = async (data: {
     paths: { pathId: string; selectedMeasurement: string }[];
   }) => {
-    try {
-      await updateMeasurementCodeMaps({
-        id: initialChartType.id,
-        measurement_code_maps: data.paths.map((item) => ({
-          measurement_code: item.selectedMeasurement,
-          path_id: item.pathId,
-        })),
-      });
-      toast({
-        title: "측정항목 매핑 업데이트 완료",
-      });
-      router.push(`/chart-types`);
-    } catch (error) {
-      console.error(error);
-      toast({
-        variant: "destructive",
-        title: "측정항목 매핑 업데이트 실패",
-        description: error instanceof Error ? error.message : "알 수 없는 오류",
-      });
-    }
+    await updateMeasurementCodeMaps({
+      id: initialChartType.id,
+      measurement_code_maps: data.paths.map((item) => ({
+        measurement_code: item.selectedMeasurement,
+        path_id: item.pathId,
+      })),
+    });
+    toast({
+      title: "측정항목 매핑 업데이트 완료",
+    });
+    router.push(`/chart-types`);
   };
   const { data: measurementRuleItemCodeList } = useQuery({
     ...measurementRuleQueries.getMeasurementRuleItemCodeQueryOptions(),
@@ -78,21 +49,19 @@ export function EditChartTypeForm({
 
   return (
     <>
-      {formData && (
-        <Suspense fallback={<div>Loading...</div>}>
-          <SvgMappingForm
-            onSubmit={onSubmit}
-            measurementCodeList={
-              initialChartType.measurement_code_maps?.map((map) => ({
-                label: codeObj[map.measurement_code] ?? "",
-                value: map.measurement_code,
-              })) ?? []
-            }
-            svgFileUrl={initialChartType.svg_file_url}
-            measurementCodeMaps={initialChartType.measurement_code_maps}
-          />
-        </Suspense>
-      )}
+      <Suspense fallback={<div>Loading...</div>}>
+        <SvgMappingForm
+          onSubmit={onSubmit}
+          measurementCodeList={
+            initialChartType.measurement_code_maps?.map((map) => ({
+              label: codeObj[map.measurement_code] ?? "",
+              value: map.measurement_code,
+            })) ?? []
+          }
+          svgFileUrl={initialChartType.svg_file_url}
+          measurementCodeMaps={initialChartType.measurement_code_maps}
+        />
+      </Suspense>
     </>
   );
 }
