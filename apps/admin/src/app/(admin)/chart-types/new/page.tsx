@@ -23,7 +23,10 @@ export default function NewChartTypePage() {
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState<FormDataType | null>(null);
   const router = useRouter();
-  const onSubmit = async (data: any) => {
+  const onSubmit = async (data: {
+    file: File | null;
+    paths: { path: string; selectedMeasurement: string }[];
+  }) => {
     if (!formData || !data) return;
 
     if (!data.file) return;
@@ -39,9 +42,9 @@ export default function NewChartTypePage() {
         name: formData.chartName,
         measurement_rule_id: formData.measurementRule ?? "",
         measurement_code_maps: data.paths.map(
-          (item: { path: { id: string }; selectedMeasurement: string }) => ({
+          (item: { path: string; selectedMeasurement: string }) => ({
             measurement_code: item.selectedMeasurement,
-            path_id: item.path.id,
+            path_id: item.path,
           })
         ),
         resource_id: resourceId,

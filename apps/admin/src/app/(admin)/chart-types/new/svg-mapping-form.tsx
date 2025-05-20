@@ -1,6 +1,5 @@
-import { useSuspenseQuery } from "@tanstack/react-query";
 import { UploadIcon } from "lucide-react";
-import React, { Dispatch, SetStateAction, useRef, useState } from "react";
+import React, { useRef, useState } from "react";
 
 import { CommonSelect } from "@/components/CommonUI";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -17,75 +16,41 @@ import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { GetMeasurementRuleItemCodeResponse } from "@/services/measurement-rule";
 
-interface SvgPath {
-  id: string;
-  path: string;
-  stroke?: string;
-  strokeLinecap?: string;
-}
+type SvgPath = string;
 
 type PathDataType = {
   path: string;
   selectedMeasurement: string | null;
 };
 
+interface SvgMappingFormProps {
+  measurementCodeList: GetMeasurementRuleItemCodeResponse[];
+  onSubmit: (data: { paths: PathDataType[]; file: File | null }) => void;
+}
+
 export default function SvgMappingForm({
   measurementCodeList,
   onSubmit,
-}: {
-  measurementCodeList: GetMeasurementRuleItemCodeResponse[];
-  onSubmit: (data: any) => void;
-}) {
-  const [svgContent, setSvgContent] = useState<string>("");
-  const fileRef = useRef<File | null>(null);
-  const [paths, setPaths] = useState<PathDataType[]>([]);
+}: SvgMappingFormProps) {
+  const { svgContent, paths, updateFile, file, updatePathInfo } =
+    useSvgMappingPath();
 
   const measurementOptionList = measurementCodeList.map((measurement) => ({
     label: measurement.label,
     value: measurement.code,
   }));
 
-  const handleSubmit = () => {
-    onSubmit({
-      paths,
-      file: fileRef.current,
-    });
-  };
-
-  const handleFileChange = (file: File | null) => {
-    if (!file) return;
-
-    fileRef.current = file;
-
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const content = e.target?.result as string;
-      setSvgContent(content);
-
-      const parser = new DOMParser();
-      const svgDoc = parser.parseFromString(content, "image/svg+xml");
-      const paths = extractSvgPaths(svgDoc.documentElement);
-
-      setPaths(
-        paths.map((path) => ({ path: path.id, selectedMeasurement: null }))
-      );
-    };
-    reader.readAsText(file);
-  };
+  const handleSubmit = () => onSubmit({ paths, file });
 
   return (
     <div className="w-full mx-auto p-6 space-y-6">
       <h2 className="text-2xl font-bold">Step 2. SVG 영역과 매핑</h2>
-
       <UploadFileForm
-        file={fileRef.current}
-        setFile={handleFileChange}
-        onRemove={() => {
-          fileRef.current = null;
-          setSvgContent("");
-          setPaths([]);
-        }}
+        file={file}
+        setFile={updateFile}
+        onRemove={() => updateFile(null)}
       />
+
       {svgContent && paths.length === 0 && (
         <Alert variant="destructive">
           <AlertTitle>경고</AlertTitle>
@@ -94,6 +59,7 @@ export default function SvgMappingForm({
           </AlertDescription>
         </Alert>
       )}
+
       {paths.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <SvgPanel svgContent={svgContent} />
@@ -107,7 +73,7 @@ export default function SvgMappingForm({
           <PathSelectList
             paths={paths}
             measurementOptionList={measurementOptionList}
-            setPaths={setPaths}
+            updatePathInfo={updatePathInfo}
           />
 
           <div className="flex justify-end space-x-3 mt-10 col-span-2">
@@ -128,16 +94,8 @@ const extractSvgPaths = (svgElement: HTMLElement): SvgPath[] => {
   pathElements.forEach((path) => {
     const id = path.id;
     const pathData = path.getAttribute("d");
-    const stroke = path.getAttribute("stroke");
-    const strokeLinecap = path.getAttribute("stroke-linecap");
-
     if (id && pathData) {
-      paths.push({
-        id,
-        path: pathData,
-        stroke: stroke || undefined,
-        strokeLinecap: strokeLinecap || undefined,
-      });
+      paths.push(id);
     }
   });
 
@@ -161,13 +119,15 @@ function SvgPanel({ svgContent }: { svgContent: string }) {
   );
 }
 
+interface SelectedMeasurementListProps {
+  measurementOptionList: { value: string; label: string }[];
+  paths: PathDataType[];
+}
+
 function SelectedMeasurementList({
   measurementOptionList,
   paths,
-}: {
-  measurementOptionList: { value: string; label: string }[];
-  paths: PathDataType[];
-}) {
+}: SelectedMeasurementListProps) {
   return (
     <div className="space-y-2">
       <Label className="text-base">선택된 측정항목</Label>
@@ -192,25 +152,21 @@ function SelectedMeasurementList({
   );
 }
 
+interface PathSelectListProps {
+  measurementOptionList: { value: string; label: string }[];
+  updatePathInfo: (pathId: string, selectedMeasurement: string | null) => void;
+  paths: PathDataType[];
+}
+
 function PathSelectList({
   measurementOptionList,
-  setPaths,
+  updatePathInfo,
   paths,
-}: {
-  measurementOptionList: { value: string; label: string }[];
-  setPaths: Dispatch<SetStateAction<PathDataType[]>>;
-  paths: PathDataType[];
-}) {
+}: PathSelectListProps) {
   const onChange = (value: string, pathId: string) => {
-    setPaths((prev) => {
-      return prev.map((item) => {
-        if (item.path === pathId) {
-          return { ...item, selectedMeasurement: value };
-        }
-        return item;
-      });
-    });
+    updatePathInfo(pathId, value);
   };
+
   return (
     <div className="space-y-2 col-span-2">
       <div className="text-sm font-medium">Path ID</div>
@@ -231,15 +187,17 @@ function PathSelectList({
   );
 }
 
+interface UploadFileFormProps {
+  file: File | null;
+  setFile: (file: File | null) => void;
+  onRemove: () => void;
+}
+
 export function UploadFileForm({
   file,
   setFile,
   onRemove,
-}: {
-  file: File | null;
-  setFile: (file: File | null) => void;
-  onRemove: () => void;
-}) {
+}: UploadFileFormProps) {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFile(e.target.files?.[0] || null);
   };
@@ -288,9 +246,6 @@ export function UploadFileForm({
                 <span className="font-semibold">클릭하여 업로드</span> 또는
                 드래그 앤 드롭
               </p>
-              <p className="text-xs text-gray-500 dark:text-gray-400">
-                SVG (최대 800x400px)
-              </p>
             </div>
             <input
               id="dropzone-file"
@@ -304,3 +259,55 @@ export function UploadFileForm({
     </Card>
   );
 }
+
+const useSvgMappingPath = () => {
+  const [svgContent, setSvgContent] = useState<string>("");
+  const fileRef = useRef<File | null>(null);
+  const [paths, setPaths] = useState<PathDataType[]>([]);
+
+  const updateFile = (file: File | null) => {
+    if (!file) {
+      setSvgContent("");
+      setPaths([]);
+      fileRef.current = null;
+      return;
+    }
+
+    fileRef.current = file;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const content = e.target?.result as string;
+      setSvgContent(content);
+
+      const parser = new DOMParser();
+      const svgDoc = parser.parseFromString(content, "image/svg+xml");
+      const paths = extractSvgPaths(svgDoc.documentElement);
+
+      setPaths(paths.map((path) => ({ path, selectedMeasurement: null })));
+    };
+    reader.readAsText(file);
+  };
+
+  const updatePathInfo = (
+    pathId: string,
+    selectedMeasurement: string | null
+  ) => {
+    setPaths((prev) => {
+      return prev.map((item) => {
+        if (item.path === pathId) {
+          return { ...item, selectedMeasurement };
+        }
+        return item;
+      });
+    });
+  };
+
+  return {
+    svgContent,
+    paths,
+    updateFile,
+    updatePathInfo,
+    file: fileRef.current,
+  };
+};
