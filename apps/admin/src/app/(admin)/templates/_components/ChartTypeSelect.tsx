@@ -51,8 +51,6 @@ export function ChartTypeSelect({
 
   const { data: chartTypeList } = useQuery(chartTypeQueries.list());
 
-  const [dialogOpen, setDialogOpen] = useState(false);
-
   const selectedChartTypes = (chartTypeMaps || [])
     .map((map) => ({
       ...chartTypeList?.find((ct) => ct.id === map.chart_type_id),
@@ -62,6 +60,20 @@ export function ChartTypeSelect({
         chartTypeList?.find((ct) => ct.id === map.chart_type_id)?.name ?? "",
     }))
     .sort((a, b) => a.order - b.order);
+
+  const getChangeArray = (
+    prevData: ChartTypeMap[],
+    { checked, chartTypeId }: { checked: boolean; chartTypeId: string }
+  ) => {
+    const currentValues = prevData || [];
+    if (checked) {
+      return [...currentValues, { chart_type_id: chartTypeId, order: 0 }];
+    } else {
+      return currentValues.filter(
+        (map: ChartTypeMap) => map.chart_type_id !== chartTypeId
+      );
+    }
+  };
 
   if (!chartBasedPattern) return null;
 
@@ -94,20 +106,12 @@ export function ChartTypeSelect({
                           map.chart_type_id === chartType.id
                       )}
                       onCheckedChange={(checked) => {
-                        const currentValues = field.value || [];
-                        if (checked) {
-                          field.onChange([
-                            ...currentValues,
-                            { chart_type_id: chartType.id, order: 0 },
-                          ]);
-                        } else {
-                          field.onChange(
-                            currentValues.filter(
-                              (map: ChartTypeMap) =>
-                                map.chart_type_id !== chartType.id
-                            )
-                          );
-                        }
+                        field.onChange(
+                          getChangeArray(field.value, {
+                            checked: checked === true,
+                            chartTypeId: chartType.id,
+                          })
+                        );
                       }}
                     />
                     <label
@@ -123,18 +127,8 @@ export function ChartTypeSelect({
             </FormItem>
           )}
         />
-        <Button
-          type="button"
-          variant="secondary"
-          className="mt-2"
-          disabled={selectedChartTypes.length < 2}
-          onClick={() => setDialogOpen(true)}
-        >
-          선택한 차트 유형 순서 변경
-        </Button>
         <ChartTypeOrderDialog
-          open={dialogOpen}
-          onOpenChange={setDialogOpen}
+          dialogButtonDisabled={selectedChartTypes.length < 2}
           chartTypes={selectedChartTypes}
           onSave={(newOrder: { chart_type_id: string; order: number }[]) => {
             // order만 반영, 기타 정보는 기존 chartTypeMaps에서 유지

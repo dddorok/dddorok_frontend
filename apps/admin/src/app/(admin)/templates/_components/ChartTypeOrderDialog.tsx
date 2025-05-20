@@ -23,13 +23,16 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
+  DialogTrigger,
+  DialogClose,
 } from "@/components/ui/dialog";
 
 interface ChartTypeOrderDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
+  // open: boolean;
+  // onOpenChange: (open: boolean) => void;
   chartTypes: { chart_type_id: string; name: string; order: number }[];
   onSave: (newOrder: { chart_type_id: string; order: number }[]) => void;
+  dialogButtonDisabled: boolean;
 }
 
 function SortableItem({ id, name }: { id: string; name: string }) {
@@ -56,10 +59,11 @@ function SortableItem({ id, name }: { id: string; name: string }) {
 }
 
 export function ChartTypeOrderDialog({
-  open,
-  onOpenChange,
+  // open,
+  // onOpenChange,
   chartTypes,
   onSave,
+  dialogButtonDisabled,
 }: ChartTypeOrderDialogProps) {
   const [items, setItems] = React.useState(chartTypes);
 
@@ -90,11 +94,20 @@ export function ChartTypeOrderDialog({
 
   const handleSave = () => {
     onSave(items.map(({ chart_type_id, order }) => ({ chart_type_id, order })));
-    onOpenChange(false);
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog>
+      <DialogTrigger asChild>
+        <Button
+          type="button"
+          variant="secondary"
+          className="mt-2"
+          disabled={dialogButtonDisabled}
+        >
+          선택한 차트 유형 순서 변경
+        </Button>
+      </DialogTrigger>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>차트 유형 순서 변경</DialogTitle>
@@ -120,10 +133,14 @@ export function ChartTypeOrderDialog({
           </DndContext>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            취소
-          </Button>
-          <Button onClick={handleSave}>저장</Button>
+          <DialogClose asChild>
+            <Button variant="outline" onClick={() => {}}>
+              취소
+            </Button>
+          </DialogClose>
+          <DialogClose asChild>
+            <Button onClick={handleSave}>저장</Button>
+          </DialogClose>
         </DialogFooter>
       </DialogContent>
     </Dialog>

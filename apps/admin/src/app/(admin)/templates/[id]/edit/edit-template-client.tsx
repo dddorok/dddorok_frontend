@@ -72,7 +72,7 @@ export default function EditTemplateClient({
 
       {/* 탭은 임시로 제거하고 기본 정보만 표시 */}
       <div className="mt-6">
-        <TemplateForm
+        {/* <TemplateForm
           onSubmit={onSubmit}
           mode="EDIT"
           measurementRuleId={template.measurement_rule.id}
@@ -97,8 +97,10 @@ export default function EditTemplateClient({
               order: map.order,
             })),
           }}
-        />
+        /> */}
       </div>
     </div>
   );
 }
+
+function TemplateEditForm() {}
