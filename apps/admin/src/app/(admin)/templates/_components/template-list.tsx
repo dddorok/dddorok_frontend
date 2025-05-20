@@ -42,9 +42,7 @@ export function TemplateList({
     needleType: NeedleType | null;
   };
 }) {
-  const { data: templates } = useQuery(
-    templateQueries.getTemplatesQueryOptions()
-  );
+  const { data: templates } = useQuery(templateQueries.list());
 
   const viewTemplateList = templates?.filter((template) => {
     if (filterOptions.needleType === null) return true;
@@ -141,9 +139,9 @@ function TemplateItem({ template }: { template: TemplateType }) {
                       title: "템플릿 게시/취소 성공",
                       description: "템플릿이 성공적으로 게시/취소되었습니다.",
                     });
-                    queryClient.invalidateQueries(
-                      templateQueries.getTemplatesQueryOptions()
-                    );
+                    queryClient.invalidateQueries({
+                      queryKey: templateQueries.list().queryKey,
+                    });
                     close();
                   });
                 }}

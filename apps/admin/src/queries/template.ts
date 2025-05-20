@@ -25,14 +25,14 @@ export const templateQueryKeys = {
   ],
 };
 
-const getTemplatesQueryOptions = () => {
+const listQueryOptions = () => {
   return queryOptions<GetTemplatesResponse>({
     queryKey: templateQueryKeys.templates(),
     queryFn: getTemplates,
   });
 };
 
-const getTemplateByIdQueryOptions = (templateId: string) => {
+const detailQueryOptions = (templateId: string) => {
   return queryOptions<GetTemplateByIdResponse>({
     queryKey: templateQueryKeys.templateById(templateId),
     queryFn: () => getTemplateById(templateId),
@@ -40,11 +40,11 @@ const getTemplateByIdQueryOptions = (templateId: string) => {
 };
 
 export const templateQueries = {
-  getTemplatesQueryOptions,
-  getTemplateByIdQueryOptions,
+  list: listQueryOptions,
+  detail: detailQueryOptions,
 };
 
-const getTemplateMeasurementValuesQueryOptions = (templateId: string) => {
+const measurementValuesQueryOptions = (templateId: string) => {
   return queryOptions<GetTemplateMeasurementValuesResponse>({
     queryKey: templateQueryKeys.templateMeasurementValues(templateId),
     queryFn: () => getTemplateMeasurementValues(templateId),
@@ -52,5 +52,5 @@ const getTemplateMeasurementValuesQueryOptions = (templateId: string) => {
 };
 
 export const templateMeasurementValuesQueries = {
-  getTemplateMeasurementValues: getTemplateMeasurementValuesQueryOptions,
+  measurementValues: measurementValuesQueryOptions,
 };

@@ -24,22 +24,11 @@ export default function TemplateDetailClient({
 }: TemplateDetailClientProps) {
   const queryClient = useQueryClient();
   const { data: template, isLoading } = useQuery({
-    ...templateQueries.getTemplateByIdQueryOptions(templateId),
+    ...templateQueries.detail(templateId),
   });
   const { data: measurementValues, isLoading: isLoadingMeasurementValues } =
     useQuery({
-      ...templateMeasurementValuesQueries.getTemplateMeasurementValues(
-        templateId
-      ),
-      // select: (data) => {
-      //   return data.map((item) =>
-      //     Object.fromEntries(
-      //       Object.entries(item).map(([key, value]) => {
-      //         return [key, value ?? ""];
-      //       })
-      //     )
-      //   );
-      // },
+      ...templateMeasurementValuesQueries.measurementValues(templateId),
     });
 
   // 세부 치수 저장 처리

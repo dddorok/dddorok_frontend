@@ -21,7 +21,7 @@ export default function EditTemplateClient({
   const router = useRouter();
   const queryClient = useQueryClient();
   const { data: template } = useQuery({
-    ...templateQueries.getTemplateByIdQueryOptions(templateId),
+    ...templateQueries.detail(templateId),
     enabled: !!templateId,
   });
 
