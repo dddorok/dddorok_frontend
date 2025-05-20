@@ -1,7 +1,11 @@
 import { UploadIcon } from "lucide-react";
 import React, { useRef, useState } from "react";
 
-import { CommonSelect } from "@/components/CommonUI";
+import {
+  SelectMeasurementList,
+  SelectPathList,
+} from "../_components/SvgMappingForm";
+
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
@@ -11,15 +15,12 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
-import { cn } from "@/lib/utils";
 import { GetMeasurementRuleItemCodeResponse } from "@/services/measurement-rule";
 
 type SvgPath = string;
 
 type PathDataType = {
-  path: string;
+  pathId: string;
   selectedMeasurement: string | null;
 };
 
@@ -64,16 +65,24 @@ export default function SvgMappingForm({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <SvgPanel svgContent={svgContent} />
           <div className="space-y-4">
-            <SelectedMeasurementList
-              measurementOptionList={measurementOptionList}
-              paths={paths}
+            <SelectMeasurementList
+              list={measurementOptionList.map((measurement) => ({
+                label: measurement.label,
+                value: measurement.value,
+                selected: paths.some(
+                  (path) => path.selectedMeasurement === measurement.value
+                ),
+              }))}
             />
           </div>
 
-          <PathSelectList
-            paths={paths}
-            measurementOptionList={measurementOptionList}
-            updatePathInfo={updatePathInfo}
+          <SelectPathList
+            paths={paths.map((path) => ({
+              pathId: path.pathId,
+              selectedMeasurement: path.selectedMeasurement,
+            }))}
+            options={measurementOptionList}
+            updateMeasurementCode={updatePathInfo}
           />
 
           <div className="flex justify-end space-x-3 mt-10 col-span-2">
@@ -116,74 +125,6 @@ function SvgPanel({ svgContent }: { svgContent: string }) {
         {svgContent && <div dangerouslySetInnerHTML={{ __html: svgContent }} />}
       </div>
     </Card>
-  );
-}
-
-interface SelectedMeasurementListProps {
-  measurementOptionList: { value: string; label: string }[];
-  paths: PathDataType[];
-}
-
-function SelectedMeasurementList({
-  measurementOptionList,
-  paths,
-}: SelectedMeasurementListProps) {
-  return (
-    <div className="space-y-2">
-      <Label className="text-base">선택된 측정항목</Label>
-      <div className="grid grid-cols-2 gap-2">
-        {measurementOptionList.map(({ value, label }) => {
-          const checked = Boolean(
-            paths.find((path) => path.selectedMeasurement === value)
-              ?.selectedMeasurement
-          );
-
-          return (
-            <div key={value} className="flex items-start space-x-2">
-              <Checkbox id={value} checked={checked} />
-              <Label htmlFor={value} className="text-sm cursor-pointer">
-                {label}
-              </Label>
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
-interface PathSelectListProps {
-  measurementOptionList: { value: string; label: string }[];
-  updatePathInfo: (pathId: string, selectedMeasurement: string | null) => void;
-  paths: PathDataType[];
-}
-
-function PathSelectList({
-  measurementOptionList,
-  updatePathInfo,
-  paths,
-}: PathSelectListProps) {
-  const onChange = (value: string, pathId: string) => {
-    updatePathInfo(pathId, value);
-  };
-
-  return (
-    <div className="space-y-2 col-span-2">
-      <div className="text-sm font-medium">Path ID</div>
-      <div className="grid grid-cols-2 gap-2">
-        {paths.map((path) => (
-          <div key={path.path} className="flex items-center space-x-2 ml-4">
-            <div className={cn(`flex-1 flex flex-col gap-2`)}>
-              <div>{path.path}</div>
-              <CommonSelect
-                options={measurementOptionList}
-                onChange={(value) => onChange(value, path.path)}
-              />
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
   );
 }
 
@@ -284,7 +225,9 @@ const useSvgMappingPath = () => {
       const svgDoc = parser.parseFromString(content, "image/svg+xml");
       const paths = extractSvgPaths(svgDoc.documentElement);
 
-      setPaths(paths.map((path) => ({ path, selectedMeasurement: null })));
+      setPaths(
+        paths.map((path) => ({ pathId: path, selectedMeasurement: null }))
+      );
     };
     reader.readAsText(file);
   };
@@ -295,7 +238,7 @@ const useSvgMappingPath = () => {
   ) => {
     setPaths((prev) => {
       return prev.map((item) => {
-        if (item.path === pathId) {
+        if (item.pathId === pathId) {
           return { ...item, selectedMeasurement };
         }
         return item;
