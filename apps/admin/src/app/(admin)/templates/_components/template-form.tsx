@@ -266,14 +266,6 @@ function ConstructionMethodSelect({
     category,
   });
 
-  // useEffect(() => {
-  //   // 필드가 비활성화될 때 값 초기화
-  //   // if (!isConstructionMethodEnabled) {
-  //   //   form.setValue("constructionPrimary", "NONE");
-  //   //   form.setValue("constructionSecondary", "NONE");
-  //   // }
-  // }, [isConstructionMethodEnabled]);
-
   if (!isConstructionMethodEnabled) return null;
 
   return (
@@ -300,36 +292,6 @@ function ConstructionMethodSelect({
           options={[CONSTRUCTION_METHOD.PIECED, CONSTRUCTION_METHOD.ROUND]}
           className="flex "
         />
-        {/* {Object.values(CONSTRUCTION_METHOD_OPTIONS).map((option) => (
-              <FormField
-                key={option.value}
-                name="constructionMethods"
-                render={({ field }) => {
-                  return (
-                    <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                      <FormControl>
-                        <Checkbox
-                          checked={field.value?.includes(option.value)}
-                          onCheckedChange={(checked) => {
-                            const currentValues = field.value || [];
-                            return checked
-                              ? field.onChange([...currentValues, option.value])
-                              : field.onChange(
-                                  currentValues.filter(
-                                    (value: string) => value !== option.value
-                                  )
-                                );
-                          }}
-                        />
-                      </FormControl>
-                      <FormLabel className="font-normal">
-                        {option.label}
-                      </FormLabel>
-                    </FormItem>
-                  );
-                }}
-              />
-            ))} */}
       </CardContent>
     </Card>
   );

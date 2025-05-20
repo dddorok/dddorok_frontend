@@ -26,54 +26,25 @@ export default function NewTemplateClient({
   const router = useRouter();
   const { toast } = useToast();
   const [ruleName, setRuleName] = useState<string>("");
-  const [selectedRule, setSelectedRule] = useState<string | null>(
-    initRuleId || null
-  );
 
-  const { data: rule } = useQuery({
-    ...measurementRuleQueries.ruleById(selectedRule || ""),
-    enabled: !!selectedRule,
-  });
-
-  const initialTemplateName = [
-    rule?.neck_line_type
-      ? NECKLINE[rule.neck_line_type as keyof typeof NECKLINE].label
-      : "",
-    rule?.sleeve_type
-      ? SLEEVE[rule.sleeve_type as keyof typeof SLEEVE].label
-      : "",
-    rule?.category_small,
-  ]
-    .filter(Boolean)
-    .join(" ");
+  const { setSelectedRule, initialTemplateName, rule } =
+    useSelectMeasurementRule(initRuleId);
 
   // 치수 규칙 선택 처리 함수
   const handleSelectRule = async (rule: GetMeasurementRuleListItemType) => {
-    console.log("Selected rule:", rule);
-
     setSelectedRule(rule.id);
     setRuleName(rule.rule_name);
   };
 
   const handleSubmit = async (data: TemplateFormData) => {
-    // setIsSubmitting(true);
-
     if (!data.needleType) {
       throw new Error("입력 필드가 비어있습니다.");
     }
 
-    // if (data.chartType === "GRID" || data.chartType === "MIXED") {
-    //   if (!data.chartTypeMaps?.length || data.chartTypeMaps.length === 0) {
-    //     throw new Error("차트 유형을 선택해주세요.");
-    //   }
-    // }
-
     const request = {
       name: data.name,
       needle_type: data.needleType,
-      // chart_type: "NONE" as const,
       measurement_rule_id: data.measurementRuleId,
-      // construction_methods: data.constructionMethods,
       construction_primary: data.constructionPrimary,
       construction_secondary: data.constructionSecondary,
       chart_type_maps: data.chartTypeMaps ?? [],
@@ -96,17 +67,17 @@ export default function NewTemplateClient({
         </p>
       </div>
 
-      {!selectedRule && (
+      {!rule && (
         // 치수 규칙 선택 UI
         <Suspense>
           <SelectMeasurementRule handleSelectRule={handleSelectRule} />
         </Suspense>
       )}
-      {selectedRule && rule && (
+      {rule && (
         <div className="space-y-6">
           <SelectedRuleInfo
             ruleName={ruleName}
-            selectedRule={selectedRule}
+            selectedRule={rule.id}
             onOtherRuleSelect={() => setSelectedRule(null)}
           />
 
@@ -115,7 +86,7 @@ export default function NewTemplateClient({
             initialTemplate={{
               name: initialTemplateName,
             }}
-            measurementRuleId={selectedRule}
+            measurementRuleId={rule.id}
             category={{
               level1: rule.category_large,
               level2: rule.category_medium,
@@ -128,6 +99,34 @@ export default function NewTemplateClient({
     </div>
   );
 }
+
+const useSelectMeasurementRule = (initRuleId?: string) => {
+  const [selectedRule, setSelectedRule] = useState<string | null>(
+    initRuleId || null
+  );
+  const { data: rule } = useQuery({
+    ...measurementRuleQueries.ruleById(selectedRule || ""),
+    enabled: !!selectedRule,
+  });
+
+  const initialTemplateName = [
+    rule?.neck_line_type
+      ? NECKLINE[rule.neck_line_type as keyof typeof NECKLINE].label
+      : "",
+    rule?.sleeve_type
+      ? SLEEVE[rule.sleeve_type as keyof typeof SLEEVE].label
+      : "",
+    rule?.category_small,
+  ]
+    .filter(Boolean)
+    .join(" ");
+
+  return {
+    setSelectedRule,
+    initialTemplateName,
+    rule,
+  };
+};
 
 function SelectMeasurementRule({
   handleSelectRule,

@@ -30,9 +30,7 @@ export const getTemplates = async () => {
 interface CreateTemplateRequest {
   name: string;
   needle_type: NeedleType;
-  chart_type: ChartType | "NONE";
   measurement_rule_id: string;
-  // construction_methods: string[];
   construction_primary: ConstructionMethodType | "NONE";
   construction_secondary: ConstructionMethodType | "NONE";
   chart_type_maps: {
@@ -77,7 +75,9 @@ export interface GetTemplateByIdResponse {
   needle_type: NeedleType;
   chart_type: ChartType;
   is_published: boolean;
-  construction_methods: ConstructionMethodType[];
+  construction_primary: ConstructionMethodType;
+  construction_secondary: ConstructionMethodType;
+  // construction_methods: ConstructionMethodType[];
   measurement_rule: TemplateMeasurementRule;
   chart_types: {
     id: string;
@@ -96,9 +96,9 @@ export const getTemplateById = async (templateId: string) => {
 interface UpdateTemplateRequest {
   name: string;
   needle_type: NeedleType;
-  chart_type: ChartType;
-  construction_methods: ConstructionMethodType[];
-  // is_published: boolean;
+  // chart_type: ChartType;
+  construction_primary: ConstructionMethodType;
+  construction_secondary: ConstructionMethodType;
   chart_type_maps?: {
     chart_type_id: string;
     order: number;

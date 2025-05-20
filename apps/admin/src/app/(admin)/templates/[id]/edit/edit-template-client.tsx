@@ -2,14 +2,26 @@
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
+import { useForm } from "react-hook-form";
 
+import { ChartTypeSelect } from "../../_components/ChartTypeSelect";
+
+import { CommonInputField } from "@/components/CommonFormField";
+import { Button } from "@/components/ui/button";
 import {
-  TemplateForm,
-  TemplateFormData,
-} from "@/app/(admin)/templates/_components/template-form";
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+} from "@/components/ui/card";
+import { Form } from "@/components/ui/form";
 import { toast } from "@/hooks/use-toast";
 import { templateQueries, templateQueryKeys } from "@/queries/template";
-import { updateTemplate } from "@/services/template/template";
+import {
+  GetTemplateByIdResponse,
+  updateTemplate,
+} from "@/services/template/template";
 
 interface EditTemplateClientProps {
   templateId: string;
@@ -26,27 +38,11 @@ export default function EditTemplateClient({
   });
 
   const onSubmit = async (data: TemplateFormData) => {
-    if (
-      !data.name ||
-      !data.needleType ||
-      !data.chartType ||
-      !data.constructionMethods
-    ) {
-      throw new Error("모든 필드를 입력해주세요.");
-    }
-
-    if (data.chartType === "GRID" || data.chartType === "MIXED") {
-      if (!data.chartTypeMaps?.length || data.chartTypeMaps.length === 0) {
-        throw new Error("차트 유형을 선택해주세요.");
-      }
-    }
+    if (!template) return;
 
     await updateTemplate(templateId, {
+      ...template,
       name: data.name,
-      needle_type: data.needleType,
-      chart_type: data.chartType,
-      construction_methods: data.constructionMethods,
-      // is_published: data.isPublished,
       chart_type_maps: data.chartTypeMaps,
     });
 
@@ -72,35 +68,61 @@ export default function EditTemplateClient({
 
       {/* 탭은 임시로 제거하고 기본 정보만 표시 */}
       <div className="mt-6">
-        {/* <TemplateForm
-          onSubmit={onSubmit}
-          mode="EDIT"
-          measurementRuleId={template.measurement_rule.id}
-          category={{
-            level1: template.measurement_rule.category_large,
-            level2: template.measurement_rule.category_medium,
-            level3: template.measurement_rule.category_small,
-          }}
-          initialTemplate={{
-            name: template.name,
-            needleType:
-              template.needle_type === "NONE"
-                ? undefined
-                : template.needle_type,
-            chartType:
-              template.chart_type === "NONE" ? undefined : template.chart_type,
-            constructionMethods: template.construction_methods?.filter(
-              (method) => method !== "NONE"
-            ),
-            chartTypeMaps: template.chart_types?.map((map) => ({
-              chart_type_id: map.id,
-              order: map.order,
-            })),
-          }}
-        /> */}
+        <TemplateEditForm template={template} onSubmit={onSubmit} />
       </div>
     </div>
   );
 }
 
-function TemplateEditForm() {}
+type TemplateFormData = {
+  name: string;
+  chartTypeMaps: {
+    chart_type_id: string;
+    order: number;
+  }[];
+};
+
+function TemplateEditForm({
+  template,
+  onSubmit,
+}: {
+  template: GetTemplateByIdResponse;
+  onSubmit: (data: TemplateFormData) => Promise<void>;
+}) {
+  const form = useForm<TemplateFormData>({
+    defaultValues: {
+      name: template.name,
+      chartTypeMaps: template.chart_types.map((chartType) => ({
+        chart_type_id: chartType.id,
+        order: chartType.order,
+      })),
+    },
+  });
+  return (
+    <Form {...form}>
+      <div className="space-y-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>기본 정보 수정</CardTitle>
+            <CardDescription>
+              템플릿의 기본 정보를 수정해주세요.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <CommonInputField name="name" label="템플릿명" />
+          </CardContent>
+        </Card>
+
+        <ChartTypeSelect chartTypeMapsName="chartTypeMaps" />
+        <div className="flex justify-end gap-4">
+          <Button variant="outline" type="button">
+            취소
+          </Button>
+          <Button type="submit" onClick={form.handleSubmit(onSubmit)}>
+            저장
+          </Button>
+        </div>
+      </div>
+    </Form>
+  );
+}
