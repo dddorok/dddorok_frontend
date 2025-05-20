@@ -31,14 +31,10 @@ type ChartTypeMap = {
 };
 
 interface ChartTypeSelectProps {
-  selectedPatternType: string;
   chartTypeMapsName: string;
 }
 
-export function ChartTypeSelect({
-  selectedPatternType,
-  chartTypeMapsName,
-}: ChartTypeSelectProps) {
+export function ChartTypeSelect({ chartTypeMapsName }: ChartTypeSelectProps) {
   const form = useFormContext();
 
   const chartTypeMaps: ChartTypeMap[] = useWatch({ name: chartTypeMapsName });
@@ -46,8 +42,8 @@ export function ChartTypeSelect({
   // TODO: 차트형 또는 혼합형 패턴 -> 차트 유형 활성화
   // TODO: 필드가 비활성화될 때 값 초기화
 
-  const chartBasedPattern =
-    selectedPatternType === "GRID" || selectedPatternType === "MIXED";
+  //   const chartBasedPattern =
+  //     selectedPatternType === "GRID" || selectedPatternType === "MIXED";
 
   const { data: chartTypeList } = useQuery(chartTypeQueries.list());
 
@@ -75,7 +71,7 @@ export function ChartTypeSelect({
     }
   };
 
-  if (!chartBasedPattern) return null;
+  //   if (!chartBasedPattern) return null;
 
   return (
     <Card>

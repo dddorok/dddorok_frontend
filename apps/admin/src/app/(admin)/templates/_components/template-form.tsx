@@ -11,6 +11,7 @@ import { ChartTypeOrderDialog } from "./ChartTypeOrderDialog";
 import { ChartTypeSelect } from "./ChartTypeSelect";
 
 import { BasicAlert } from "@/components/Alert";
+import { CommonSelectField } from "@/components/CommonFormField";
 import { CommonSelect } from "@/components/CommonUI";
 import { Button } from "@/components/ui/button";
 import {
@@ -32,10 +33,8 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import {
-  CHART_TYPE_OPTIONS,
   ChartType,
   ChartTypeMapSchema,
-  ChartTypeSchema,
   CONSTRUCTION_METHOD,
   CONSTRUCTION_METHOD_OPTIONS,
   ConstructionMethodSchema,
@@ -44,27 +43,14 @@ import {
   NeedleTypeSchema,
 } from "@/constants/template";
 import { toast } from "@/hooks/use-toast";
-import { chartTypeQueries } from "@/queries/chart-type";
 
 const templateFormSchema = z.object({
   name: z.string().min(1, "템플릿 이름을 입력해주세요"),
   measurementRuleId: z.string().min(1, "치수 규칙을 선택해주세요"),
   needleType: NeedleTypeSchema,
-  chartType: ChartTypeSchema,
   constructionMethods: z.array(ConstructionMethodSchema),
-  chartTypeMaps: z.array(ChartTypeMapSchema).optional(),
+  chartTypeMaps: z.array(ChartTypeMapSchema).min(1, "차트 유형을 선택해주세요"),
 });
-// .refine(
-//   (data) => {
-//     if (data.needleType === "KNITTING") {
-//       return data.constructionMethods.length > 1;
-//     }
-//     return true;
-//   },
-//   {
-//     message: "상의 제작 방식을 1개 이상 입력해주세요.",
-//   }
-// );
 
 export type TemplateFormData = z.infer<typeof templateFormSchema>;
 
@@ -83,7 +69,6 @@ interface TemplateFormProps {
 export function TemplateForm({
   measurementRuleId,
   category,
-  mode,
   onSubmit,
   initialTemplate,
 }: TemplateFormProps) {
@@ -92,7 +77,6 @@ export function TemplateForm({
     defaultValues: {
       name: initialTemplate?.name || "",
       needleType: initialTemplate?.needleType,
-      chartType: initialTemplate?.chartType,
       constructionMethods: initialTemplate?.constructionMethods || [],
       measurementRuleId: measurementRuleId,
       chartTypeMaps: initialTemplate?.chartTypeMaps || [],
@@ -143,47 +127,11 @@ export function TemplateForm({
           <CardContent className="space-y-4">
             <TemplateNameField initialTemplateName={initialTemplate?.name} />
 
-            <FormField
+            <CommonSelectField
               name="needleType"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>도구 유형</FormLabel>
-                  <CommonSelect<NeedleType>
-                    placeholder="도구 유형을 선택하세요"
-                    options={NEEDLE_OPTIONS}
-                    value={field.value ?? undefined}
-                    onChange={(value: NeedleType) => {
-                      field.onChange(value);
-                    }}
-                  />
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              name="chartType"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>도안 유형</FormLabel>
-                  <CommonSelect<ChartType>
-                    placeholder="도안 유형을 선택하세요"
-                    options={CHART_TYPE_OPTIONS}
-                    defaultValue={field.value ?? undefined}
-                    value={field.value ?? undefined}
-                    onChange={(value: ChartType) => {
-                      field.onChange(value);
-                      // 차트 관련 필드 표시 로직 실행
-                      const chartBasedPattern = getIsChartBasedPattern(value);
-                      // 차트 유형이 선택되지 않았을 때 값 초기화
-                      if (!chartBasedPattern) {
-                        form.setValue("chartTypeMaps", []);
-                      }
-                    }}
-                  />
-                  <FormMessage />
-                </FormItem>
-              )}
+              label="도구 유형"
+              placeholder="도구 유형을 선택하세요"
+              options={NEEDLE_OPTIONS}
             />
 
             <div>
@@ -201,10 +149,7 @@ export function TemplateForm({
         {/* Section 2: 조건부 속성 입력 */}
         <ConstructionMethodSelect category={category} />
 
-        <ChartTypeSelect
-          selectedPatternType={form.watch("chartType")}
-          chartTypeMapsName="chartTypeMaps"
-        />
+        <ChartTypeSelect chartTypeMapsName="chartTypeMaps" />
 
         <div className="flex justify-end gap-4">
           <Button variant="outline" type="button">
