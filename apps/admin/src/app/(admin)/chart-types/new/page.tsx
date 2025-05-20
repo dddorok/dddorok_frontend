@@ -12,10 +12,10 @@ import { toast } from "@/hooks/use-toast";
 import { measurementRuleQueries } from "@/queries/measurement-rule";
 import { createChartType, uploadSvg } from "@/services/chart-type";
 type FormDataType = {
-  type: SectionType;
+  section: SectionType;
   detailType: string;
   chartName: string;
-  measurementRule?: string;
+  measurementRuleId?: string;
   selectedMeasurements?: string[];
   measurementRuleName?: string;
 };
@@ -40,10 +40,10 @@ export default function NewChartTypePage() {
       await createChartType({
         category_large: "의류",
         category_medium: "상의",
-        section: formData.type,
+        section: formData.section,
         detail_type: formData.detailType,
         name: formData.chartName,
-        measurement_rule_id: formData.measurementRule ?? "",
+        measurement_rule_id: formData.measurementRuleId ?? "",
         measurement_code_maps: data.paths.map((item) => ({
           measurement_code: item.selectedMeasurement,
           path_id: item.path,
@@ -72,11 +72,9 @@ export default function NewChartTypePage() {
           onSubmit={(data) => {
             setFormData({
               ...data,
-              type: data.type,
-              detailType:
-                data.type === "BODY"
-                  ? data.bodyDetailType
-                  : data.retailDetailType,
+              section: data.section,
+              detailType: data.detailType,
+              chartName: data.chartName,
             });
             setStep(2);
           }}
@@ -100,18 +98,19 @@ function SvgMappingFormWrapper({
   onSubmit: (data: any) => void;
 }) {
   const { data: measurementRuleList } = useQuery({
-    enabled: Boolean(formData?.measurementRule) && formData?.type === "BODY",
+    enabled:
+      Boolean(formData?.measurementRuleId) && formData?.section === "BODY",
     ...measurementRuleQueries.getMeasurementRuleByIdQueryOptions(
-      formData.measurementRule ?? ""
+      formData.measurementRuleId ?? ""
     ),
   });
   const { data: measurementRuleItemCodeList } = useQuery({
     ...measurementRuleQueries.getMeasurementRuleItemCodeQueryOptions(),
-    enabled: formData.type === "SLEEVE",
+    enabled: formData.section === "SLEEVE",
   });
 
   const measurementList =
-    formData?.type === "BODY"
+    formData?.section === "BODY"
       ? measurementRuleList?.items
       : measurementRuleItemCodeList?.filter((item) =>
           formData.selectedMeasurements?.includes(item.code)

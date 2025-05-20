@@ -1,8 +1,8 @@
 import { z } from "zod";
 
 export const SECTION_TYPE = ["BODY", "SLEEVE"] as const;
-export const SectionTypeSchema = z.enum(SECTION_TYPE);
-export type SectionType = z.infer<typeof SectionTypeSchema>;
+export const ChartSectionSchema = z.enum(SECTION_TYPE);
+export type SectionType = z.infer<typeof ChartSectionSchema>;
 
 export const BODY_DETAIL_TYPE = [
   "FRONT_BODY",

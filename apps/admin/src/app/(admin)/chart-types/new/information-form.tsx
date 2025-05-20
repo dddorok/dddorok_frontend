@@ -4,7 +4,12 @@ import React, { Suspense, useCallback, useEffect, useState } from "react";
 import { useForm, useFormContext, useWatch } from "react-hook-form";
 import { z } from "zod";
 
-import { BODY_DETAIL_TYPE, SectionType, RETAIL_DETAIL_TYPE } from "./constants";
+import {
+  BODY_DETAIL_TYPE,
+  SectionType,
+  RETAIL_DETAIL_TYPE,
+  ChartSectionSchema,
+} from "./constants";
 
 import { CommonSelect } from "@/components/CommonUI";
 import { Button } from "@/components/ui/button";
@@ -24,33 +29,47 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { measurementRuleQueries } from "@/queries/measurement-rule";
 import { getMeasurementRuleList } from "@/services/measurement-rule";
 
-// 몸판 폼 스키마
-const bodyFormSchema = z.object({
-  type: z.literal("BODY"),
-  bodyDetailType: z.string({
-    required_error: "몸판 세부유형을 선택해주세요",
-  }),
-  measurementRule: z.string({
-    required_error: "치수규칙을 선택해주세요",
-  }),
-  measurementRuleName: z.string().optional(),
+// 기본 폼 스키마
+const baseFormSchema = z.object({
+  section: ChartSectionSchema,
+  measurementRuleId: z.string().optional(),
+  measurement_code_maps: z
+    .array(
+      z.object({
+        measurement_code: z.string(),
+        path_id: z.string(),
+      })
+    )
+    .optional(),
   chartName: z.string().min(1, "차트 이름을 입력해주세요"),
+  detailType: z.string(),
+});
+
+// 몸판 폼 스키마
+const bodyFormSchema = baseFormSchema.extend({
+  section: z.literal("BODY"),
+  // bodyDetailType: z.string({
+  //   required_error: "몸판 세부유형을 선택해주세요",
+  // }),
+  // measurementRule: z.string({
+  //   required_error: "치수규칙을 선택해주세요",
+  // }),
+  measurementRuleName: z.string().optional(),
 });
 
 // 소매 폼 스키마
-const retailFormSchema = z.object({
-  type: z.literal("SLEEVE"),
-  retailDetailType: z.string({
-    required_error: "소매 서브유형을 선택해주세요",
-  }),
+const retailFormSchema = baseFormSchema.extend({
+  section: z.literal("SLEEVE"),
+  // retailDetailType: z.string({
+  //   required_error: "소매 서브유형을 선택해주세요",
+  // }),
   selectedMeasurements: z
     .array(z.string())
     .min(1, "최소 1개 이상의 측정항목을 선택해주세요"),
-  chartName: z.string().min(1, "차트 이름을 입력해주세요"),
 });
 
 // 통합 폼 스키마
-const formSchema = z.discriminatedUnion("type", [
+const formSchema = z.discriminatedUnion("section", [
   bodyFormSchema,
   retailFormSchema,
 ]);
@@ -71,18 +90,18 @@ export default function InformationForm({
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      type: selectedTab,
-      chartName: "",
-      ...(selectedTab === "BODY"
-        ? {
-            bodyDetailType: initialChartType?.bodyDetailType || "",
-            measurementRule: initialChartType?.measurementRule || "",
-            measurementRuleName: initialChartType?.measurementRuleName || "",
-          }
-        : {
-            retailDetailType: initialChartType?.retailDetailType || "",
-            selectedMeasurements: initialChartType?.selectedMeasurements || [],
-          }),
+      section: selectedTab,
+      // chartName: "",
+      // ...(selectedTab === "BODY"
+      //   ? {
+      //       bodyDetailType: initialChartType?.bodyDetailType || "",
+      //       measurementRule: initialChartType?.measurementRule || "",
+      //       measurementRuleName: initialChartType?.measurementRuleName || "",
+      //     }
+      //   : {
+      //       retailDetailType: initialChartType?.retailDetailType || "",
+      //       selectedMeasurements: initialChartType?.selectedMeasurements || [],
+      //     }),
     } as any,
   });
 
@@ -94,16 +113,16 @@ export default function InformationForm({
 
       if (type === "BODY") {
         form.reset({
-          type: "BODY",
+          section: "BODY",
           chartName: currentChartName,
-          bodyDetailType: "",
-          measurementRule: "",
+          detailType: "",
+          measurementRuleId: "",
         } as BodyFormValues);
       } else {
         form.reset({
-          type: "SLEEVE",
+          section: "SLEEVE",
           chartName: currentChartName,
-          retailDetailType: "",
+          detailType: "",
           selectedMeasurements: [],
         } as RetailFormValues);
       }
@@ -176,27 +195,27 @@ export default function InformationForm({
 
 function ChartNameForm() {
   const form = useFormContext<FormValues>();
-  const type = useWatch({ name: "type" });
-  const bodyDetailType = useWatch({ name: "bodyDetailType" });
+  const section = useWatch({ name: "section" });
+  const detailType = useWatch({ name: "detailType" });
   const measurementRuleName = useWatch({ name: "measurementRuleName" });
-  const retailDetailType = useWatch({ name: "retailDetailType" });
 
   useEffect(() => {
-    if (type === "BODY" && bodyDetailType) {
+    console.log("section: ", section);
+    if (section === "BODY" && detailType) {
       // {치수규칙명} {세부유형} 형식으로 자동 생성
       // ex) 래글런형 브이넥 스웨터 상단 전개도
       form.setValue(
         "chartName",
-        `${measurementRuleName} ${bodyDetailType} 상단 전개도`
+        `${measurementRuleName} ${detailType} 상단 전개도`
       );
     }
-    if (type === "SLEEVE" && retailDetailType) {
+    if (section === "SLEEVE" && detailType) {
       // {세부유형} 소매 형식으로 자동 생성
       // ex)셋인형 소매
-      form.setValue("chartName", `${retailDetailType} 소매`);
+      form.setValue("chartName", `${detailType} 소매`);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [bodyDetailType, retailDetailType, type, measurementRuleName]);
+  }, [detailType, section, measurementRuleName]);
 
   return (
     <FormField
@@ -225,7 +244,7 @@ function BodyChart() {
     <div className="space-y-4">
       <FormField
         control={form.control}
-        name="bodyDetailType"
+        name="detailType"
         render={({ field }) => (
           <FormItem>
             <FormLabel>몸판 세부유형 선택</FormLabel>
@@ -247,7 +266,7 @@ function BodyChart() {
 
       <FormField
         control={form.control}
-        name="measurementRule"
+        name="measurementRuleId"
         render={({ field }) => (
           <FormItem>
             <FormLabel>치수규칙 선택</FormLabel>
@@ -295,7 +314,7 @@ function RetailChart() {
     <div className="space-y-4">
       <FormField
         control={form.control}
-        name="retailDetailType"
+        name="detailType"
         render={({ field }) => (
           <FormItem>
             <FormLabel>소매 서브유형 선택</FormLabel>
