@@ -10,7 +10,7 @@ export default function EditChartTypePage() {
   const { id } = useParams();
 
   const { data: chartType } = useQuery({
-    ...chartTypeQueries.getChartTypeQueryOptions(id as string),
+    ...chartTypeQueries.detail(id as string),
     enabled: !!id,
   });
 

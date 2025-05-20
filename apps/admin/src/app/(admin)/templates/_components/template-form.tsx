@@ -300,9 +300,7 @@ function ChartTypeSelect() {
   const chartBasedPattern =
     selectedPatternType === "GRID" || selectedPatternType === "MIXED";
 
-  const { data: chartTypeList } = useQuery(
-    chartTypeQueries.getChartTypeListQueryOptions()
-  );
+  const { data: chartTypeList } = useQuery(chartTypeQueries.list());
 
   const [dialogOpen, setDialogOpen] = useState(false);
 

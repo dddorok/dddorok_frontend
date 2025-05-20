@@ -14,14 +14,14 @@ export const chartTypeQueryKeys = {
 };
 
 // 쿼리 옵션 함수 정의
-const getChartTypeListQueryOptions = () => {
+const chartTypeListQueryOptions = () => {
   return queryOptions({
     queryKey: chartTypeQueryKeys.list(),
     queryFn: getChartTypeList,
   });
 };
 
-const getChartTypeQueryOptions = (id: string) => {
+const chartTypeQueryOptions = (id: string) => {
   return queryOptions<GetChartTypeResponse>({
     queryKey: chartTypeQueryKeys.detail(id),
     queryFn: () => getChartType(id),
@@ -30,6 +30,6 @@ const getChartTypeQueryOptions = (id: string) => {
 
 // 쿼리 옵션 객체 내보내기
 export const chartTypeQueries = {
-  getChartTypeListQueryOptions,
-  getChartTypeQueryOptions,
+  list: chartTypeListQueryOptions,
+  detail: chartTypeQueryOptions,
 };

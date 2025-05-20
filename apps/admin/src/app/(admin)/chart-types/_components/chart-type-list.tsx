@@ -19,9 +19,7 @@ import {
 import { chartTypeQueries } from "@/queries/chart-type";
 
 export function ChartTypeList() {
-  const { data: chartTypesList } = useQuery(
-    chartTypeQueries.getChartTypeListQueryOptions()
-  );
+  const { data: chartTypesList } = useQuery(chartTypeQueries.list());
 
   return (
     <div className="space-y-6">

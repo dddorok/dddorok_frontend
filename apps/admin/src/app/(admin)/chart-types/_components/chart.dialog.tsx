@@ -25,7 +25,7 @@ export function ChartDeleteDialog(props: {
   const handleDeleteChartType = () => {
     deleteChartType(props.chartId).then(() => {
       queryClient.invalidateQueries({
-        queryKey: chartTypeQueries.getChartTypeListQueryOptions().queryKey,
+        queryKey: chartTypeQueries.list().queryKey,
       });
     });
 
@@ -74,7 +74,7 @@ export function ChartTypeDetailsDialog(props: {
   chartType: ChartTypeItemType;
 }) {
   const { data: chartData } = useQuery(
-    chartTypeQueries.getChartTypeQueryOptions(props.chartType.id)
+    chartTypeQueries.detail(props.chartType.id)
   );
 
   if (!chartData) return null;
