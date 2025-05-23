@@ -2,8 +2,7 @@
 
 import { DevTool } from "@hookform/devtools";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useQuery } from "@tanstack/react-query";
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { useForm, useFormContext, useWatch } from "react-hook-form";
 import * as z from "zod";
 
@@ -21,11 +20,9 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -33,10 +30,8 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import {
-  ChartType,
   ChartTypeMapSchema,
   CONSTRUCTION_METHOD,
-  CONSTRUCTION_METHOD_OPTIONS,
   ConstructionMethodSchema,
   NEEDLE_OPTIONS,
   NeedleType,
@@ -81,9 +76,7 @@ export function TemplateForm({
     defaultValues: {
       name: initialTemplate?.name || "",
       needleType: "KNITTING",
-      // constructionMethods: initialTemplate?.constructionMethods || [],
       measurementRuleId: measurementRuleId,
-      chartTypeMaps: initialTemplate?.chartTypeMaps || [],
     },
     mode: "onSubmit",
     shouldFocusError: true,
@@ -99,6 +92,7 @@ export function TemplateForm({
         return;
       }
       if (request.needleType === "KNITTING") {
+        // TODO
         // if (request.constructionMethods.length === 0) {
         //   // throw new Error("상의 제작 방식을 1개 이상 입력해주세요.");
         //   form.setError("constructionMethods", {
