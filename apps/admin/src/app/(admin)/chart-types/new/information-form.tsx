@@ -18,28 +18,27 @@ import {
 } from "@/components/CommonFormField";
 import { CommonRadioGroup } from "@/components/CommonUI";
 import { Button } from "@/components/ui/button";
-import { Form } from "@/components/ui/form";
+import {
+  Form,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { measurementRuleQueries } from "@/queries/measurement-rule";
-import { getMeasurementRuleList } from "@/services/measurement-rule";
 
 const baseFormSchema = z.object({
   section: ChartSectionSchema,
   measurementRuleId: z.string().optional(),
-  measurement_code_maps: z
-    .array(
-      z.object({
-        measurement_code: z.string(),
-        path_id: z.string(),
-      })
-    )
-    .optional(),
+  selectedMeasurements: z.array(z.string()).optional(),
   chartName: z.string().min(1, "차트 이름을 입력해주세요"),
   detailType: z.string(),
 });
 
 const bodyFormSchema = baseFormSchema.extend({
   section: z.literal("BODY"),
+  ruleType: z.enum(["RULE", "CODE"]),
   measurementRuleName: z.string().optional(),
 });
 
@@ -64,7 +63,7 @@ export default function InformationForm({
 }) {
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: { section: "BODY" } as any,
+    defaultValues: { section: "BODY", ruleType: "RULE" } as any,
   });
 
   const handleProductTypeChange = useCallback(
@@ -89,6 +88,8 @@ export default function InformationForm({
     },
     [form]
   );
+
+  console.log(form.formState.errors);
 
   return (
     <Form {...form}>
@@ -174,10 +175,6 @@ function ChartNameForm() {
 
 function BodyChart() {
   const form = useFormContext<FormValues>();
-  const { data: measurementRuleList } = useSuspenseQuery({
-    ...measurementRuleQueries.list(),
-  });
-
   return (
     <div className="space-y-4">
       <CommonSelectField
@@ -189,45 +186,48 @@ function BodyChart() {
           value: type,
         }))}
       />
-      <CommonSelectField
-        name="measurementRuleId"
-        label="치수규칙 선택"
-        options={measurementRuleList.data.map((item) => ({
-          label: item.rule_name,
-          value: item.id,
-        }))}
-        onChange={(value) => {
-          const selectedRule = measurementRuleList.data.find(
-            (item) => item.id === value
-          );
-          form.setValue("measurementRuleName", selectedRule?.rule_name);
-        }}
-        placeholder="선택하세요"
-      />
+      <div className="space-y-2">
+        <FormField
+          control={form.control}
+          name="ruleType"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>측정항목 선택 방식</FormLabel>
+              <CommonRadioGroup
+                options={[
+                  { label: "치수규칙 선택", value: "RULE" },
+                  { label: "측정항목 직접 선택", value: "CODE" },
+                ]}
+                onChange={(value) => {
+                  form.setValue("ruleType", value as "RULE" | "CODE");
+                  form.setValue("measurementRuleId", "");
+                  form.setValue("measurementRuleName", "");
+                  form.setValue("selectedMeasurements", []);
+                }}
+                defaultValue="RULE"
+                className="w-full flex gap-2"
+              />
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      </div>
+      {form.watch("ruleType") === "RULE" && (
+        <MeasurementRuleSelectSection key={form.watch("ruleType")} />
+      )}
+      {form.watch("ruleType") === "CODE" && (
+        <MeasurementCodeSelectSection section="몸통" />
+      )}
     </div>
   );
 }
 
 function RetailChart() {
-  const form = useFormContext<FormValues>();
-
-  const { data: measurementRuleItemCodeList } = useQuery({
-    ...measurementRuleQueries.itemCode(),
-  });
-
-  const sleeveOptions =
-    measurementRuleItemCodeList
-      ?.filter((item) => item.section === "소매")
-      .map((item) => ({
-        label: item.label,
-        value: item.code,
-      })) ?? [];
-
   return (
     <div className="space-y-4">
       <CommonSelectField
         name="detailType"
-        label="소매 서브유형 선택"
+        label="소매 세브유형 선택"
         options={RETAIL_DETAIL_TYPE.map((type) => ({
           label: type,
           value: type,
@@ -235,11 +235,61 @@ function RetailChart() {
         placeholder="선택하세요"
       />
 
-      <CommonCheckboxListField
-        name="selectedMeasurements"
-        label="측정항목 선택"
-        options={sleeveOptions}
-      />
+      <MeasurementCodeSelectSection section="소매" />
     </div>
+  );
+}
+
+function MeasurementRuleSelectSection() {
+  const form = useFormContext<FormValues>();
+  const { data: measurementRuleList } = useSuspenseQuery({
+    ...measurementRuleQueries.list(),
+  });
+
+  return (
+    <CommonSelectField
+      name="measurementRuleId"
+      label="치수규칙 선택"
+      options={measurementRuleList.data.map((item) => ({
+        label: item.rule_name,
+        value: item.id,
+      }))}
+      onChange={(value) => {
+        const selectedRule = measurementRuleList.data.find(
+          (item) => item.id === value
+        );
+        form.setValue("measurementRuleName", selectedRule?.rule_name);
+      }}
+      placeholder="선택하세요"
+    />
+  );
+}
+
+function MeasurementCodeSelectSection({
+  section,
+}: {
+  section: "몸통" | "소매";
+}) {
+  const { data: measurementRuleItemCodeList } = useQuery({
+    ...measurementRuleQueries.itemCode(),
+  });
+
+  const options =
+    measurementRuleItemCodeList
+      ?.filter((item) => item.section === section)
+      .map((item) => ({
+        label: item.label,
+        value: item.code,
+      })) ?? [];
+
+  return (
+    <CommonCheckboxListField
+      name={
+        section === "몸통" ? "selectedMeasurements" : "selectedMeasurements"
+      }
+      label="측정항목 선택"
+      options={options}
+      className="grid grid-cols-2 gap-2"
+    />
   );
 }

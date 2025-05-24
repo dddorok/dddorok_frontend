@@ -70,11 +70,13 @@ export default function NewChartTypePage() {
       {step === 1 && (
         <InformationForm
           onSubmit={(data) => {
+            console.log(data);
             setFormData({
               ...data,
               section: data.section,
               detailType: data.detailType,
               chartName: data.chartName,
+              measurementRuleId: data.measurementRuleId,
             });
             setStep(2);
           }}
@@ -98,22 +100,22 @@ function SvgMappingFormWrapper({
   onSubmit: (data: any) => void;
 }) {
   const { data: measurementRuleList } = useQuery({
-    enabled:
-      Boolean(formData?.measurementRuleId) && formData?.section === "BODY",
     ...measurementRuleQueries.ruleById(formData.measurementRuleId ?? ""),
+    enabled: Boolean(formData?.measurementRuleId),
   });
   const { data: measurementRuleItemCodeList } = useQuery({
     ...measurementRuleQueries.itemCode(),
-    enabled: formData.section === "SLEEVE",
+    // enabled: formData.section === "SLEEVE",
   });
+  console.log("formData: ", formData);
 
-  const measurementList =
-    formData?.section === "BODY"
-      ? measurementRuleList?.items
-      : measurementRuleItemCodeList?.filter((item) =>
-          formData.selectedMeasurements?.includes(item.code)
-        );
+  const measurementList = formData.measurementRuleId
+    ? measurementRuleList?.items
+    : measurementRuleItemCodeList?.filter((item) =>
+        formData.selectedMeasurements?.includes(item.code)
+      );
 
+  console.log("measurementList: ", measurementList);
   return (
     <Suspense fallback={<div>Loading...</div>}>
       <SvgMappingForm
