@@ -3,6 +3,8 @@ import { queryOptions } from "@tanstack/react-query";
 import {
   getMeasurementRuleById,
   GetMeasurementRuleByIdResponse,
+  getMeasurementRuleChartTypeList,
+  GetMeasurementRuleChartTypeListItemType,
   getMeasurementRuleItemCode,
   GetMeasurementRuleItemCodeResponse,
   getMeasurementRuleList,
@@ -20,6 +22,12 @@ export const measurementRuleQueryKeys = {
     "measurement-rule",
     id,
     "template",
+    "list",
+  ],
+  measurementRuleChartTypeList: (id: string) => [
+    "measurement-rule",
+    id,
+    "chart-type",
     "list",
   ],
 };
@@ -56,9 +64,18 @@ const templateListByRuleIdQueryOptions = (id: string) => {
   });
 };
 
+// 치수 규칙 id로 차트 타입 조회
+const chartTypeListByRuleIdQueryOptions = (id: string) => {
+  return queryOptions<GetMeasurementRuleChartTypeListItemType[]>({
+    queryKey: measurementRuleQueryKeys.measurementRuleChartTypeList(id),
+    queryFn: () => getMeasurementRuleChartTypeList(id),
+  });
+};
+
 export const measurementRuleQueries = {
   itemCode: itemCodeQueryOptions,
   list: listQueryOptions,
   ruleById: ruleByIdQueryOptions,
   templateListByRuleId: templateListByRuleIdQueryOptions,
+  chartTypeListByRuleId: chartTypeListByRuleIdQueryOptions,
 };

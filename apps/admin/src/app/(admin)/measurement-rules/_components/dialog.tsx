@@ -164,3 +164,82 @@ export function MeasurementRuleRelatedTemplateDialog({
     </Dialog>
   );
 }
+export function MeasurementRuleRelatedChartDialog({
+  ruleId,
+  open,
+  onOpenChange,
+  ruleName,
+  onDelete,
+}: {
+  ruleId: string;
+  ruleName: string;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onDelete?: () => void;
+}) {
+  const { data: relatedTemplates } = useSuspenseQuery({
+    ...measurementRuleQueries.chartTypeListByRuleId(ruleId),
+  });
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>
+            <div className="flex items-center gap-2">
+              <Layers className="h-5 w-5 text-blue-600" />
+              <span>"{ruleName}" 연결 템플릿</span>
+            </div>
+          </DialogTitle>
+        </DialogHeader>
+
+        <div className="py-4">
+          {(() => {
+            if (relatedTemplates.length === 0) {
+              return (
+                <div className="text-center p-4 bg-gray-50 rounded">
+                  <p className="text-gray-500">연결된 템플릿이 없습니다.</p>
+                </div>
+              );
+            }
+
+            return (
+              <>
+                <h3 className="font-medium mb-2 text-sm text-muted-foreground">
+                  템플릿 목록 ({relatedTemplates.length}개)
+                </h3>
+                <ul className="divide-y max-h-80 overflow-y-auto">
+                  {relatedTemplates.map((template) => (
+                    <li key={template.id} className="py-3">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="font-medium">{template.name}</p>
+                        </div>
+                        <Link href={`/chart-types/${template.id}`}>
+                          <Button variant="ghost" size="sm">
+                            보기
+                          </Button>
+                        </Link>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </>
+            );
+          })()}
+        </div>
+
+        <DialogFooter className="flex justify-between items-center">
+          {relatedTemplates.length === 0 && onDelete && (
+            <Button variant="outline" onClick={onDelete}>
+              삭제하기
+            </Button>
+          )}
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            닫기
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}

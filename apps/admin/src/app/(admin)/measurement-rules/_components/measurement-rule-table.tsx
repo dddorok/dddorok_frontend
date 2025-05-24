@@ -2,14 +2,15 @@
 
 import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { useOverlay } from "@toss/use-overlay";
-import { List, Layers } from "lucide-react";
+import { List, Layers, ChartLine } from "lucide-react";
 import Link from "next/link";
 import { Suspense } from "react";
 
 import {
   DeleteNotAllowDialog,
+  MeasurementRuleRelatedChartDialog,
   MeasurementRuleRelatedTemplateDialog,
-} from "./delete-not-allow-dialog";
+} from "./dialog";
 import { RuleDialog } from "./rule-dialog";
 
 import { ConfirmDialog } from "@/components/Dialog/ConfirmDialog";
@@ -47,7 +48,7 @@ export function MeasurementRuleTable() {
         <TableRow>
           <TableHead>규칙 이름</TableHead>
           <TableHead>측정 항목 수</TableHead>
-          <TableHead>사용상태</TableHead>
+          <TableHead className="text-center">사용상태</TableHead>
           <TableHead className="text-center">작업</TableHead>
         </TableRow>
       </TableHeader>
@@ -73,6 +74,7 @@ function TableItem({ rule }: { rule: GetMeasurementRuleListItemType }) {
   const overlay = useOverlay();
 
   const templateCount = rule.template_count;
+  const chartCount = rule.chart_count;
   const isDeletable = templateCount === 0;
 
   // 삭제 버튼 클릭 핸들러
@@ -152,31 +154,59 @@ function TableItem({ rule }: { rule: GetMeasurementRuleListItemType }) {
 
       {/* 템플릿 수 클릭 가능 */}
       <TableCell>
-        <Button
-          variant="ghost"
-          className="p-0 h-auto font-normal text-blue-600 hover:text-blue-800 hover:bg-blue-50 flex items-center gap-1"
-          onClick={() => {
-            overlay.open(({ isOpen, close }) => (
-              <Suspense>
-                <MeasurementRuleRelatedTemplateDialog
-                  ruleId={rule.id}
-                  ruleName={rule.rule_name}
-                  open={isOpen}
-                  onOpenChange={close}
-                />
-              </Suspense>
-            ));
-          }}
-          disabled={templateCount === 0}
-        >
-          <Layers className="h-3 w-3" />
-          <Badge
-            variant="outline"
-            className={templateCount === 0 ? "bg-gray-100" : ""}
+        <div className="flex items-center ">
+          <Button
+            variant="ghost"
+            className="p-0 h-auto font-normal text-blue-600 hover:text-blue-800 hover:bg-blue-50 flex items-center gap-1"
+            onClick={() => {
+              overlay.open(({ isOpen, close }) => (
+                <Suspense>
+                  <MeasurementRuleRelatedTemplateDialog
+                    ruleId={rule.id}
+                    ruleName={rule.rule_name}
+                    open={isOpen}
+                    onOpenChange={close}
+                  />
+                </Suspense>
+              ));
+            }}
+            disabled={templateCount === 0}
           >
-            {templateCount}개
-          </Badge>
-        </Button>
+            <Layers className="h-3 w-3" />
+            <Badge
+              variant="outline"
+              className={templateCount === 0 ? "bg-gray-100" : ""}
+            >
+              {templateCount}개
+            </Badge>
+          </Button>
+          {/* 연결된 차트 */}
+          <Button
+            variant="ghost"
+            className="p-0 h-auto font-normal text-blue-600 hover:text-blue-800 hover:bg-blue-50 flex items-center gap-1"
+            onClick={() => {
+              overlay.open(({ isOpen, close }) => (
+                <Suspense>
+                  <MeasurementRuleRelatedChartDialog
+                    ruleId={rule.id}
+                    ruleName={rule.rule_name}
+                    open={isOpen}
+                    onOpenChange={close}
+                  />
+                </Suspense>
+              ));
+            }}
+            disabled={chartCount === 0}
+          >
+            <ChartLine className="h-3 w-3" />
+            <Badge
+              variant="outline"
+              className={chartCount === 0 ? "bg-gray-100" : ""}
+            >
+              {chartCount}개
+            </Badge>
+          </Button>
+        </div>
       </TableCell>
 
       <TableCell className="text-center">

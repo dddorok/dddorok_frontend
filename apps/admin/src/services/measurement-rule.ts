@@ -39,6 +39,7 @@ export interface GetMeasurementRuleListItemType {
   rule_name: string;
   sleeve_type?: SleeveType;
   template_count: number;
+  chart_count: number;
 }
 
 export interface GetMeasurementRuleListResponse {
@@ -160,5 +161,18 @@ export const getMeasurementRuleTemplateList = async (id: string) => {
     await privateInstance<GetMeasurementRuleTemplateListResponse>(
       `measurement-rule/${id}/template/list`
     ).json();
+  return response.data;
+};
+
+export interface GetMeasurementRuleChartTypeListItemType {
+  id: string;
+  name: string;
+}
+
+// 치수 규칙 id로 차트 타입 조회
+export const getMeasurementRuleChartTypeList = async (id: string) => {
+  const response = await privateInstance<{
+    data: GetMeasurementRuleChartTypeListItemType[];
+  }>(`measurement-rule/${id}/chart-type/list`).json();
   return response.data;
 };
