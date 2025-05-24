@@ -60,6 +60,7 @@ export interface TemplateMeasurementValueType {
   size_121_129: number;
   min: number;
   max: number;
+  range_toggle: boolean;
 }
 
 type UpdateTemplateMeasurementValuesRequest = TemplateMeasurementValueType[];

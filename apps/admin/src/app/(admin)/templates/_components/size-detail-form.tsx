@@ -52,10 +52,15 @@ export function SizeDetailForm({
     handleCellChange,
     tableRef,
     selectedItems,
+    setRangeToggleList,
+    rangeToggleList,
   } = useSizeDetails(measurementValues);
 
   const handleSubmit = () => {
-    const result = convertToTemplateMeasurementValueType(sizeDetails);
+    const result = convertToTemplateMeasurementValueType(
+      sizeDetails,
+      rangeToggleList
+    );
     try {
       onSubmit(result);
     } catch (error) {
@@ -145,7 +150,16 @@ export function SizeDetailForm({
                       </TableCell>
                     ))}
                     <TableCell className="border">
-                      <Switch />
+                      <Switch
+                        checked={rangeToggleList.includes(itemId)}
+                        onCheckedChange={(checked) =>
+                          setRangeToggleList((prev) =>
+                            checked
+                              ? [...prev, itemId]
+                              : prev.filter((item) => item !== itemId)
+                          )
+                        }
+                      />
                     </TableCell>
                   </TableRow>
                 ))}
@@ -170,7 +184,7 @@ export function SizeDetailForm({
 const useSizeDetails = (
   measurementValues: GetTemplateMeasurementValuesResponse
 ) => {
-  const selectedItems = measurementValues.map((item) => item.id);
+  const selectedItems = measurementValues.map((item) => item.id).sort();
   const [sizeDetails, setSizeDetails] = useState<SizeDetailFormType>(
     convertToSizeRangeTypeRecord(measurementValues)
   );
@@ -265,12 +279,15 @@ const useSizeDetails = (
     handlePaste,
     handleCellChange,
     tableRef,
+    setRangeToggleList,
     selectedItems,
+    rangeToggleList,
   };
 };
 
 function convertToTemplateMeasurementValueType(
-  input: SizeDetailFormType
+  input: SizeDetailFormType,
+  rangeToggleList: string[]
 ): TemplateMeasurementValueType[] {
   // 모든 id(측정항목) 추출
   const allIds = new Set<string>();
@@ -287,6 +304,7 @@ function convertToTemplateMeasurementValueType(
       const value = input[range]?.[id];
       obj[range] = value ? Number(value) : undefined;
     });
+    obj.range_toggle = rangeToggleList.includes(id);
     result.push(obj);
   });
 

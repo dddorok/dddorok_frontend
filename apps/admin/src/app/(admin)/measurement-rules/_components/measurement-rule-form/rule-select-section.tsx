@@ -13,7 +13,7 @@ const 제외_측정_코드 = [
   "BODY_TOTAL_LENGTH",
   "BODY_ARM_HOLE_LENGTH",
   "SLEEVE_SLEEVE_CAP_LENGTH",
-] as const;
+];
 
 export function MeasurementRuleSelectSection() {
   const { data: itemCodes } = useQuery({
