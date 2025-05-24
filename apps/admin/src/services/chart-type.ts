@@ -84,7 +84,7 @@ interface CreateChartTypeRequest {
   section: "BODY" | "SLEEVE";
   detail_type: string;
   name: string;
-  measurement_rule_id: string;
+  measurement_rule_id?: string;
   measurement_code_maps: {
     measurement_code: string;
     path_id: string;

@@ -7,10 +7,13 @@ import { Suspense, useState } from "react";
 import { SectionType } from "./constants";
 import InformationForm from "./information-form";
 import SvgMappingForm from "./svg-mapping-form";
+import { SvgUpload } from "./svg-upload";
 
-import { toast } from "@/hooks/use-toast";
+import { toast, useToast } from "@/hooks/use-toast";
 import { measurementRuleQueries } from "@/queries/measurement-rule";
 import { createChartType, uploadSvg } from "@/services/chart-type";
+import { GetMeasurementRuleItemCodeResponse } from "@/services/measurement-rule";
+
 type FormDataType = {
   section: SectionType;
   detailType: string;
@@ -22,13 +25,22 @@ type FormDataType = {
 
 export default function NewChartTypePage() {
   const router = useRouter();
+  const { toast } = useToast();
 
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState<FormDataType | null>(null);
+  const [pathData, setPathData] = useState<{
+    pathIds: string[];
+    file: File | null;
+    svgContent: string;
+  } | null>(null);
+
+  const measurementList = useSelectedMeasurements(formData);
+  console.log("measurementList: ", measurementList);
 
   const onSubmit = async (data: {
     file: File | null;
-    paths: { path: string; selectedMeasurement: string }[];
+    paths: { pathId: string; selectedMeasurement: string }[];
   }) => {
     if (!formData || !data) return;
 
@@ -43,10 +55,12 @@ export default function NewChartTypePage() {
         section: formData.section,
         detail_type: formData.detailType,
         name: formData.chartName,
-        measurement_rule_id: formData.measurementRuleId ?? "",
+        measurement_rule_id: formData.measurementRuleId
+          ? formData.measurementRuleId
+          : undefined,
         measurement_code_maps: data.paths.map((item) => ({
           measurement_code: item.selectedMeasurement,
-          path_id: item.path,
+          path_id: item.pathId,
         })),
         resource_id: resourceId,
       });
@@ -85,43 +99,51 @@ export default function NewChartTypePage() {
 
       {step === 2 && formData && (
         <Suspense fallback={<div>Loading...</div>}>
-          <SvgMappingFormWrapper formData={formData} onSubmit={onSubmit} />
+          <SvgUpload
+            onSubmit={(data) => {
+              if (data.pathIds.length !== measurementList.length) {
+                toast({
+                  variant: "destructive",
+                  title:
+                    "Path 개수와 측정항목 개수가 일치하지 않습니다. 다시 확인해주세요.",
+                  description: `Path 개수: ${data.pathIds.length}, 측정항목 개수: ${measurementList.length}`,
+                });
+                return;
+              }
+              setPathData(data);
+              setStep(3);
+            }}
+          />
+        </Suspense>
+      )}
+      {step === 3 && formData && pathData && (
+        <Suspense fallback={<div>Loading...</div>}>
+          <SvgMappingForm
+            pathData={pathData}
+            onSubmit={onSubmit}
+            measurementCodeList={measurementList ?? []}
+          />
         </Suspense>
       )}
     </>
   );
 }
 
-function SvgMappingFormWrapper({
-  formData,
-  onSubmit,
-}: {
-  formData: FormDataType;
-  onSubmit: (data: any) => void;
-}) {
+const useSelectedMeasurements = (formData: FormDataType | null) => {
   const { data: measurementRuleList } = useQuery({
-    ...measurementRuleQueries.ruleById(formData.measurementRuleId ?? ""),
+    ...measurementRuleQueries.ruleById(formData?.measurementRuleId ?? ""),
     enabled: Boolean(formData?.measurementRuleId),
   });
   const { data: measurementRuleItemCodeList } = useQuery({
     ...measurementRuleQueries.itemCode(),
     // enabled: formData.section === "SLEEVE",
   });
-  console.log("formData: ", formData);
 
-  const measurementList = formData.measurementRuleId
+  const measurementList = formData?.measurementRuleId
     ? measurementRuleList?.items
     : measurementRuleItemCodeList?.filter((item) =>
-        formData.selectedMeasurements?.includes(item.code)
+        formData?.selectedMeasurements?.includes(item.code)
       );
 
-  console.log("measurementList: ", measurementList);
-  return (
-    <Suspense fallback={<div>Loading...</div>}>
-      <SvgMappingForm
-        onSubmit={onSubmit}
-        measurementCodeList={measurementList ?? []}
-      />
-    </Suspense>
-  );
-}
+  return measurementList ?? [];
+};
