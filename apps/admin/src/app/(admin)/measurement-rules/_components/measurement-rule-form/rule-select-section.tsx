@@ -9,8 +9,18 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { measurementRuleQueries } from "@/queries/measurement-rule";
 import { GetMeasurementRuleItemCodeResponse } from "@/services/measurement-rule";
 
+const 제외_측정_코드 = [
+  "BODY_TOTAL_LENGTH",
+  "BODY_ARM_HOLE_LENGTH",
+  "SLEEVE_SLEEVE_CAP_LENGTH",
+] as const;
+
 export function MeasurementRuleSelectSection() {
-  const { data: itemCodes } = useQuery(measurementRuleQueries.itemCode());
+  const { data: itemCodes } = useQuery({
+    ...measurementRuleQueries.itemCode(),
+    select: (data) =>
+      data.filter((item) => !제외_측정_코드.includes(item.code)),
+  });
 
   const groupedItems = transformMeasurementItems(itemCodes ?? []);
   const [activeTab, setActiveTab] = useState<string>("상의");
