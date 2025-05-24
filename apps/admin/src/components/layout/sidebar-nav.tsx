@@ -29,11 +29,6 @@ const devItems: SidebarNavItem[] = [
 
 export const navItems: SidebarNavItem[] = [
   {
-    title: "개발자 가이드",
-    url: "/developer-guide",
-    Icon: FileText,
-  },
-  {
     title: "치수 규칙 설정",
     url: "/measurement-rules",
     Icon: Ruler,
