@@ -1,7 +1,9 @@
 import { ChevronDownIcon } from "lucide-react";
+import Link from "next/link";
 
 import { Button } from "../ui/button";
 
+import { ROUTE } from "@/constants/route";
 import { cn } from "@/lib/utils";
 
 interface HeaderProps {
@@ -13,7 +15,7 @@ export default function Header({ className }: HeaderProps) {
     <>
       <div
         className={cn(
-          "border-b  w-full",
+          "border-b  w-full bg-neutral-N0 border-neutral-N100 shadow-[0px_4px_4px_0px_var(--Neutral-N100, #F5F7FA)]",
           "fixed top-0 left-0 right-0 z-50",
           "px-8",
           className
@@ -44,7 +46,9 @@ export default function Header({ className }: HeaderProps) {
               </ul>
             </div>
             <div className="flex gap-2">
-              <Button>로그인</Button>
+              <Button asChild>
+                <Link href={ROUTE.LOGIN}>로그인</Link>
+              </Button>
               <Button color="fill">회원가입</Button>
             </div>
           </div>

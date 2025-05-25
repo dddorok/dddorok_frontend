@@ -1,8 +1,8 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 
-import { Button } from "@/components/ui/button";
 import { createSession } from "@/lib/auth";
 
 export function LoginButton({
@@ -20,12 +20,23 @@ export function LoginButton({
     router.push("/");
   };
 
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      onLogin();
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, []);
+
   return (
-    <div className="flex flex-col justify-center items-center h-screen gap-4">
-      <h1 className="text-2xl font-bold">로그인 성공</h1>
-      <Button variant="outline" onClick={onLogin}>
-        홈으로 이동
-      </Button>
+    <div className="flex flex-col items-center justify-center gap-6 min-h-screen">
+      <div className="space-y-6">
+        <p className="text-small text-neutral-N400 text-center ">
+          로그인 중<br />
+          <br />
+          잠시만 기다려주세요.
+        </p>
+        <img src="/logo/logo-gray.svg" width={200} height={80} alt="" />
+      </div>
     </div>
   );
 }

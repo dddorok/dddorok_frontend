@@ -8,6 +8,7 @@ export async function middleware(request: NextRequest) {
 
   // 로그인 페이지와 공개 경로는 인증 체크에서 제외
   if (
+    pathname === "/" ||
     pathname === "/auth/login" ||
     pathname.startsWith("/oauth") ||
     pathname.startsWith("/api") ||
