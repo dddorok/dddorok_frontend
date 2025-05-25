@@ -8,7 +8,6 @@ const config: Config = {
   content: ["./src/**/*.{js,ts,jsx,tsx,mdx}"],
   theme: {
     colors: colors,
-
     extend: {
       borderRadius: {
         lg: "var(--radius)",
