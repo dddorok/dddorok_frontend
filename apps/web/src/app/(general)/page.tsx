@@ -1,6 +1,9 @@
 /* eslint-disable @next/next/no-img-element */
+import Link from "next/link";
+
 import Header from "@/components/layout/Header";
 import { Button } from "@/components/ui/button";
+import { ROUTE } from "@/constants/route";
 
 export default function Home() {
   return (
@@ -29,7 +32,7 @@ export default function Home() {
           누구나 전문가 수준의 도안을 제작할 수 있습니다.
         </p>
         <Button color="fill" className="mt-10 min-w-[270px]">
-          템플릿 보러가기
+          <Link href={ROUTE.TEMPLATE}>템플릿 보러가기</Link>
         </Button>
       </div>
     </div>
