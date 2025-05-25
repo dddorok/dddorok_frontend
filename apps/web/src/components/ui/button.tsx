@@ -5,52 +5,93 @@ import * as React from "react";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive",
+  // 기본 스타일 (모든 버튼에 공통 적용)
+  [
+    "inline-flex items-center justify-center gap-2",
+    "rounded-lg", // 8px border radius
+    "px-4 min-h-[52px]", // 16px padding
+    "text-medium-sb",
+    "transition-all duration-200",
+    "focus:outline-none focus:ring-2 focus:ring-offset-2",
+    "disabled:cursor-not-allowed",
+    "backdrop-blur-[12px]", // blur(12px) effect,
+    "[&_svg]:w-5 [&_svg]:h-5",
+    // disable
+    "disable:bg-neutral-N400",
+    "disable:border-0",
+    "disable:text-neutral-N0",
+    "disable:cursor-not-allowed",
+    "disable:opacity-60",
+  ],
   {
     variants: {
-      variant: {
-        default:
-          "bg-primary text-primary-foreground shadow-xs hover:bg-primary/90",
-        destructive:
-          "bg-destructive text-white shadow-xs hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/60",
-        outline:
-          "border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50",
-        secondary:
-          "bg-secondary text-secondary-foreground shadow-xs hover:bg-secondary/80",
-        ghost:
-          "hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50",
-        link: "text-primary underline-offset-4 hover:underline",
+      // Color variants (피그마의 Color 속성)
+      color: {
+        // Default: 흰색 배경 + 파란색 테두리 + 파란색 텍스트
+        default: [
+          "bg-neutral-N0", // #FFFFFF
+          "border border-primary-PR300", // #BFE3F8
+          "text-primary-PR", // #75C0EF
+          "hover:bg-primary-PR100", // hover state
+          "active:bg-primary-PR200", // active state
+          "focus:ring-primary-PR300",
+        ],
+
+        // Fill: 파란색 배경 + 흰색 텍스트
+        fill: [
+          "bg-primary-PR", // #75C0EF
+          "border-0",
+          "text-neutral-N0", // #FFFFFF
+          "hover:bg-primary-PR600", // hover state
+          "active:bg-primary-PR400", // active state
+          "focus:ring-primary-PR300",
+        ],
+
+        // Trans: 투명 배경 + 회색 테두리 + 회색 텍스트
+        trans: [
+          "bg-neutralAlpha-NA05", // rgba(28, 31, 37, 0.05)
+          "border border-neutral-N400", // #C8CDD9
+          "text-neutral-N800", // #4B5162
+          "hover:bg-neutralAlpha-NA10", // hover state
+          "active:bg-neutralAlpha-NA20", // active state
+          "focus:ring-neutral-N400",
+        ],
       },
-      size: {
-        default: "h-9 px-4 py-2 has-[>svg]:px-3",
-        sm: "h-8 rounded-md gap-1.5 px-3 has-[>svg]:px-2.5",
-        lg: "h-10 rounded-md px-6 has-[>svg]:px-4",
-        icon: "size-9",
+
+      disabled: {
+        true: [
+          "bg-neutral-N400", // #C8CDD9
+          "border-0",
+          "text-neutral-N0", // #FFFFFF
+          "cursor-not-allowed",
+          "opacity-60",
+          "hover:bg-neutral-N400 active:bg-neutral-N400",
+        ],
+        false: "",
       },
     },
+
+    // 기본값 설정
     defaultVariants: {
-      variant: "default",
-      size: "default",
+      color: "default",
     },
   }
 );
 
-function Button({
-  className,
-  variant,
-  size,
-  asChild = false,
-  ...props
-}: React.ComponentProps<"button"> &
+type ButtonProps = React.ComponentProps<"button"> &
   VariantProps<typeof buttonVariants> & {
     asChild?: boolean;
-  }) {
+  };
+
+function Button({ className, color, asChild, ...props }: ButtonProps) {
   const Comp = asChild ? Slot : "button";
 
   return (
     <Comp
       data-slot="button"
-      className={cn(buttonVariants({ variant, size, className }))}
+      className={cn(
+        buttonVariants({ color, className, disabled: props.disabled })
+      )}
       {...props}
     />
   );

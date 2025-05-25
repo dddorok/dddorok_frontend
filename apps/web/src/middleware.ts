@@ -9,6 +9,7 @@ export async function middleware(request: NextRequest) {
   // 로그인 페이지와 공개 경로는 인증 체크에서 제외
   if (
     pathname === "/auth/login" ||
+    pathname.startsWith("/oauth") ||
     pathname.startsWith("/api") ||
     pathname.includes("_next") ||
     pathname.includes("favicon.ico")
@@ -18,6 +19,7 @@ export async function middleware(request: NextRequest) {
 
   // 쿠키에서 세션 확인
   const sessionCookie = request.cookies.get(sessionCookieName);
+  console.log("sessionCookie: ", sessionCookie);
 
   // 세션이 없으면 로그인 페이지로 리디렉션
   if (!sessionCookie) {

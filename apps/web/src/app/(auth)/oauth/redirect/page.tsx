@@ -21,6 +21,9 @@ export default async function OAuthRedirect(props: {
           code: searchParams.code,
           state: searchParams.state,
         });
+
+        console.log("000000000000000");
+        console.log("data: ", data);
         return (
           <LoginButton
             accessToken={data.access_token}
@@ -36,5 +39,5 @@ export default async function OAuthRedirect(props: {
     console.error(error);
   }
 
-  redirect("/");
+  // redirect("/");
 }
