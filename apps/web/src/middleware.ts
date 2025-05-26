@@ -32,6 +32,12 @@ export async function middleware(request: NextRequest) {
 }
 
 // 미들웨어가 실행될 경로 지정
+// export const config = {
+//   matcher: [
+//     "/((?!api|_next/static|_next/image|favicon.ico|png|jpg|jpeg|svg|css|js).*)",
+//   ],
+// };
+
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|.png|.webp|.svg).*)"],
+  matcher: ["/((?!api|_next|.*\\..*).*)"],
 };

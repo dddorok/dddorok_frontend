@@ -14,7 +14,7 @@ export default function NewProjectClient({
 }: {
   templateId: string;
 }) {
-  const [step, setStep] = useState(2);
+  const [step, setStep] = useState(1);
 
   const { data: template } = useSuspenseQuery({
     ...templateQueries.chartList(templateId),
