@@ -41,9 +41,34 @@ export const getTemplates = async (request: GetTemplateListRequest) => {
   return response.data;
 };
 
+interface MeasurementType {
+  measurementCode: string;
+  sliderEnabled: boolean;
+  code: string;
+  label: string;
+  value: number;
+  min: number;
+  max: number;
+  rangeToggle: boolean;
+}
+
+export interface ChartType {
+  id: string;
+  name: string;
+  svg_url: string;
+  measurements: MeasurementType[];
+}
+
+export interface GetTemplateChartListResponse {
+  template_id: string;
+  chart_types: ChartType[];
+}
+
 export const getTemplateChartList = async (templateId: string) => {
-  const response = await privateInstance.get(
-    `templates/${templateId}/chart-list`
-  );
-  return response.json();
+  const response = await privateInstance
+    .get<{
+      data: GetTemplateChartListResponse;
+    }>(`template/${templateId}/chart-list`)
+    .json();
+  return response.data;
 };

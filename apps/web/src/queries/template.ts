@@ -10,7 +10,7 @@ export const templateQueryKey = "template";
 
 const templateListQueryOptions = (request: GetTemplateListRequest) =>
   queryOptions({
-    queryKey: [templateQueryKey, "list"],
+    queryKey: [templateQueryKey, "list", request],
     queryFn: () => getTemplates(request),
   });
 

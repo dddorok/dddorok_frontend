@@ -7,6 +7,7 @@ import { useState } from "react";
 import { CarouselSpacing } from "./_components/Slider";
 
 import Header from "@/components/layout/Header";
+import { ROUTE } from "@/constants/route";
 import { cn } from "@/lib/utils";
 import { templateQueries } from "@/queries/template";
 import { TemplateType } from "@/services/template";
@@ -51,7 +52,7 @@ export default function TemplateListPage() {
       <div className="grid grid-cols-4 gap-[30px] container pt-12 px-8">
         {templateList?.items.map((template) => (
           <Link
-            href={`/project/new?templateId=${template.id}`}
+            href={ROUTE.PROJECT.NEW(template.id, template.name)}
             key={template.id}
             className="w-full"
           >

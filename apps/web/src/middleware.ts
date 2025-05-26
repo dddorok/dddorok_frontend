@@ -20,11 +20,11 @@ export async function middleware(request: NextRequest) {
 
   // 쿠키에서 세션 확인
   const sessionCookie = request.cookies.get(sessionCookieName);
-  console.log("sessionCookie: ", sessionCookie);
 
   // 세션이 없으면 로그인 페이지로 리디렉션
   if (!sessionCookie) {
     const url = new URL("/auth/login", request.url);
+    console.log("redirect to login - no sessionCookie");
     return NextResponse.redirect(url);
   }
 

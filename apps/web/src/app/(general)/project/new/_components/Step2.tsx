@@ -1,62 +1,65 @@
 import { SliderSection } from "./korean-slider-component";
 
 import { Button } from "@/components/ui/button";
+import { ChartType } from "@/services/template";
 
-export default function Step2() {
+export default function Step2({ chartTypes }: { chartTypes: ChartType[] }) {
   return (
     <div>
       <div className="w-full max-w-5xl mx-auto p-8 bg-gray-50 min-h-screen">
-        <section className="mb-8">
-          <h4 className="text-[21px] font-semibold text-neutral-N500 mb-4">
-            <strong className="text-neutral-N900 font-semibold">
-              몸판 길이
-            </strong>
-            를 조정해주세요
-          </h4>
-          <div className="grid-cols-[315px_1fr] gap-16 grid">
-            <Svg1 />
-            <div>
-              <div className="flex gap-4 mb-4">
-                <Button color="fill">몸판</Button>
-                <Button>2</Button>
-              </div>
-              <div className="bg-neutral-N100 border border-neutral-N200 rounded-sm px-[18px] py-4 space-y-[72px]">
-                <SliderSection
-                  label="E 소매길이"
-                  min={45}
-                  max={55}
-                  snapValues={[45, 47, 50, 51, 52, 54, 55]}
-                  initialValue={50}
-                  average={47}
-                />
-
-                <SliderSection
-                  label="F 소매너비"
-                  min={15}
-                  max={19}
-                  snapValues={[15, 16, 17, 18, 19]}
-                  initialValue={17}
-                  average={18}
-                />
-
-                <SliderSection
-                  label="G 손목너비"
-                  min={6}
-                  max={10}
-                  snapValues={[6, 7, 8, 9, 10]}
-                  initialValue={7}
-                  leftLabel="짧음"
-                  rightLabel="여유있음"
-                  average={8}
-                />
-              </div>
-            </div>
-          </div>
-        </section>
+        {chartTypes.map((chart) => (
+          <ChartItem key={chart.id} chartType={chart} />
+        ))}
       </div>
     </div>
   );
 }
+
+function ChartItem({ chartType }: { chartType: ChartType }) {
+  return (
+    <section className="mb-8">
+      <h4 className="text-[21px] font-semibold text-neutral-N500 mb-4">
+        <strong className="text-neutral-N900 font-semibold">
+          {chartType.name}
+        </strong>
+        를 조정해주세요
+      </h4>
+      <div className="grid-cols-[315px_1fr] gap-16 grid">
+        <Svg1 />
+        {/* <div>
+          <img src={chartType.svg_url} alt={chartType.name} />
+        </div> */}
+        <div>
+          {/* <div className="flex gap-4 mb-4">
+          <Button color="fill">몸판</Button>
+          <Button>2</Button>
+        </div> */}
+          <div className="bg-neutral-N100 border border-neutral-N200 rounded-sm px-[18px] py-4 space-y-[72px]">
+            {chartType.measurements.map((item) => (
+              <SliderSection
+                key={item.code}
+                label={item.label}
+                min={item.min}
+                max={item.max}
+                snapValues={getSnapValues(item.min, item.max)}
+                initialValue={item.value}
+                average={item.min}
+              />
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+const getSnapValues = (min: number, max: number) => {
+  const values = [];
+  for (let i = min; i <= max; i++) {
+    values.push(i);
+  }
+  return values;
+};
 
 function Svg1() {
   return (
