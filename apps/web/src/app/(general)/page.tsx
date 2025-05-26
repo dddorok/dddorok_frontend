@@ -1,4 +1,3 @@
-/* eslint-disable @next/next/no-img-element */
 import Image from "next/image";
 import Link from "next/link";
 
@@ -13,12 +12,13 @@ export default function Home() {
       <Header className="bg-neutral-N100-25A h-[var(--header-height)] border-neutralAlpha-NA30" />
       <div className="px-8 pt-16 pb-20 flex flex-col items-center justify-center">
         <p className="text-neutral-N800 text-h4 font-medium">✦</p>
-        <img
+        <Image
           src="/images/main/stress-less.png"
           width={254}
           height={32}
           alt="stress-less"
           className="my-[2px]"
+          priority
         />
         <h1 className="text-center text-neutral-N900 text-h1 font-medium">
           상상한 모든 것을{" "}
