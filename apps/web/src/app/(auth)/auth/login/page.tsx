@@ -132,9 +132,11 @@ function TermsDialog({
 function NaverLogin() {
   const NAVER_CLIENT_ID = process.env.NEXT_PUBLIC_NAVER_CLIENT_ID; // 발급받은 클라이언트 아이디
   const REDIRECT_URI = `${process.env.NEXT_PUBLIC_OAUTH_REDIRECT_URI}?provider=naver`; // Callback URL
+  console.log("REDIRECT_URI: ", REDIRECT_URI);
 
   const STATE = "flase";
   const NAVER_AUTH_URL = `https://nid.naver.com/oauth2.0/authorize?response_type=code&client_id=${NAVER_CLIENT_ID}&state=${STATE}&redirect_uri=${REDIRECT_URI}`;
+  console.log("NAVER_AUTH_URL: ", NAVER_AUTH_URL);
 
   const login = () => {
     window.location.href = NAVER_AUTH_URL;
@@ -167,10 +169,7 @@ function LoginButton({
   text: string;
 }) {
   return (
-    <div
-      className="rounded-md border border-neutral-N300 bg-neutral-N0 backdrop-blur-[12px] flex w-[300px] px-4 py-2 justify-center items-center"
-      // onClick={onLogin}
-    >
+    <div className="rounded-md border border-neutral-N300 bg-neutral-N0 backdrop-blur-[12px] flex w-[300px] px-4 py-2 justify-center items-center">
       <img src={imageSrc} alt={`${text}-logo`} width={32} height={32} />
       <p className="flex-1 text-medium-sb text-neutral-N900">{text}</p>
     </div>
@@ -207,6 +206,7 @@ function KakaoLogin() {
 function GoogleLogin() {
   const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID; // 발급받은 클라이언트 아이디
   const REDIRECT_URI = `${process.env.NEXT_PUBLIC_OAUTH_REDIRECT_URI}?provider=google`; // Callback URL
+  console.log("REDIRECT_URI: ", REDIRECT_URI);
 
   const GOOGLE_AUTH_URL = `https://accounts.google.com/o/oauth2/v2/auth?
 		client_id=${GOOGLE_CLIENT_ID}
