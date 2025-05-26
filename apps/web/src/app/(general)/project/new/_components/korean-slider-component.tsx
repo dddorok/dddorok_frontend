@@ -1,139 +1,117 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 
 import { cn } from "@/lib/utils";
 
-// shadcn ui 스타일 Slider 컴포넌트
-const Slider = ({
-  value,
-  onValueChange,
+const useSlider = ({
+  initialValue,
   min,
   max,
   snapValues,
-  className = "",
 }: {
-  value: number;
-  onValueChange: (value: number) => void;
+  initialValue: number;
   min: number;
   max: number;
   snapValues: number[];
-  className?: string;
 }) => {
+  const [value, setValue] = useState(initialValue);
   const [isDragging, setIsDragging] = useState(false);
   const sliderRef = React.useRef<HTMLDivElement>(null);
 
   const percentage = ((value - min) / (max - min)) * 100;
 
-  const updateValue = (clientX: number) => {
-    if (!sliderRef.current) return;
-
-    const rect = sliderRef.current.getBoundingClientRect();
-    const clickX = clientX - rect.left;
-    const newPercentage = Math.max(
-      0,
-      Math.min(100, (clickX / rect.width) * 100)
-    );
-    const newValue = min + (newPercentage / 100) * (max - min);
-
-    // 가장 가까운 snapValue로 스냅
-    let closestValue = snapValues[0];
-
-    if (!closestValue) return;
-    let minDistance = Math.abs(newValue - closestValue);
-
-    for (const snapValue of snapValues) {
-      const distance = Math.abs(newValue - snapValue);
-      if (distance < minDistance) {
-        minDistance = distance;
-        closestValue = snapValue;
-      }
-    }
-
-    onValueChange(closestValue);
-  };
-
-  const handleTrackClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (
-      e.target === e.currentTarget ||
-      (e.target as HTMLElement).classList.contains("slider-track")
-    ) {
-      updateValue(e.clientX);
-    }
-  };
-
-  const handleThumbMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(true);
-  };
-
-  const handleMouseMove = (e: MouseEvent) => {
-    if (isDragging) {
-      updateValue(e.clientX);
-    }
-  };
-
-  const handleMouseUp = () => {
-    setIsDragging(false);
-  };
-
-  React.useEffect(() => {
-    if (isDragging) {
-      document.addEventListener("mousemove", handleMouseMove);
-      document.addEventListener("mouseup", handleMouseUp);
-      return () => {
-        document.removeEventListener("mousemove", handleMouseMove);
-        document.removeEventListener("mouseup", handleMouseUp);
-      };
-    }
-  }, [isDragging]);
-
-  return (
-    <div ref={sliderRef} className={`relative h-6 cursor-pointer ${className}`}>
-      <div
-        className="h-16 relative top-[-10px] z-[20]"
-        onClick={handleTrackClick}
-      ></div>
-      {/* 슬라이더 트랙 */}
-      <div className="slider-track absolute top-1/2 transform -translate-y-1/2 w-full h-[1px] bg-neutral-N500 rounded-full"></div>
-
-      {/* 슬라이더 썸 (원) */}
-      <div
-        className={cn(
-          `absolute top-1/2 transform -translate-y-1/2 -translate-x-1/2 w-5 h-5 rounded-full border-2 border-primary-PR shadow-lg transition-all duration-150 cursor-grab`,
-          isDragging
-            ? "bg-[#4581DB] border-[#4581DB] cursor-grabbing"
-            : "bg-primary-PR",
-          "z-10"
-        )}
-        style={{ left: `${percentage}%` }}
-        onMouseDown={handleThumbMouseDown}
-      ></div>
-    </div>
+  const findClosestValue = React.useCallback(
+    (targetValue: number): number => {
+      return snapValues.reduce((prev, curr) => {
+        return Math.abs(curr - targetValue) < Math.abs(prev - targetValue)
+          ? curr
+          : prev;
+      });
+    },
+    [snapValues]
   );
-};
 
-// 개별 슬라이더 섹션 컴포넌트
-const SliderSection = ({
-  label,
-  min,
-  max,
-  snapValues,
-  initialValue,
-  leftLabel,
-  rightLabel,
-}: {
-  label: string;
-  min: number;
-  max: number;
-  snapValues: number[];
-  initialValue: number;
-  leftLabel?: string;
-  rightLabel?: string;
-}) => {
-  const [value, setValue] = useState(initialValue);
+  const calculateValueFromClientX = React.useCallback(
+    (clientX: number): number => {
+      if (!sliderRef.current) return value;
 
-  // 눈금과 숫자 생성 (snapValues 기반)
-  const generateTicks = () => {
+      const rect = sliderRef.current.getBoundingClientRect();
+      const clickX = clientX - rect.left;
+      const newPercentage = Math.max(
+        0,
+        Math.min(100, (clickX / rect.width) * 100)
+      );
+      return min + (newPercentage / 100) * (max - min);
+    },
+    [min, max, value]
+  );
+
+  const updateValue = React.useCallback(
+    (clientX: number) => {
+      const newValue = calculateValueFromClientX(clientX);
+
+      if (isDragging) {
+        // 드래그 중에는 자유롭게 움직임
+        setValue(newValue);
+      } else {
+        // 클릭 시에만 snapValue로 스냅
+        const closestValue = findClosestValue(newValue);
+        setValue(closestValue);
+      }
+    },
+    [isDragging, calculateValueFromClientX, findClosestValue]
+  );
+
+  const handleTrackClick = React.useCallback(
+    (e: React.MouseEvent<HTMLDivElement>) => {
+      if (
+        e.target === e.currentTarget ||
+        (e.target as HTMLElement).classList.contains("slider-track")
+      ) {
+        updateValue(e.clientX);
+      }
+    },
+    [updateValue]
+  );
+
+  const handleThumbMouseDown = React.useCallback(
+    (e: React.MouseEvent<HTMLDivElement>) => {
+      console.log("handleThumbMouseDown");
+      e.preventDefault();
+      e.stopPropagation();
+      setIsDragging(true);
+      updateValue(e.clientX);
+    },
+    [updateValue]
+  );
+
+  // 마우스 이벤트 리스너 설정
+  React.useEffect(() => {
+    const handleGlobalMouseMove = (e: MouseEvent) => {
+      if (isDragging) {
+        updateValue(e.clientX);
+      }
+    };
+
+    const handleGlobalMouseUp = () => {
+      if (isDragging) {
+        const closestValue = findClosestValue(value);
+        setValue(closestValue);
+        setIsDragging(false);
+      }
+    };
+
+    if (isDragging) {
+      document.addEventListener("mousemove", handleGlobalMouseMove);
+      document.addEventListener("mouseup", handleGlobalMouseUp);
+    }
+
+    return () => {
+      document.removeEventListener("mousemove", handleGlobalMouseMove);
+      document.removeEventListener("mouseup", handleGlobalMouseUp);
+    };
+  }, [isDragging, value, findClosestValue, updateValue]);
+
+  const generateTicks = React.useCallback(() => {
     return snapValues.map((tickValue, index) => {
       const percentage = ((tickValue - min) / (max - min)) * 100;
       return (
@@ -149,12 +127,53 @@ const SliderSection = ({
         </div>
       );
     });
+  }, [snapValues, min, max]);
+
+  return {
+    value,
+    isDragging,
+    handleTrackClick,
+    handleThumbMouseDown,
+    sliderRef,
+    percentage,
+    generateTicks,
   };
+};
 
-  // 현재 값의 위치 계산
-  const valuePercentage = ((value - min) / (max - min)) * 100;
+export const SliderSection = ({
+  label,
+  min,
+  max,
+  snapValues,
+  initialValue,
+  leftLabel,
+  rightLabel,
+  average,
+}: {
+  label: string;
+  min: number;
+  max: number;
+  snapValues: number[];
+  initialValue: number;
+  leftLabel?: string;
+  rightLabel?: string;
+  average: number;
+}) => {
+  const {
+    value,
+    isDragging,
+    handleTrackClick,
+    handleThumbMouseDown,
+    sliderRef,
+    percentage,
+    generateTicks,
+  } = useSlider({
+    initialValue,
+    min,
+    max,
+    snapValues,
+  });
 
-  const average = 16;
   const averagePercentage = ((average - min) / (max - min)) * 100;
 
   return (
@@ -167,35 +186,46 @@ const SliderSection = ({
       </div>
 
       <div className="relative">
-        {/* 눈금과 숫자 */}
-
         {/* 현재 값 표시 (슬라이더 위에) */}
         <div className="relative mb-2">
           <div
             className={cn(
               "absolute transform -translate-x-1/2  px-[6px] py-[2px] rounded text-sm font-medium top-[-38px]",
-              "rounded-sm bg-primary-PR shadow-md text-neutral-N0"
+              "rounded-sm bg-primary-PR shadow-md text-neutral-N0",
+              isDragging ? "bg-[#4581DB] border-[#4581DB]" : "bg-primary-PR"
             )}
-            style={{ left: `${valuePercentage}%` }}
+            style={{ left: `${percentage}%` }}
           >
-            {value}
+            {Math.round(value)}
           </div>
           <div
             className="absolute transform -translate-x-1/2 top-[-28px]"
-            style={{ left: `${valuePercentage}%` }}
+            style={{ left: `${percentage}%` }}
           >
             <Dots />
           </div>
         </div>
 
         {/* 슬라이더 */}
-        <Slider
-          value={value}
-          onValueChange={setValue}
-          min={min}
-          max={max}
-          snapValues={snapValues}
-        />
+        <div ref={sliderRef} className={cn(`relative h-6 cursor-pointer`)}>
+          <div
+            className="h-16 relative top-[-10px] z-[20] cursor-grab"
+            onClick={handleTrackClick}
+            onMouseDown={handleThumbMouseDown}
+          ></div>
+          <div className="slider-track absolute top-1/2 transform -translate-y-1/2 w-full h-[1px] bg-neutral-N500 rounded-full"></div>
+          <div
+            className={cn(
+              `absolute top-1/2 transform -translate-y-1/2 -translate-x-1/2 w-5 h-5 rounded-full border-2 border-primary-PR shadow-lg `,
+              isDragging
+                ? "bg-[#4581DB] border-[#4581DB] cursor-grabbing"
+                : "bg-primary-PR",
+              "z-10"
+            )}
+            style={{ left: `${percentage}%` }}
+          ></div>
+        </div>
+
         <div className="relative top-[-18px] h-[14px]">{generateTicks()}</div>
 
         <div className="relative mt-[6px]">
@@ -221,43 +251,6 @@ const SliderSection = ({
     </div>
   );
 };
-
-// 메인 컴포넌트
-const SliderApp = () => {
-  return (
-    <div className="w-full max-w-5xl mx-auto p-8 bg-gray-50 min-h-screen">
-      <div className="bg-white p-8 rounded-lg shadow-sm">
-        <SliderSection
-          label="E 소매길이"
-          min={45}
-          max={55}
-          snapValues={[45, 47, 50, 52, 55]}
-          initialValue={50}
-        />
-
-        <SliderSection
-          label="F 소매너비"
-          min={15}
-          max={19}
-          snapValues={[15, 16, 17, 18, 19]}
-          initialValue={17}
-        />
-
-        <SliderSection
-          label="G 손목너비"
-          min={6}
-          max={10}
-          snapValues={[6, 7, 8, 9, 10]}
-          initialValue={7}
-          leftLabel="짧음"
-          rightLabel="여유있음"
-        />
-      </div>
-    </div>
-  );
-};
-
-export default SliderApp;
 
 function Dots() {
   return (
