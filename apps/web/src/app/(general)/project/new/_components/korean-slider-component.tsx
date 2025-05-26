@@ -140,6 +140,17 @@ const useSlider = ({
   };
 };
 
+interface SliderSectionProps {
+  label: string;
+  min: number;
+  max: number;
+  snapValues: number[];
+  initialValue: number;
+  leftLabel?: string;
+  rightLabel?: string;
+  average: number;
+}
+
 export const SliderSection = ({
   label,
   min,
@@ -149,16 +160,7 @@ export const SliderSection = ({
   leftLabel,
   rightLabel,
   average,
-}: {
-  label: string;
-  min: number;
-  max: number;
-  snapValues: number[];
-  initialValue: number;
-  leftLabel?: string;
-  rightLabel?: string;
-  average: number;
-}) => {
+}: SliderSectionProps) => {
   const {
     value,
     isDragging,
@@ -240,11 +242,10 @@ export const SliderSection = ({
           </div>
         </div>
 
-        {/* 왼쪽/오른쪽 라벨 */}
         {(leftLabel || rightLabel) && (
-          <div className="flex justify-between text-sm text-gray-500 px-1">
-            <span>{leftLabel}</span>
-            <span>{rightLabel}</span>
+          <div className="flex justify-between text-xsmall text-neutral-N700">
+            <span className="relative left-[-4px]">{leftLabel}</span>
+            <span className="relative right-[-4px]">{rightLabel}</span>
           </div>
         )}
       </div>
