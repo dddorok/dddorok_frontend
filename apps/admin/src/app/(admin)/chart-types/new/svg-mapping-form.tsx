@@ -52,10 +52,6 @@ export default function SvgMappingForm({
   }));
 
   const handleSubmit = () => {
-    const setMeasurementList = new Set(
-      paths.map((path) => path.selectedMeasurement)
-    );
-
     if (paths.some((path) => !path.selectedMeasurement)) {
       toast({
         title: "경고",
@@ -65,14 +61,14 @@ export default function SvgMappingForm({
       return;
     }
 
-    if (setMeasurementList.size !== paths.length) {
-      toast({
-        variant: "destructive",
-        title: "경고",
-        description: "중복된 측정항목이 있습니다.",
-      });
-      return;
-    }
+    // if (setMeasurementList.size !== paths.length) {
+    //   toast({
+    //     variant: "destructive",
+    //     title: "경고",
+    //     description: "중복된 측정항목이 있습니다.",
+    //   });
+    //   return;
+    // }
 
     onSubmit({
       // TODO: 더 안정성 있는 방식으로

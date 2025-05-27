@@ -101,11 +101,11 @@ export default function NewChartTypePage() {
         <Suspense fallback={<div>Loading...</div>}>
           <SvgUpload
             onSubmit={(data) => {
-              if (data.pathIds.length !== measurementList.length) {
+              if (data.pathIds.length > measurementList.length) {
                 toast({
                   variant: "destructive",
                   title:
-                    "Path 개수와 측정항목 개수가 일치하지 않습니다. 다시 확인해주세요.",
+                    "Path 개수가 측정항목 개수보다 많습니다. 다시 확인해주세요.",
                   description: `Path 개수: ${data.pathIds.length}, 측정항목 개수: ${measurementList.length}`,
                 });
                 return;
