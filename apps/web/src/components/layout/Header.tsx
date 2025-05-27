@@ -1,4 +1,5 @@
 import { ChevronDownIcon } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 
 import { Button } from "../ui/button";
@@ -33,11 +34,12 @@ export default function Header({ className }: HeaderProps) {
           <div className="flex justify-between items-center py-5 w-full">
             <div className="flex gap-10">
               <div>
-                <img
+                <Image
                   src="/logo/logo-01.svg"
                   alt="logo"
                   width={104}
                   height={42}
+                  priority
                 />
               </div>
               <ul className="flex gap-16 items-center text-neutral-N800 text-medium-r">
