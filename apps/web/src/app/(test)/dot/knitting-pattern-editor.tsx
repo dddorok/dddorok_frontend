@@ -1,5 +1,21 @@
-import { Dotting, DottingRef, useDotting, BrushTool } from "dotting";
+import {
+  Dotting,
+  DottingRef,
+  useDotting,
+  BrushTool,
+  DottingData,
+  CanvasDataChangeParams,
+} from "dotting";
 import React, { useRef, useState, useEffect } from "react";
+
+import { DottingDataType } from "./types";
+
+const gridSize = {
+  width: 18,
+  height: 18,
+};
+
+const GRID_SQUARE_LENGTH = 18 as const;
 
 // 타입 정의
 interface KnittingSymbol {
@@ -18,6 +34,13 @@ interface PatternData {
   pattern: any[];
   disabledCells: string[];
   gridSize: GridSize;
+}
+
+// 셀 데이터 타입 추가
+interface CellData {
+  row: number;
+  col: number;
+  symbolId: string;
 }
 
 const KnittingPatternEditor: React.FC = () => {
@@ -46,8 +69,28 @@ const KnittingPatternEditor: React.FC = () => {
   );
   const [disabledCells, setDisabledCells] = useState<Set<string>>(new Set());
   const [isRestrictMode, setIsRestrictMode] = useState<boolean>(false);
-  const [gridSize, setGridSize] = useState<GridSize>({ width: 20, height: 15 });
-  const [pattern, setPattern] = useState<any[]>([]);
+  // const [gridSize, setGridSize] = useState<GridSize>({ width: 20, height: 15 });
+
+  // 셀별 기호 데이터 상태를 2차원 배열로 변경
+  const [cellSymbols, setCellSymbols] = useState<string[][]>(() => {
+    // 초기 2차원 배열 생성 (빈 문자열로 초기화)
+    return Array(gridSize.height)
+      .fill(null)
+      .map(() => Array(gridSize.width).fill(""));
+  });
+
+  // 현재 상태를 참조하기 위한 ref 추가
+  const currentSymbolRef = useRef(currentSymbol);
+  const disabledCellsRef = useRef(disabledCells);
+
+  // ref 업데이트
+  useEffect(() => {
+    currentSymbolRef.current = currentSymbol;
+  }, [currentSymbol]);
+
+  useEffect(() => {
+    disabledCellsRef.current = disabledCells;
+  }, [disabledCells]);
 
   // 초기 제한된 셀 설정 (격자 사방 1개씩)
   useEffect(() => {
@@ -69,28 +112,28 @@ const KnittingPatternEditor: React.FC = () => {
   }, [gridSize.width, gridSize.height]);
 
   // 제한된 셀들을 dotting 라이브러리용 indicatorData로 변환
-  const indicatorData = Array.from(disabledCells)
-    .map((cellKey) => {
-      const parts = cellKey.split("-");
-      if (parts.length !== 2 || !parts[0] || !parts[1]) return null;
+  // const indicatorData = Array.from(disabledCells)
+  //   .map((cellKey) => {
+  //     const parts = cellKey.split("-");
+  //     if (parts.length !== 2 || !parts[0] || !parts[1]) return null;
 
-      const row = parseInt(parts[0], 10);
-      const col = parseInt(parts[1], 10);
+  //     const row = parseInt(parts[0], 20);
+  //     const col = parseInt(parts[1], 20);
 
-      if (isNaN(row) || isNaN(col)) return null;
+  //     if (isNaN(row) || isNaN(col)) return null;
 
-      return {
-        rowIndex: row,
-        columnIndex: col,
-        color: "#9CA3AF", // 회색
-      };
-    })
-    .filter(
-      (
-        item
-      ): item is { rowIndex: number; columnIndex: number; color: string } =>
-        item !== null
-    );
+  //     return {
+  //       rowIndex: row,
+  //       columnIndex: col,
+  //       color: "#9CA3AF", // 회색
+  //     };
+  //   })
+  //   .filter(
+  //     (
+  //       item
+  //     ): item is { rowIndex: number; columnIndex: number; color: string } =>
+  //       item !== null
+  //   );
 
   // currentSymbol이 변경될 때마다 브러시 색상 업데이트
   useEffect(() => {
@@ -98,6 +141,80 @@ const KnittingPatternEditor: React.FC = () => {
       dottingRef.current.changeBrushColor(currentSymbol.color);
     }
   }, [currentSymbol.color]);
+
+  // 색상에 따라 기호 ID를 반환하는 함수 추가
+  const getSymbolIdByColor = (color: string): string => {
+    const symbol = knittingSymbols.find((s) => s.color === color);
+    return symbol ? symbol.id : currentSymbolRef.current.id;
+  };
+
+  // handleDataChange 함수 수정
+  const handleDataChange = (data: CanvasDataChangeParams) => {
+    console.log("=== Dotting data changed ===");
+
+    const dotData: DottingData = data.data;
+
+    const dotDataArray = Array.from(dotData.entries()).map(([, value]) => {
+      return Array.from(value.entries()).map(([, value]) => {
+        return value;
+      });
+    });
+
+    console.log("Dot data array:", dotDataArray);
+
+    // 이중 배열 데이터 처리
+    if (
+      dotDataArray &&
+      Array.isArray(dotDataArray) &&
+      dotDataArray.length > 0
+    ) {
+      console.log("Processing 2D array data");
+
+      setCellSymbols((prevCellSymbols) => {
+        const newCellSymbols = prevCellSymbols.map((row) => row.slice());
+
+        dotDataArray.forEach((row, rowIndex) => {
+          if (Array.isArray(row)) {
+            row.forEach((cell, colIndex) => {
+              // 셀에 색상이 있는지 확인
+              if (cell && cell.color && cell.color !== "") {
+                const cellKey = `${rowIndex}-${colIndex}`;
+
+                console.log(
+                  `Found colored cell at ${cellKey} with color: ${cell.color}`
+                );
+
+                // 제한된 셀이 아닌 경우에만 기호 추가
+                if (!disabledCellsRef.current.has(cellKey)) {
+                  // 색상에 따라 기호 결정
+                  const symbolId = getSymbolIdByColor(cell.color);
+                  // 배열 범위 체크 추가
+                  if (
+                    rowIndex < newCellSymbols.length &&
+                    newCellSymbols[rowIndex] &&
+                    colIndex < newCellSymbols[rowIndex].length
+                  ) {
+                    newCellSymbols[rowIndex][colIndex] = symbolId;
+                    console.log(
+                      `Added symbol ${symbolId} to ${cellKey} for color ${cell.color}`
+                    );
+                  }
+                }
+              }
+            });
+          }
+        });
+
+        console.log(
+          "Updated cellSymbols:",
+          newCellSymbols.map((row) => row.join(" "))
+        );
+        return newCellSymbols;
+      });
+    } else {
+      console.log("Data is not valid 2D array or empty");
+    }
+  };
 
   // dotting 컴포넌트 초기 설정
   useEffect(() => {
@@ -109,11 +226,7 @@ const KnittingPatternEditor: React.FC = () => {
         shape: "square",
       } as any);
 
-      // 데이터 변경 이벤트 리스너 추가 (디버깅용)
-      const handleDataChange = (data: any) => {
-        console.log("Dotting data changed:", data);
-      };
-
+      // 데이터 변경 이벤트 리스너 추가
       dottingRef.current.addDataChangeListener(handleDataChange);
 
       // 클린업 함수
@@ -123,7 +236,7 @@ const KnittingPatternEditor: React.FC = () => {
         }
       };
     }
-  }, []);
+  }, []); // 의존성 배열을 빈 배열로 변경
 
   // 셀 제한 설정
   const handleCellRestriction = (
@@ -180,12 +293,72 @@ const KnittingPatternEditor: React.FC = () => {
   // 패턴 저장
   const savePattern = (): void => {
     const patternData: PatternData = {
-      pattern: pattern,
+      pattern: cellSymbols.flat(),
       disabledCells: Array.from(disabledCells),
       gridSize: gridSize,
     };
     console.log("패턴 저장:", patternData);
     alert("패턴이 저장되었습니다!");
+  };
+
+  // 전체 지우기 함수 수정
+  const clearAll = (): void => {
+    clear();
+    setCellSymbols(
+      Array(gridSize.height)
+        .fill(null)
+        .map(() => Array(gridSize.width).fill(""))
+    );
+  };
+
+  // 기호 오버레이 렌더링 함수
+  const renderSymbolOverlay = () => {
+    const nonEmptySymbols = cellSymbols
+      .flat()
+      .filter((symbol) => symbol !== "");
+    console.log("렌더링할 기호 개수:", nonEmptySymbols.length);
+    console.log(
+      "cellSymbols 내용:",
+      cellSymbols.map((row) => row.join(" "))
+    );
+
+    const symbols: React.ReactElement[] = [];
+
+    cellSymbols.forEach((row, rowIndex) => {
+      row.forEach((symbolId, colIndex) => {
+        // 빈 기호는 렌더링하지 않음
+        if (!symbolId) return;
+
+        const symbol = knittingSymbols.find((s) => s.id === symbolId);
+        if (!symbol || !symbol.symbol) return;
+
+        console.log(`기호 렌더링: ${rowIndex}-${colIndex} -> ${symbol.symbol}`);
+
+        symbols.push(
+          <div
+            key={`${rowIndex}-${colIndex}`}
+            className="absolute flex items-center justify-center pointer-events-none"
+            style={{
+              left: colIndex * GRID_SQUARE_LENGTH,
+              top: rowIndex * GRID_SQUARE_LENGTH,
+              width: GRID_SQUARE_LENGTH,
+              height: GRID_SQUARE_LENGTH,
+              fontSize: "14px",
+              fontWeight: "bold",
+              color: "#000000", // 검은색으로 통일
+              textShadow: "0 0 2px rgba(255,255,255,0.8)", // 흰색 그림자로 가독성 향상
+              zIndex: 10,
+              backgroundColor: "rgba(255, 0, 0, 0.1)", // 디버깅용 배경색
+            }}
+          >
+            {symbol.symbol}
+          </div>
+        );
+      });
+    });
+
+    console.log("렌더링된 기호 요소 개수:", symbols.length);
+    return symbols;
   };
 
   return (
@@ -299,7 +472,7 @@ const KnittingPatternEditor: React.FC = () => {
             </h3>
             <div className="flex flex-col gap-2">
               <button
-                onClick={clear}
+                onClick={clearAll}
                 className="py-2 px-4 border border-gray-400 rounded bg-white text-gray-600 text-sm hover:bg-gray-50 transition-colors"
                 type="button"
               >
@@ -326,28 +499,58 @@ const KnittingPatternEditor: React.FC = () => {
               >
                 패턴 저장
               </button>
+              <button
+                onClick={() => {
+                  // 테스트용 기호 추가
+                  const testCellSymbols = cellSymbols.map((row) => row.slice());
+                  // 배열 범위 체크 후 기호 추가
+                  if (
+                    testCellSymbols[5] &&
+                    testCellSymbols[5][5] !== undefined
+                  ) {
+                    testCellSymbols[5][5] = currentSymbol.id;
+                  }
+                  if (
+                    testCellSymbols[6] &&
+                    testCellSymbols[6][6] !== undefined
+                  ) {
+                    testCellSymbols[6][6] = currentSymbol.id;
+                  }
+                  if (
+                    testCellSymbols[7] &&
+                    testCellSymbols[7][7] !== undefined
+                  ) {
+                    testCellSymbols[7][7] = currentSymbol.id;
+                  }
+                  setCellSymbols(testCellSymbols);
+                  console.log("테스트 기호 추가됨");
+                }}
+                className="py-2 px-4 bg-blue-500 text-white text-sm rounded hover:bg-blue-600 transition-colors"
+                type="button"
+              >
+                테스트 기호 추가
+              </button>
             </div>
           </div>
         </div>
 
         {/* 캔버스 영역 */}
         <div className="flex-1 flex flex-col gap-5">
-          <div className="relative border-2 border-gray-300 rounded-lg overflow-hidden bg-white">
+          <div className="relative border-2 border-gray-300 rounded-lg overflow-hidden bg-white w-fit">
             <Dotting
               ref={dottingRef}
-              width={gridSize.width * 18}
-              height={gridSize.height * 18}
+              width={360}
+              height={360}
+              minRowCount={20}
+              minColumnCount={20}
               gridSquareLength={18}
               brushColor={currentSymbol.color}
               backgroundColor="#f8f9fa"
-              gridStrokeColor="#e0e0e0"
-              isDrawingEnabled={true}
-              isInteractionApplicable={true}
-              indicatorData={indicatorData}
-              resizeUnit={0}
-              isPanZoomable={false}
-              isGridFixed={true}
             />
+            {/* 기호 오버레이 */}
+            {/* <div className="absolute inset-0 pointer-events-none top-[48%] left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full">
+              {renderSymbolOverlay()}
+            </div> */}
           </div>
 
           {/* 정보 패널 */}
@@ -356,9 +559,15 @@ const KnittingPatternEditor: React.FC = () => {
               현재 선택:{" "}
               <strong className="text-gray-800">{currentSymbol.name}</strong>
             </p>
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-gray-600 mb-1">
               제한된 셀:{" "}
               <strong className="text-gray-800">{disabledCells.size}개</strong>
+            </p>
+            <p className="text-sm text-gray-600">
+              배치된 기호:{" "}
+              <strong className="text-gray-800">
+                {cellSymbols.flat().length}개
+              </strong>
             </p>
           </div>
         </div>
