@@ -344,6 +344,9 @@ const KnittingPatternEditor: React.FC = () => {
               isDrawingEnabled={true}
               isInteractionApplicable={true}
               indicatorData={indicatorData}
+              resizeUnit={0}
+              isPanZoomable={false}
+              isGridFixed={true}
             />
           </div>
 
