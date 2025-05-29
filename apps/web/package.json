@@ -22,6 +22,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cookies-next": "^5.1.0",
+    "dotting": "^2.1.13",
     "embla-carousel-react": "^8.6.0",
     "jose": "^6.0.10",
     "ky": "^1.8.0",
