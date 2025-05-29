@@ -152,6 +152,70 @@ const drawLine = (
   return interpolatePixels(startRow, startCol, endRow, endCol, shape, disabled);
 };
 
+// 비활성화 셀 체크 및 필터링 유틸리티 함수들
+const isValidPosition = (
+  row: number,
+  col: number,
+  rows: number,
+  cols: number
+): boolean => {
+  return row >= 0 && row < rows && col >= 0 && col < cols;
+};
+
+const isCellDisabled = (
+  row: number,
+  col: number,
+  pixels: (Pixel | null)[][]
+): boolean => {
+  const existingPixel = pixels[row]?.[col];
+  return existingPixel?.disabled || false;
+};
+
+const canDrawOnCell = (
+  row: number,
+  col: number,
+  rows: number,
+  cols: number,
+  pixels: (Pixel | null)[][]
+): boolean => {
+  return (
+    isValidPosition(row, col, rows, cols) && !isCellDisabled(row, col, pixels)
+  );
+};
+
+const filterDrawablePixels = (
+  pixelsToFilter: Pixel[],
+  rows: number,
+  cols: number,
+  currentPixels: (Pixel | null)[][]
+): Pixel[] => {
+  return pixelsToFilter.filter((pixel) =>
+    canDrawOnCell(pixel.rowIndex, pixel.columnIndex, rows, cols, currentPixels)
+  );
+};
+
+const applyPixelWithDisabledCheck = (
+  newPixels: (Pixel | null)[][],
+  row: number,
+  col: number,
+  shape: Shape | null,
+  rows: number,
+  cols: number
+): void => {
+  if (!canDrawOnCell(row, col, rows, cols, newPixels)) return;
+
+  if (!newPixels[row]) newPixels[row] = [];
+  const targetRow = newPixels[row];
+  if (targetRow) {
+    const existingDisabled = targetRow[col]?.disabled || false;
+    targetRow[col] = shape
+      ? createPixel(row, col, shape, existingDisabled)
+      : existingDisabled
+        ? createPixel(row, col, null, true)
+        : null;
+  }
+};
+
 // 도형 그리기 함수 (Canvas 렌더링 함수 사용으로 단순화)
 const drawShape = (
   ctx: CanvasRenderingContext2D,
@@ -196,6 +260,120 @@ const createInitialPixels = (
   return pixels;
 };
 
+// 히스토리 관련 유틸리티 함수들
+const convertPixelToHistory = (pixel: Pixel): HistoryPixel => ({
+  rowIndex: pixel.rowIndex,
+  columnIndex: pixel.columnIndex,
+  shapeId: pixel.shape?.id || null,
+  disabled: pixel.disabled || false,
+});
+
+const convertHistoryToPixel = (
+  historyPixel: HistoryPixel,
+  getShapeById: (id: string | null) => Shape | null
+): Pixel => ({
+  rowIndex: historyPixel.rowIndex,
+  columnIndex: historyPixel.columnIndex,
+  shape: getShapeById(historyPixel.shapeId),
+  disabled: historyPixel.disabled || false,
+});
+
+const convertPixelsToHistory = (
+  pixels: (Pixel | null)[][]
+): (HistoryPixel | null)[][] => {
+  return pixels.map((row) =>
+    row ? row.map((pixel) => (pixel ? convertPixelToHistory(pixel) : null)) : []
+  );
+};
+
+const convertHistoryToPixels = (
+  historyPixels: (HistoryPixel | null)[][],
+  getShapeById: (id: string | null) => Shape | null
+): (Pixel | null)[][] => {
+  return historyPixels.map((row) =>
+    row
+      ? row.map((historyPixel) =>
+          historyPixel
+            ? convertHistoryToPixel(historyPixel, getShapeById)
+            : null
+        )
+      : []
+  );
+};
+
+const createHistoryEntry = (
+  pixels: (Pixel | null)[][]
+): (HistoryPixel | null)[][] => {
+  return convertPixelsToHistory(pixels);
+};
+
+const trimHistoryIfNeeded = (
+  history: (HistoryPixel | null)[][][],
+  maxSize: number = 50
+): { trimmedHistory: (HistoryPixel | null)[][][]; newIndex: number } => {
+  if (history.length <= maxSize) {
+    return { trimmedHistory: history, newIndex: history.length - 1 };
+  }
+
+  const trimmedHistory = history.slice(-maxSize);
+  return { trimmedHistory, newIndex: trimmedHistory.length - 1 };
+};
+
+const addToHistory = (
+  currentHistory: (HistoryPixel | null)[][][],
+  historyIndex: number,
+  newEntry: (HistoryPixel | null)[][]
+): { newHistory: (HistoryPixel | null)[][][]; newIndex: number } => {
+  // 현재 인덱스 이후의 히스토리 제거
+  const newHistory = currentHistory.slice(0, historyIndex + 1);
+  newHistory.push(newEntry);
+
+  // 히스토리 크기 제한
+  const { trimmedHistory, newIndex } = trimHistoryIfNeeded(newHistory);
+
+  return { newHistory: trimmedHistory, newIndex };
+};
+
+const initializeHistory = (
+  initialPixels: (Pixel | null)[][]
+): (HistoryPixel | null)[][][] => {
+  const initialHistoryData = createHistoryEntry(initialPixels);
+  return [initialHistoryData];
+};
+
+const canUndoHistory = (historyIndex: number): boolean => historyIndex > 0;
+
+const canRedoHistory = (historyIndex: number, historyLength: number): boolean =>
+  historyIndex < historyLength - 1;
+
+const executeUndo = (
+  history: (HistoryPixel | null)[][][],
+  historyIndex: number,
+  getShapeById: (id: string | null) => Shape | null
+): { pixels: (Pixel | null)[][]; newIndex: number } | null => {
+  if (!canUndoHistory(historyIndex)) return null;
+
+  const prevHistoryPixels = history[historyIndex - 1];
+  if (!prevHistoryPixels) return null;
+
+  const pixels = convertHistoryToPixels(prevHistoryPixels, getShapeById);
+  return { pixels, newIndex: historyIndex - 1 };
+};
+
+const executeRedo = (
+  history: (HistoryPixel | null)[][][],
+  historyIndex: number,
+  getShapeById: (id: string | null) => Shape | null
+): { pixels: (Pixel | null)[][]; newIndex: number } | null => {
+  if (!canRedoHistory(historyIndex, history.length)) return null;
+
+  const nextHistoryPixels = history[historyIndex + 1];
+  if (!nextHistoryPixels) return null;
+
+  const pixels = convertHistoryToPixels(nextHistoryPixels, getShapeById);
+  return { pixels, newIndex: historyIndex + 1 };
+};
+
 // Dotting 컴포넌트
 export const Dotting = forwardRef<DottingRef, DottingProps>(
   (
@@ -233,30 +411,15 @@ export const Dotting = forwardRef<DottingRef, DottingProps>(
       createInitialPixels(rows, cols, initialCells, disabledCells)
     );
 
-    // 히스토리 관리를 위한 상태들 (HistoryPixel 사용)
+    // 히스토리 관리를 위한 상태들 (개선된 유틸리티 함수 사용)
     const [history, setHistory] = useState<(HistoryPixel | null)[][][]>(() => {
-      // 초기 상태를 히스토리로 설정
       const initialPixels = createInitialPixels(
         rows,
         cols,
         initialCells,
         disabledCells
       );
-      const initialHistoryData = initialPixels.map((row) =>
-        row
-          ? row.map((pixel) =>
-              pixel
-                ? {
-                    rowIndex: pixel.rowIndex,
-                    columnIndex: pixel.columnIndex,
-                    shapeId: pixel.shape?.id || null,
-                    disabled: pixel.disabled || false,
-                  }
-                : null
-            )
-          : []
-      );
-      return [initialHistoryData];
+      return initializeHistory(initialPixels);
     });
     const [historyIndex, setHistoryIndex] = useState(0);
     const [isApplyingHistory, setIsApplyingHistory] = useState(false);
@@ -283,116 +446,62 @@ export const Dotting = forwardRef<DottingRef, DottingProps>(
       [shapes]
     );
 
-    // 픽셀 데이터를 히스토리 데이터로 변환
-    const pixelsToHistory = useCallback(
-      (pixels: (Pixel | null)[][]): (HistoryPixel | null)[][] => {
-        return pixels.map((row) =>
-          row
-            ? row.map((pixel) =>
-                pixel
-                  ? {
-                      rowIndex: pixel.rowIndex,
-                      columnIndex: pixel.columnIndex,
-                      shapeId: pixel.shape?.id || null,
-                      disabled: pixel.disabled || false,
-                    }
-                  : null
-              )
-            : []
-        );
-      },
-      []
-    );
-
-    // 히스토리 데이터를 픽셀 데이터로 변환
-    const historyToPixels = useCallback(
-      (historyPixels: (HistoryPixel | null)[][]): (Pixel | null)[][] => {
-        return historyPixels.map((row) =>
-          row
-            ? row.map((historyPixel) =>
-                historyPixel
-                  ? {
-                      rowIndex: historyPixel.rowIndex,
-                      columnIndex: historyPixel.columnIndex,
-                      shape: getShapeById(historyPixel.shapeId),
-                      disabled: historyPixel.disabled || false,
-                    }
-                  : null
-              )
-            : []
-        );
-      },
-      [getShapeById]
-    );
-
-    // 픽셀 상태를 히스토리에 저장하는 함수
+    // 픽셀 상태를 히스토리에 저장하는 함수 (개선된 유틸리티 사용)
     const saveToHistory = useCallback(
       (newPixels: (Pixel | null)[][]) => {
         if (isApplyingHistory) return;
 
-        const historyData = pixelsToHistory(newPixels);
+        const historyEntry = createHistoryEntry(newPixels);
 
         setHistory((prev) => {
           // 첫 번째 히스토리가 비어있다면 현재 상태로 교체
           if (prev.length === 1 && prev[0] && prev[0].length === 0) {
             setHistoryIndex(0);
-            return [historyData];
+            return [historyEntry];
           }
 
-          // 현재 인덱스 이후의 히스토리 제거 (새로운 변경사항이 있을 때)
-          const newHistory = prev.slice(0, historyIndex + 1);
-          newHistory.push(historyData);
-
-          // 히스토리 최대 개수 제한 (메모리 관리)
-          const maxHistorySize = 50;
-          if (newHistory.length > maxHistorySize) {
-            const trimmedHistory = newHistory.slice(-maxHistorySize);
-            // 히스토리 인덱스도 조정
-            setHistoryIndex(trimmedHistory.length - 1);
-            return trimmedHistory;
-          }
-
-          // 히스토리 인덱스를 새로운 마지막 인덱스로 설정
-          setHistoryIndex(newHistory.length - 1);
+          const { newHistory, newIndex } = addToHistory(
+            prev,
+            historyIndex,
+            historyEntry
+          );
+          setHistoryIndex(newIndex);
           return newHistory;
         });
       },
-      [historyIndex, isApplyingHistory, pixelsToHistory]
+      [historyIndex, isApplyingHistory]
     );
 
-    // undo 함수
+    // undo 함수 (개선된 유틸리티 사용)
     const undo = useCallback(() => {
-      if (historyIndex > 0) {
+      const result = executeUndo(history, historyIndex, getShapeById);
+      if (result) {
         setIsApplyingHistory(true);
-        const prevHistoryPixels = history[historyIndex - 1];
-        if (prevHistoryPixels) {
-          const prevPixels = historyToPixels(prevHistoryPixels);
-          setPixels(prevPixels);
-          setHistoryIndex((prev) => prev - 1);
-        }
+        setPixels(result.pixels);
+        setHistoryIndex(result.newIndex);
         setTimeout(() => setIsApplyingHistory(false), 0);
       }
-    }, [history, historyIndex, historyToPixels]);
+    }, [history, historyIndex, getShapeById]);
 
-    // redo 함수
+    // redo 함수 (개선된 유틸리티 사용)
     const redo = useCallback(() => {
-      if (historyIndex < history.length - 1) {
+      const result = executeRedo(history, historyIndex, getShapeById);
+      if (result) {
         setIsApplyingHistory(true);
-        const nextHistoryPixels = history[historyIndex + 1];
-        if (nextHistoryPixels) {
-          const nextPixels = historyToPixels(nextHistoryPixels);
-          setPixels(nextPixels);
-          setHistoryIndex((prev) => prev + 1);
-        }
+        setPixels(result.pixels);
+        setHistoryIndex(result.newIndex);
         setTimeout(() => setIsApplyingHistory(false), 0);
       }
-    }, [history, historyIndex, historyToPixels]);
+    }, [history, historyIndex, getShapeById]);
 
-    // undo/redo 가능 여부 확인 함수들
-    const canUndo = useCallback(() => historyIndex > 0, [historyIndex]);
+    // undo/redo 가능 여부 확인 함수들 (개선된 유틸리티 사용)
+    const canUndo = useCallback(
+      () => canUndoHistory(historyIndex),
+      [historyIndex]
+    );
 
     const canRedo = useCallback(
-      () => historyIndex < history.length - 1,
+      () => canRedoHistory(historyIndex, history.length),
       [historyIndex, history.length]
     );
 
@@ -467,22 +576,11 @@ export const Dotting = forwardRef<DottingRef, DottingProps>(
 
     const setPixel = useCallback(
       (row: number, col: number, shape: Shape | null) => {
-        if (row < 0 || row >= rows || col < 0 || col >= cols) return;
-
-        // 현재 픽셀이 비활성화되어 있는지 확인
-        const currentPixel = pixels[row]?.[col];
-        if (currentPixel?.disabled) return; // 비활성화된 셀에는 그리기 불가
+        if (!canDrawOnCell(row, col, rows, cols, pixels)) return;
 
         setPixels((prev) => {
           const newPixels = [...prev];
-          if (!newPixels[row]) newPixels[row] = [];
-          // 기존 disabled 상태 유지
-          const existingDisabled = newPixels[row][col]?.disabled || false;
-          newPixels[row][col] = shape
-            ? createPixel(row, col, shape, existingDisabled)
-            : existingDisabled
-              ? createPixel(row, col, null, true)
-              : null;
+          applyPixelWithDisabledCheck(newPixels, row, col, shape, rows, cols);
           return newPixels;
         });
       },
@@ -504,41 +602,34 @@ export const Dotting = forwardRef<DottingRef, DottingProps>(
           toCol,
           shape
         );
+        const drawablePixels = filterDrawablePixels(
+          linePixels,
+          rows,
+          cols,
+          pixels
+        );
+
         setPixels((prev) => {
           const newPixels = [...prev];
-          linePixels.forEach((pixel) => {
-            const row = pixel.rowIndex;
-            const col = pixel.columnIndex;
-
-            // 범위 체크
-            if (row < 0 || row >= rows || col < 0 || col >= cols) return;
-
-            // 기존 픽셀의 비활성화 상태 확인
-            const existingPixel = newPixels[row]?.[col];
-            if (existingPixel?.disabled) return; // 비활성화된 셀에는 그리기 불가
-
-            if (!newPixels[row]) newPixels[row] = [];
-            const targetRow = newPixels[row];
-            if (targetRow) {
-              // 기존 disabled 상태 유지
-              const existingDisabled = existingPixel?.disabled || false;
-              targetRow[col] = shape
-                ? createPixel(row, col, shape, existingDisabled)
-                : existingDisabled
-                  ? createPixel(row, col, null, true)
-                  : null;
-            }
+          drawablePixels.forEach((pixel) => {
+            applyPixelWithDisabledCheck(
+              newPixels,
+              pixel.rowIndex,
+              pixel.columnIndex,
+              pixel.shape,
+              rows,
+              cols
+            );
           });
           return newPixels;
         });
       },
-      [rows, cols]
+      [rows, cols, pixels]
     );
 
     // 그리기 완료 시 히스토리 저장
     const saveDrawingToHistory = useCallback(() => {
       if (!isApplyingHistory) {
-        // 현재 pixels 상태를 히스토리에 저장
         setTimeout(() => {
           saveToHistory(pixels);
         }, 0);
@@ -618,7 +709,6 @@ export const Dotting = forwardRef<DottingRef, DottingProps>(
 
         switch (brushTool) {
           case BrushTool.DOT:
-            // 연속적인 선 그리기로 끊김 방지
             if (
               lastDrawnPos &&
               (lastDrawnPos.row !== row || lastDrawnPos.col !== col)
@@ -636,7 +726,6 @@ export const Dotting = forwardRef<DottingRef, DottingProps>(
             setLastDrawnPos({ row, col });
             break;
           case BrushTool.ERASER:
-            // 지우개도 연속적으로 처리
             if (
               lastDrawnPos &&
               (lastDrawnPos.row !== row || lastDrawnPos.col !== col)
@@ -662,13 +751,13 @@ export const Dotting = forwardRef<DottingRef, DottingProps>(
                 col,
                 selectedShape || null
               );
-              // 비활성화된 셀은 미리보기에서 제외
-              const filteredLinePixels = linePixels.filter((pixel) => {
-                const existingPixel =
-                  pixels[pixel.rowIndex]?.[pixel.columnIndex];
-                return !existingPixel?.disabled;
-              });
-              setPreviewLine(filteredLinePixels);
+              const drawableLinePixels = filterDrawablePixels(
+                linePixels,
+                rows,
+                cols,
+                pixels
+              );
+              setPreviewLine(drawableLinePixels);
             }
             break;
           case BrushTool.SELECT:
@@ -700,6 +789,8 @@ export const Dotting = forwardRef<DottingRef, DottingProps>(
         lastDrawnPos,
         drawContinuousLine,
         pixels,
+        rows,
+        cols,
       ]
     );
 
@@ -714,35 +805,27 @@ export const Dotting = forwardRef<DottingRef, DottingProps>(
         if (brushTool === BrushTool.LINE && previewLine.length > 0) {
           setPixels((prev) => {
             const newPixels = [...prev];
-            previewLine.forEach((pixel) => {
-              const row = pixel.rowIndex;
-              const col = pixel.columnIndex;
-
-              // 범위 체크
-              if (row < 0 || row >= rows || col < 0 || col >= cols) return;
-
-              // 기존 픽셀의 비활성화 상태 확인
-              const existingPixel = newPixels[row]?.[col];
-              if (existingPixel?.disabled) return; // 비활성화된 셀에는 그리기 불가
-
-              if (!newPixels[row]) newPixels[row] = [];
-              const targetRow = newPixels[row];
-              if (targetRow) {
-                // 기존 disabled 상태 유지
-                const existingDisabled = existingPixel?.disabled || false;
-                targetRow[col] = pixel.shape
-                  ? createPixel(row, col, pixel.shape, existingDisabled)
-                  : existingDisabled
-                    ? createPixel(row, col, null, true)
-                    : null;
-              }
+            const drawablePixels = filterDrawablePixels(
+              previewLine,
+              rows,
+              cols,
+              newPixels
+            );
+            drawablePixels.forEach((pixel) => {
+              applyPixelWithDisabledCheck(
+                newPixels,
+                pixel.rowIndex,
+                pixel.columnIndex,
+                pixel.shape,
+                rows,
+                cols
+              );
             });
             return newPixels;
           });
           setPreviewLine([]);
         }
 
-        // 그리기 완료 시 히스토리 저장
         setTimeout(() => {
           saveDrawingToHistory();
         }, 0);
@@ -821,7 +904,7 @@ export const Dotting = forwardRef<DottingRef, DottingProps>(
         ctx.stroke();
       }
 
-      // 픽셀 그리기 (동기 처리로 변경)
+      // 픽셀 그리기
       for (const row of pixels) {
         if (row) {
           for (const pixel of row) {
@@ -907,6 +990,7 @@ export const Dotting = forwardRef<DottingRef, DottingProps>(
       cols,
       rows,
       gridSquareLength,
+      disabledCellColor,
     ]);
 
     useEffect(() => {
