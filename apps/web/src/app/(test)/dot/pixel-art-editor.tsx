@@ -15,6 +15,7 @@ interface Pixel {
   rowIndex: number;
   columnIndex: number;
   shape: Shape | null;
+  disabled?: boolean; // 비활성화 셀 여부
 }
 
 // 히스토리용 픽셀 데이터 타입 (shape를 ID로만 저장)
@@ -22,6 +23,15 @@ interface HistoryPixel {
   rowIndex: number;
   columnIndex: number;
   shapeId: string | null;
+  disabled?: boolean; // 비활성화 셀 여부
+}
+
+// 초기 셀 데이터 타입
+interface InitialCellData {
+  row: number;
+  col: number;
+  shape?: Shape | null;
+  disabled?: boolean;
 }
 
 interface MousePosition {
@@ -65,6 +75,9 @@ interface DottingProps {
   style?: CSSProperties;
   defaultPixelShape?: Shape | null;
   shapes?: Shape[]; // 외부에서 도형 리스트를 받을 수 있도록
+  initialCells?: InitialCellData[]; // 초기 선택된 셀 데이터
+  disabledCells?: { row: number; col: number }[]; // 초기 비활성화 셀 데이터
+  disabledCellColor?: string; // 비활성화 셀 색상
 }
 
 interface DottingRef {
@@ -81,11 +94,13 @@ interface DottingRef {
 const createPixel = (
   rowIndex: number,
   columnIndex: number,
-  shape: Shape | null = null
+  shape: Shape | null = null,
+  disabled: boolean = false
 ): Pixel => ({
   rowIndex,
   columnIndex,
   shape,
+  disabled,
 });
 
 // 유틸리티 함수들
@@ -94,7 +109,8 @@ const interpolatePixels = (
   startCol: number,
   endRow: number,
   endCol: number,
-  shape: Shape | null
+  shape: Shape | null,
+  disabled: boolean = false
 ): Pixel[] => {
   const pixels: Pixel[] = [];
   const dx = Math.abs(endCol - startCol);
@@ -107,7 +123,7 @@ const interpolatePixels = (
   let y = startRow;
 
   while (true) {
-    pixels.push(createPixel(y, x, shape));
+    pixels.push(createPixel(y, x, shape, disabled));
 
     if (x === endCol && y === endRow) break;
 
@@ -130,9 +146,10 @@ const drawLine = (
   startCol: number,
   endRow: number,
   endCol: number,
-  shape: Shape | null
+  shape: Shape | null,
+  disabled: boolean = false
 ): Pixel[] => {
-  return interpolatePixels(startRow, startCol, endRow, endCol, shape);
+  return interpolatePixels(startRow, startCol, endRow, endCol, shape, disabled);
 };
 
 // 도형 그리기 함수 (Canvas 렌더링 함수 사용으로 단순화)
@@ -144,6 +161,39 @@ const drawShape = (
   size: number
 ): void => {
   shape.render(ctx, x, y, size, shape.color);
+};
+
+// 초기 픽셀 데이터를 생성하는 함수
+const createInitialPixels = (
+  rows: number,
+  cols: number,
+  initialCells: InitialCellData[],
+  disabledCells: { row: number; col: number }[]
+): (Pixel | null)[][] => {
+  const pixels: (Pixel | null)[][] = Array(rows)
+    .fill(null)
+    .map(() => Array(cols).fill(null));
+
+  // 비활성화 셀 설정
+  disabledCells.forEach(({ row, col }) => {
+    if (row >= 0 && row < rows && col >= 0 && col < cols) {
+      pixels[row]![col] = createPixel(row, col, null, true);
+    }
+  });
+
+  // 초기 선택된 셀 설정
+  initialCells.forEach(({ row, col, shape, disabled }) => {
+    if (row >= 0 && row < rows && col >= 0 && col < cols) {
+      pixels[row]![col] = createPixel(
+        row,
+        col,
+        shape || null,
+        disabled || false
+      );
+    }
+  });
+
+  return pixels;
 };
 
 // Dotting 컴포넌트
@@ -168,6 +218,9 @@ export const Dotting = forwardRef<DottingRef, DottingProps>(
       style = {},
       defaultPixelShape = null,
       shapes = KNITTING_SYMBOLS,
+      initialCells = [],
+      disabledCells = [],
+      disabledCellColor = "#f0f0f0",
     },
     ref
   ) => {
@@ -176,12 +229,34 @@ export const Dotting = forwardRef<DottingRef, DottingProps>(
     const height = rows * gridSquareLength;
 
     const canvasRef = useRef<HTMLCanvasElement>(null);
-    const [pixels, setPixels] = useState<(Pixel | null)[][]>([]);
+    const [pixels, setPixels] = useState<(Pixel | null)[][]>(() =>
+      createInitialPixels(rows, cols, initialCells, disabledCells)
+    );
 
     // 히스토리 관리를 위한 상태들 (HistoryPixel 사용)
     const [history, setHistory] = useState<(HistoryPixel | null)[][][]>(() => {
-      // 초기 빈 상태를 히스토리로 설정
-      return [[]];
+      // 초기 상태를 히스토리로 설정
+      const initialPixels = createInitialPixels(
+        rows,
+        cols,
+        initialCells,
+        disabledCells
+      );
+      const initialHistoryData = initialPixels.map((row) =>
+        row
+          ? row.map((pixel) =>
+              pixel
+                ? {
+                    rowIndex: pixel.rowIndex,
+                    columnIndex: pixel.columnIndex,
+                    shapeId: pixel.shape?.id || null,
+                    disabled: pixel.disabled || false,
+                  }
+                : null
+            )
+          : []
+      );
+      return [initialHistoryData];
     });
     const [historyIndex, setHistoryIndex] = useState(0);
     const [isApplyingHistory, setIsApplyingHistory] = useState(false);
@@ -219,6 +294,7 @@ export const Dotting = forwardRef<DottingRef, DottingProps>(
                       rowIndex: pixel.rowIndex,
                       columnIndex: pixel.columnIndex,
                       shapeId: pixel.shape?.id || null,
+                      disabled: pixel.disabled || false,
                     }
                   : null
               )
@@ -239,6 +315,7 @@ export const Dotting = forwardRef<DottingRef, DottingProps>(
                       rowIndex: historyPixel.rowIndex,
                       columnIndex: historyPixel.columnIndex,
                       shape: getShapeById(historyPixel.shapeId),
+                      disabled: historyPixel.disabled || false,
                     }
                   : null
               )
@@ -392,14 +469,24 @@ export const Dotting = forwardRef<DottingRef, DottingProps>(
       (row: number, col: number, shape: Shape | null) => {
         if (row < 0 || row >= rows || col < 0 || col >= cols) return;
 
+        // 현재 픽셀이 비활성화되어 있는지 확인
+        const currentPixel = pixels[row]?.[col];
+        if (currentPixel?.disabled) return; // 비활성화된 셀에는 그리기 불가
+
         setPixels((prev) => {
           const newPixels = [...prev];
           if (!newPixels[row]) newPixels[row] = [];
-          newPixels[row][col] = shape ? createPixel(row, col, shape) : null;
+          // 기존 disabled 상태 유지
+          const existingDisabled = newPixels[row][col]?.disabled || false;
+          newPixels[row][col] = shape
+            ? createPixel(row, col, shape, existingDisabled)
+            : existingDisabled
+              ? createPixel(row, col, null, true)
+              : null;
           return newPixels;
         });
       },
-      [rows, cols]
+      [rows, cols, pixels]
     );
 
     const drawContinuousLine = useCallback(
@@ -410,20 +497,42 @@ export const Dotting = forwardRef<DottingRef, DottingProps>(
         toCol: number,
         shape: Shape | null
       ) => {
-        const pixels = interpolatePixels(fromRow, fromCol, toRow, toCol, shape);
+        const linePixels = interpolatePixels(
+          fromRow,
+          fromCol,
+          toRow,
+          toCol,
+          shape
+        );
         setPixels((prev) => {
           const newPixels = [...prev];
-          pixels.forEach((pixel) => {
-            if (!newPixels[pixel.rowIndex]) newPixels[pixel.rowIndex] = [];
-            const row = newPixels[pixel.rowIndex];
-            if (row) {
-              row[pixel.columnIndex] = pixel;
+          linePixels.forEach((pixel) => {
+            const row = pixel.rowIndex;
+            const col = pixel.columnIndex;
+
+            // 범위 체크
+            if (row < 0 || row >= rows || col < 0 || col >= cols) return;
+
+            // 기존 픽셀의 비활성화 상태 확인
+            const existingPixel = newPixels[row]?.[col];
+            if (existingPixel?.disabled) return; // 비활성화된 셀에는 그리기 불가
+
+            if (!newPixels[row]) newPixels[row] = [];
+            const targetRow = newPixels[row];
+            if (targetRow) {
+              // 기존 disabled 상태 유지
+              const existingDisabled = existingPixel?.disabled || false;
+              targetRow[col] = shape
+                ? createPixel(row, col, shape, existingDisabled)
+                : existingDisabled
+                  ? createPixel(row, col, null, true)
+                  : null;
             }
           });
           return newPixels;
         });
       },
-      []
+      [rows, cols]
     );
 
     // 그리기 완료 시 히스토리 저장
@@ -553,7 +662,13 @@ export const Dotting = forwardRef<DottingRef, DottingProps>(
                 col,
                 selectedShape || null
               );
-              setPreviewLine(linePixels);
+              // 비활성화된 셀은 미리보기에서 제외
+              const filteredLinePixels = linePixels.filter((pixel) => {
+                const existingPixel =
+                  pixels[pixel.rowIndex]?.[pixel.columnIndex];
+                return !existingPixel?.disabled;
+              });
+              setPreviewLine(filteredLinePixels);
             }
             break;
           case BrushTool.SELECT:
@@ -584,6 +699,7 @@ export const Dotting = forwardRef<DottingRef, DottingProps>(
         dragStart,
         lastDrawnPos,
         drawContinuousLine,
+        pixels,
       ]
     );
 
@@ -599,10 +715,26 @@ export const Dotting = forwardRef<DottingRef, DottingProps>(
           setPixels((prev) => {
             const newPixels = [...prev];
             previewLine.forEach((pixel) => {
-              if (!newPixels[pixel.rowIndex]) newPixels[pixel.rowIndex] = [];
-              const row = newPixels[pixel.rowIndex];
-              if (row) {
-                row[pixel.columnIndex] = pixel;
+              const row = pixel.rowIndex;
+              const col = pixel.columnIndex;
+
+              // 범위 체크
+              if (row < 0 || row >= rows || col < 0 || col >= cols) return;
+
+              // 기존 픽셀의 비활성화 상태 확인
+              const existingPixel = newPixels[row]?.[col];
+              if (existingPixel?.disabled) return; // 비활성화된 셀에는 그리기 불가
+
+              if (!newPixels[row]) newPixels[row] = [];
+              const targetRow = newPixels[row];
+              if (targetRow) {
+                // 기존 disabled 상태 유지
+                const existingDisabled = existingPixel?.disabled || false;
+                targetRow[col] = pixel.shape
+                  ? createPixel(row, col, pixel.shape, existingDisabled)
+                  : existingDisabled
+                    ? createPixel(row, col, null, true)
+                    : null;
               }
             });
             return newPixels;
@@ -620,7 +752,15 @@ export const Dotting = forwardRef<DottingRef, DottingProps>(
       setDragStart(null);
       setLineStart(null);
       setLastDrawnPos(null);
-    }, [isDragging, isDrawing, brushTool, previewLine, saveDrawingToHistory]);
+    }, [
+      isDragging,
+      isDrawing,
+      brushTool,
+      previewLine,
+      saveDrawingToHistory,
+      rows,
+      cols,
+    ]);
 
     const handleWheel = useCallback(
       (e: WheelEvent) => {
@@ -685,14 +825,38 @@ export const Dotting = forwardRef<DottingRef, DottingProps>(
       for (const row of pixels) {
         if (row) {
           for (const pixel of row) {
-            if (pixel && pixel.shape) {
-              drawShape(
-                ctx,
-                pixel.shape,
-                pixel.columnIndex * gridSquareLength,
-                pixel.rowIndex * gridSquareLength,
-                gridSquareLength
-              );
+            if (pixel) {
+              if (pixel.disabled) {
+                // 비활성화된 셀 표시
+                ctx.fillStyle = disabledCellColor;
+                ctx.fillRect(
+                  pixel.columnIndex * gridSquareLength,
+                  pixel.rowIndex * gridSquareLength,
+                  gridSquareLength,
+                  gridSquareLength
+                );
+
+                // X 표시 추가
+                ctx.strokeStyle = "#999";
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                const x = pixel.columnIndex * gridSquareLength;
+                const y = pixel.rowIndex * gridSquareLength;
+                ctx.moveTo(x + 2, y + 2);
+                ctx.lineTo(x + gridSquareLength - 2, y + gridSquareLength - 2);
+                ctx.moveTo(x + gridSquareLength - 2, y + 2);
+                ctx.lineTo(x + 2, y + gridSquareLength - 2);
+                ctx.stroke();
+              } else if (pixel.shape) {
+                // 일반 도형 그리기
+                drawShape(
+                  ctx,
+                  pixel.shape,
+                  pixel.columnIndex * gridSquareLength,
+                  pixel.rowIndex * gridSquareLength,
+                  gridSquareLength
+                );
+              }
             }
           }
         }

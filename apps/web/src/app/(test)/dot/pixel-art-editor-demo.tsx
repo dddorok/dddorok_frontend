@@ -167,6 +167,20 @@ const PixelArtEditor: React.FC = () => {
   const { clear, exportImage, undo, redo, canUndo, canRedo } =
     useDotting(dottingRef);
 
+  // 초기 셀 데이터 예시
+  const initialCells = [
+    { row: 1, col: 1, shape: KNITTING_SYMBOLS[0] }, // 뜨기
+    { row: 2, col: 2, shape: KNITTING_SYMBOLS[1] }, // 날리기
+  ];
+
+  // 비활성화 셀 예시
+  const disabledCells = [
+    { row: 0, col: 0 },
+    { row: 0, col: 3 },
+    { row: 4, col: 0 },
+    { row: 4, col: 3 },
+  ];
+
   const handleExport = () => {
     const dataUrl = exportImage();
     if (dataUrl) {
@@ -281,6 +295,9 @@ const PixelArtEditor: React.FC = () => {
           gridStrokeColor="#e9ecef"
           isPanZoomable={true}
           zoomSensitivity={0.1}
+          initialCells={initialCells}
+          disabledCells={disabledCells}
+          disabledCellColor="#f0f0f0"
         />
       </div>
 
@@ -301,6 +318,10 @@ const PixelArtEditor: React.FC = () => {
           <li>
             <strong>실행 취소/다시 실행:</strong> Ctrl+Z로 실행 취소, Ctrl+Y
             또는 Ctrl+Shift+Z로 다시 실행
+          </li>
+          <li>
+            <strong>비활성화 셀:</strong> X 표시된 회색 셀은 편집할 수 없는
+            비활성화된 영역입니다
           </li>
         </ul>
 

@@ -6,6 +6,7 @@ interface Pixel {
   rowIndex: number;
   columnIndex: number;
   shape: Shape | null;
+  disabled?: boolean; // 비활성화 셀 여부
 }
 
 export interface DottingRef {
