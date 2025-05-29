@@ -371,8 +371,8 @@ interface SelectedArea {
 }
 
 interface DottingProps {
-  width?: number;
-  height?: number;
+  rows?: number;
+  cols?: number;
   gridSquareLength?: number;
   gridStrokeColor?: string;
   gridStrokeWidth?: number;
@@ -470,8 +470,8 @@ const drawShape = (
 const Dotting = forwardRef<DottingRef, DottingProps>(
   (
     {
-      width = 400,
-      height = 400,
+      rows = 20,
+      cols = 20,
       gridSquareLength = 20,
       gridStrokeColor = "#ddd",
       gridStrokeWidth = 1,
@@ -491,6 +491,10 @@ const Dotting = forwardRef<DottingRef, DottingProps>(
     },
     ref
   ) => {
+    // width, height를 rows, cols, gridSquareLength로 계산
+    const width = cols * gridSquareLength;
+    const height = rows * gridSquareLength;
+
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const [pixels, setPixels] = useState<(Pixel | null)[][]>([]);
     const [isDrawing, setIsDrawing] = useState(false);
@@ -505,9 +509,6 @@ const Dotting = forwardRef<DottingRef, DottingProps>(
     const [previewLine, setPreviewLine] = useState<Pixel[]>([]);
     const [selectedArea, setSelectedArea] = useState<SelectedArea | null>(null);
     const [lastDrawnPos, setLastDrawnPos] = useState<GridPosition | null>(null);
-
-    const rows = Math.ceil(height / gridSquareLength);
-    const cols = Math.ceil(width / gridSquareLength);
 
     // ref를 통해 외부에서 사용할 수 있는 메서드들
     useImperativeHandle(
@@ -1172,8 +1173,8 @@ const PixelArtEditor: React.FC = () => {
       <div className="border-2 border-gray-300 inline-block">
         <Dotting
           ref={dottingRef}
-          width={800}
-          height={600}
+          rows={5}
+          cols={4}
           gridSquareLength={30}
           brushTool={brushTool}
           selectedShape={selectedShape}
