@@ -32,14 +32,54 @@ interface DottingRef {
   getPixels: () => (Pixel | null)[][];
   setPixels: (newPixels: (Pixel | null)[][]) => void;
   exportImage: () => string;
+  undo: () => void;
+  redo: () => void;
+  canUndo: () => boolean;
+  canRedo: () => boolean;
 }
 
 const useDotting = (ref: React.RefObject<DottingRef | null>) => {
+  const [canUndoState, setCanUndoState] = useState(false);
+  const [canRedoState, setCanRedoState] = useState(false);
+
+  // 상태 업데이트를 위한 함수
+  const updateUndoRedoState = useCallback(() => {
+    if (ref.current) {
+      setCanUndoState(ref.current.canUndo());
+      setCanRedoState(ref.current.canRedo());
+    }
+  }, [ref]);
+
+  // 마우스 이벤트 리스너를 추가하여 그리기 완료 감지
+  React.useEffect(() => {
+    const handleGlobalMouseUp = () => {
+      setTimeout(updateUndoRedoState, 100);
+    };
+
+    const handleGlobalClick = () => {
+      setTimeout(updateUndoRedoState, 100);
+    };
+
+    // 주기적 업데이트 (더 긴 간격으로)
+    const interval = setInterval(updateUndoRedoState, 500);
+
+    // 전역 이벤트 리스너 추가
+    document.addEventListener("mouseup", handleGlobalMouseUp);
+    document.addEventListener("click", handleGlobalClick);
+
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener("mouseup", handleGlobalMouseUp);
+      document.removeEventListener("click", handleGlobalClick);
+    };
+  }, [updateUndoRedoState]);
+
   const clear = useCallback(() => {
     if (ref.current) {
       ref.current.clear();
+      setTimeout(updateUndoRedoState, 50);
     }
-  }, [ref]);
+  }, [ref, updateUndoRedoState]);
 
   const getPixels = useCallback(() => {
     if (ref.current) {
@@ -55,7 +95,29 @@ const useDotting = (ref: React.RefObject<DottingRef | null>) => {
     return null;
   }, [ref]);
 
-  return { clear, getPixels, exportImage };
+  const undo = useCallback(() => {
+    if (ref.current) {
+      ref.current.undo();
+      setTimeout(updateUndoRedoState, 10);
+    }
+  }, [ref, updateUndoRedoState]);
+
+  const redo = useCallback(() => {
+    if (ref.current) {
+      ref.current.redo();
+      setTimeout(updateUndoRedoState, 10);
+    }
+  }, [ref, updateUndoRedoState]);
+
+  return {
+    clear,
+    getPixels,
+    exportImage,
+    undo,
+    redo,
+    canUndo: canUndoState,
+    canRedo: canRedoState,
+  };
 };
 
 // 도형 선택 컴포넌트
@@ -194,7 +256,8 @@ const PixelArtEditor: React.FC = () => {
   );
   const [shapes, setShapes] = useState<Shape[]>(KNITTING_SYMBOLS);
   const dottingRef = useRef<DottingRef | null>(null);
-  const { clear, exportImage } = useDotting(dottingRef);
+  const { clear, exportImage, undo, redo, canUndo, canRedo } =
+    useDotting(dottingRef);
 
   const handleExport = () => {
     const dataUrl = exportImage();
@@ -209,6 +272,25 @@ const PixelArtEditor: React.FC = () => {
   const handleAddShape = (newShape: Shape) => {
     setShapes((prev) => [...prev, newShape]);
   };
+
+  // 키보드 단축키 추가
+  React.useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "z" && !e.shiftKey) {
+        e.preventDefault();
+        undo();
+      } else if (
+        (e.metaKey || e.ctrlKey) &&
+        (e.key === "y" || (e.key === "z" && e.shiftKey))
+      ) {
+        e.preventDefault();
+        redo();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [undo, redo]);
 
   return (
     <div className="p-4">
@@ -237,6 +319,31 @@ const PixelArtEditor: React.FC = () => {
         />
 
         <CustomShapeAdder onAddShape={handleAddShape} />
+
+        <div className="flex gap-2">
+          <button
+            onClick={undo}
+            disabled={!canUndo}
+            className="bg-orange-500 text-white px-3 py-1 rounded hover:bg-orange-600 disabled:bg-gray-300 disabled:cursor-not-allowed"
+            title="실행 취소 (Ctrl+Z)"
+          >
+            ↶ 실행취소
+          </button>
+
+          <button
+            onClick={redo}
+            disabled={!canRedo}
+            className="bg-purple-500 text-white px-3 py-1 rounded hover:bg-purple-600 disabled:bg-gray-300 disabled:cursor-not-allowed"
+            title="다시 실행 (Ctrl+Y)"
+          >
+            ↷ 다시실행
+          </button>
+
+          <div className="text-xs text-gray-600 bg-gray-100 px-2 py-1 rounded">
+            실행취소: {canUndo ? "가능" : "불가능"} | 다시실행:{" "}
+            {canRedo ? "가능" : "불가능"}
+          </div>
+        </div>
 
         <button
           onClick={clear}
@@ -283,6 +390,10 @@ const PixelArtEditor: React.FC = () => {
           <li>없음 도구: 마우스 휠로 확대/축소, 드래그로 이동</li>
           <li>뜨개질 기호: 상단의 기호 버튼을 클릭해서 그릴 기호 선택</li>
           <li>도형 추가: "도형 추가" 버튼으로 커스텀 기호 추가</li>
+          <li>
+            <strong>실행 취소/다시 실행:</strong> Ctrl+Z로 실행 취소, Ctrl+Y
+            또는 Ctrl+Shift+Z로 다시 실행
+          </li>
         </ul>
 
         <div className="mt-2">

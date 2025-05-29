@@ -8,38 +8,20 @@ import React, {
   CSSProperties,
 } from "react";
 
-import { KNITTING_SYMBOLS } from "./constant";
-
-// 브러시 도구 타입 정의
-const BrushTool = {
-  NONE: "NONE",
-  DOT: "DOT",
-  ERASER: "ERASER",
-  SELECT: "SELECT",
-  LINE: "LINE",
-} as const;
-
-type BrushToolType = (typeof BrushTool)[keyof typeof BrushTool];
-
-// 도형 타입 정의
-interface Shape {
-  id: string;
-  name: string;
-  color: string;
-  render: (
-    ctx: CanvasRenderingContext2D,
-    x: number,
-    y: number,
-    size: number,
-    color: string
-  ) => void;
-}
+import { KNITTING_SYMBOLS, BrushTool, BrushToolType, Shape } from "./constant";
 
 // 픽셀 데이터 타입
 interface Pixel {
   rowIndex: number;
   columnIndex: number;
   shape: Shape | null;
+}
+
+// 히스토리용 픽셀 데이터 타입 (shape를 ID로만 저장)
+interface HistoryPixel {
+  rowIndex: number;
+  columnIndex: number;
+  shapeId: string | null;
 }
 
 interface MousePosition {
@@ -90,6 +72,10 @@ interface DottingRef {
   getPixels: () => (Pixel | null)[][];
   setPixels: (newPixels: (Pixel | null)[][]) => void;
   exportImage: () => string;
+  undo: () => void;
+  redo: () => void;
+  canUndo: () => boolean;
+  canRedo: () => boolean;
 }
 
 const createPixel = (
@@ -191,6 +177,15 @@ export const Dotting = forwardRef<DottingRef, DottingProps>(
 
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const [pixels, setPixels] = useState<(Pixel | null)[][]>([]);
+
+    // 히스토리 관리를 위한 상태들 (HistoryPixel 사용)
+    const [history, setHistory] = useState<(HistoryPixel | null)[][][]>(() => {
+      // 초기 빈 상태를 히스토리로 설정
+      return [[]];
+    });
+    const [historyIndex, setHistoryIndex] = useState(0);
+    const [isApplyingHistory, setIsApplyingHistory] = useState(false);
+
     const [isDrawing, setIsDrawing] = useState(false);
     const [dragStart, setDragStart] = useState<GridPosition | null>(null);
     const [panOffset, setPanOffset] = useState<PanOffset>({ x: 0, y: 0 });
@@ -204,13 +199,140 @@ export const Dotting = forwardRef<DottingRef, DottingProps>(
     const [selectedArea, setSelectedArea] = useState<SelectedArea | null>(null);
     const [lastDrawnPos, setLastDrawnPos] = useState<GridPosition | null>(null);
 
+    // shape ID로 실제 shape 객체를 찾는 함수
+    const getShapeById = useCallback(
+      (shapeId: string | null): Shape | null => {
+        if (!shapeId) return null;
+        return shapes.find((shape) => shape.id === shapeId) || null;
+      },
+      [shapes]
+    );
+
+    // 픽셀 데이터를 히스토리 데이터로 변환
+    const pixelsToHistory = useCallback(
+      (pixels: (Pixel | null)[][]): (HistoryPixel | null)[][] => {
+        return pixels.map((row) =>
+          row
+            ? row.map((pixel) =>
+                pixel
+                  ? {
+                      rowIndex: pixel.rowIndex,
+                      columnIndex: pixel.columnIndex,
+                      shapeId: pixel.shape?.id || null,
+                    }
+                  : null
+              )
+            : []
+        );
+      },
+      []
+    );
+
+    // 히스토리 데이터를 픽셀 데이터로 변환
+    const historyToPixels = useCallback(
+      (historyPixels: (HistoryPixel | null)[][]): (Pixel | null)[][] => {
+        return historyPixels.map((row) =>
+          row
+            ? row.map((historyPixel) =>
+                historyPixel
+                  ? {
+                      rowIndex: historyPixel.rowIndex,
+                      columnIndex: historyPixel.columnIndex,
+                      shape: getShapeById(historyPixel.shapeId),
+                    }
+                  : null
+              )
+            : []
+        );
+      },
+      [getShapeById]
+    );
+
+    // 픽셀 상태를 히스토리에 저장하는 함수
+    const saveToHistory = useCallback(
+      (newPixels: (Pixel | null)[][]) => {
+        if (isApplyingHistory) return;
+
+        const historyData = pixelsToHistory(newPixels);
+
+        setHistory((prev) => {
+          // 첫 번째 히스토리가 비어있다면 현재 상태로 교체
+          if (prev.length === 1 && prev[0] && prev[0].length === 0) {
+            setHistoryIndex(0);
+            return [historyData];
+          }
+
+          // 현재 인덱스 이후의 히스토리 제거 (새로운 변경사항이 있을 때)
+          const newHistory = prev.slice(0, historyIndex + 1);
+          newHistory.push(historyData);
+
+          // 히스토리 최대 개수 제한 (메모리 관리)
+          const maxHistorySize = 50;
+          if (newHistory.length > maxHistorySize) {
+            const trimmedHistory = newHistory.slice(-maxHistorySize);
+            // 히스토리 인덱스도 조정
+            setHistoryIndex(trimmedHistory.length - 1);
+            return trimmedHistory;
+          }
+
+          // 히스토리 인덱스를 새로운 마지막 인덱스로 설정
+          setHistoryIndex(newHistory.length - 1);
+          return newHistory;
+        });
+      },
+      [historyIndex, isApplyingHistory, pixelsToHistory]
+    );
+
+    // undo 함수
+    const undo = useCallback(() => {
+      if (historyIndex > 0) {
+        setIsApplyingHistory(true);
+        const prevHistoryPixels = history[historyIndex - 1];
+        if (prevHistoryPixels) {
+          const prevPixels = historyToPixels(prevHistoryPixels);
+          setPixels(prevPixels);
+          setHistoryIndex((prev) => prev - 1);
+        }
+        setTimeout(() => setIsApplyingHistory(false), 0);
+      }
+    }, [history, historyIndex, historyToPixels]);
+
+    // redo 함수
+    const redo = useCallback(() => {
+      if (historyIndex < history.length - 1) {
+        setIsApplyingHistory(true);
+        const nextHistoryPixels = history[historyIndex + 1];
+        if (nextHistoryPixels) {
+          const nextPixels = historyToPixels(nextHistoryPixels);
+          setPixels(nextPixels);
+          setHistoryIndex((prev) => prev + 1);
+        }
+        setTimeout(() => setIsApplyingHistory(false), 0);
+      }
+    }, [history, historyIndex, historyToPixels]);
+
+    // undo/redo 가능 여부 확인 함수들
+    const canUndo = useCallback(() => historyIndex > 0, [historyIndex]);
+
+    const canRedo = useCallback(
+      () => historyIndex < history.length - 1,
+      [historyIndex, history.length]
+    );
+
     // ref를 통해 외부에서 사용할 수 있는 메서드들
     useImperativeHandle(
       ref,
       () => ({
-        clear: () => setPixels([]),
+        clear: () => {
+          const newPixels: (Pixel | null)[][] = [];
+          setPixels(newPixels);
+          saveToHistory(newPixels);
+        },
         getPixels: () => pixels,
-        setPixels: (newPixels: (Pixel | null)[][]) => setPixels(newPixels),
+        setPixels: (newPixels: (Pixel | null)[][]) => {
+          setPixels(newPixels);
+          saveToHistory(newPixels);
+        },
         exportImage: () => {
           const canvas = document.createElement("canvas");
           canvas.width = cols * gridSquareLength;
@@ -225,8 +347,23 @@ export const Dotting = forwardRef<DottingRef, DottingProps>(
 
           return canvas.toDataURL();
         },
+        undo,
+        redo,
+        canUndo,
+        canRedo,
       }),
-      [pixels, backgroundColor, cols, rows, gridSquareLength]
+      [
+        pixels,
+        backgroundColor,
+        cols,
+        rows,
+        gridSquareLength,
+        undo,
+        redo,
+        canUndo,
+        canRedo,
+        saveToHistory,
+      ]
     );
 
     const getMousePos = useCallback(
@@ -288,6 +425,16 @@ export const Dotting = forwardRef<DottingRef, DottingProps>(
       },
       []
     );
+
+    // 그리기 완료 시 히스토리 저장
+    const saveDrawingToHistory = useCallback(() => {
+      if (!isApplyingHistory) {
+        // 현재 pixels 상태를 히스토리에 저장
+        setTimeout(() => {
+          saveToHistory(pixels);
+        }, 0);
+      }
+    }, [pixels, saveToHistory, isApplyingHistory]);
 
     const handleMouseDown = useCallback(
       (e: React.MouseEvent) => {
@@ -462,13 +609,18 @@ export const Dotting = forwardRef<DottingRef, DottingProps>(
           });
           setPreviewLine([]);
         }
+
+        // 그리기 완료 시 히스토리 저장
+        setTimeout(() => {
+          saveDrawingToHistory();
+        }, 0);
       }
 
       setIsDrawing(false);
       setDragStart(null);
       setLineStart(null);
       setLastDrawnPos(null);
-    }, [isDragging, isDrawing, brushTool, previewLine]);
+    }, [isDragging, isDrawing, brushTool, previewLine, saveDrawingToHistory]);
 
     const handleWheel = useCallback(
       (e: WheelEvent) => {
