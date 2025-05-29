@@ -46,8 +46,51 @@ const KnittingPatternEditor: React.FC = () => {
   );
   const [disabledCells, setDisabledCells] = useState<Set<string>>(new Set());
   const [isRestrictMode, setIsRestrictMode] = useState<boolean>(false);
-  const [gridSize, setGridSize] = useState<GridSize>({ width: 30, height: 20 });
+  const [gridSize, setGridSize] = useState<GridSize>({ width: 20, height: 15 });
   const [pattern, setPattern] = useState<any[]>([]);
+
+  // 초기 제한된 셀 설정 (격자 사방 1개씩)
+  useEffect(() => {
+    const initialDisabledCells = new Set<string>();
+
+    // 상단과 하단 가장자리
+    for (let col = 0; col < gridSize.width; col++) {
+      initialDisabledCells.add(`0-${col}`); // 상단
+      initialDisabledCells.add(`${gridSize.height - 1}-${col}`); // 하단
+    }
+
+    // 좌측과 우측 가장자리 (모서리 제외)
+    for (let row = 1; row < gridSize.height - 1; row++) {
+      initialDisabledCells.add(`${row}-0`); // 좌측
+      initialDisabledCells.add(`${row}-${gridSize.width - 1}`); // 우측
+    }
+
+    setDisabledCells(initialDisabledCells);
+  }, [gridSize.width, gridSize.height]);
+
+  // 제한된 셀들을 dotting 라이브러리용 indicatorData로 변환
+  const indicatorData = Array.from(disabledCells)
+    .map((cellKey) => {
+      const parts = cellKey.split("-");
+      if (parts.length !== 2 || !parts[0] || !parts[1]) return null;
+
+      const row = parseInt(parts[0], 10);
+      const col = parseInt(parts[1], 10);
+
+      if (isNaN(row) || isNaN(col)) return null;
+
+      return {
+        rowIndex: row,
+        columnIndex: col,
+        color: "#9CA3AF", // 회색
+      };
+    })
+    .filter(
+      (
+        item
+      ): item is { rowIndex: number; columnIndex: number; color: string } =>
+        item !== null
+    );
 
   // currentSymbol이 변경될 때마다 브러시 색상 업데이트
   useEffect(() => {
@@ -145,53 +188,18 @@ const KnittingPatternEditor: React.FC = () => {
     alert("패턴이 저장되었습니다!");
   };
 
-  // 격자 크기 변경 핸들러
-  const handleGridWidthChange = (
-    e: React.ChangeEvent<HTMLInputElement>
-  ): void => {
-    const value = parseInt(e.target.value);
-    if (!isNaN(value)) {
-      setGridSize({ ...gridSize, width: value });
-    }
-  };
-
-  const handleGridHeightChange = (
-    e: React.ChangeEvent<HTMLInputElement>
-  ): void => {
-    const value = parseInt(e.target.value);
-    if (!isNaN(value)) {
-      setGridSize({ ...gridSize, height: value });
-    }
-  };
-
   return (
     <div className="max-w-7xl mx-auto p-5 bg-white rounded-xl shadow-lg">
       {/* 헤더 */}
       <div className="flex justify-between items-center mb-8 pb-5 border-b-2 border-gray-100">
         <h2 className="text-3xl font-bold text-gray-800">뜨개질 도안 편집기</h2>
         <div className="flex gap-4">
-          <label className="flex items-center gap-2 text-sm font-medium text-gray-600">
-            가로:
-            <input
-              type="number"
-              value={gridSize.width}
-              onChange={handleGridWidthChange}
-              className="w-16 px-2 py-1 border border-gray-300 rounded text-sm"
-              min="10"
-              max="50"
-            />
-          </label>
-          <label className="flex items-center gap-2 text-sm font-medium text-gray-600">
-            세로:
-            <input
-              type="number"
-              value={gridSize.height}
-              onChange={handleGridHeightChange}
-              className="w-16 px-2 py-1 border border-gray-300 rounded text-sm"
-              min="10"
-              max="50"
-            />
-          </label>
+          <div className="text-sm font-medium text-gray-600">
+            격자 크기:{" "}
+            <strong className="text-gray-800">
+              {gridSize.width} × {gridSize.height}
+            </strong>
+          </div>
         </div>
       </div>
 
@@ -327,44 +335,16 @@ const KnittingPatternEditor: React.FC = () => {
           <div className="relative border-2 border-gray-300 rounded-lg overflow-hidden bg-white">
             <Dotting
               ref={dottingRef}
-              width={600}
-              height={400}
+              width={gridSize.width * 18}
+              height={gridSize.height * 18}
               gridSquareLength={18}
               brushColor={currentSymbol.color}
-              maxColumnCount={gridSize.width}
-              maxRowCount={gridSize.height}
-              minColumnCount={10}
-              minRowCount={10}
               backgroundColor="#f8f9fa"
               gridStrokeColor="#e0e0e0"
               isDrawingEnabled={true}
               isInteractionApplicable={true}
+              indicatorData={indicatorData}
             />
-
-            {/* 비활성화된 셀 오버레이 */}
-            <div className="absolute top-0 left-0 pointer-events-none w-full h-full">
-              {Array.from(disabledCells).map((cellKey: string) => {
-                const [row, col] = cellKey.split("-").map(Number);
-                if (!row || !col) return null;
-                return (
-                  <div
-                    key={cellKey}
-                    className="absolute w-4.5 h-4.5 pointer-events-none z-10"
-                    style={{
-                      left: col * 18,
-                      top: row * 18,
-                      background: `repeating-linear-gradient(
-                        45deg,
-                        rgba(239, 68, 68, 0.1),
-                        rgba(239, 68, 68, 0.1) 3px,
-                        rgba(239, 68, 68, 0.2) 3px,
-                        rgba(239, 68, 68, 0.2) 6px
-                      )`,
-                    }}
-                  />
-                );
-              })}
-            </div>
           </div>
 
           {/* 정보 패널 */}
@@ -372,12 +352,6 @@ const KnittingPatternEditor: React.FC = () => {
             <p className="text-sm text-gray-600 mb-1">
               현재 선택:{" "}
               <strong className="text-gray-800">{currentSymbol.name}</strong>
-            </p>
-            <p className="text-sm text-gray-600 mb-1">
-              격자 크기:{" "}
-              <strong className="text-gray-800">
-                {gridSize.width} × {gridSize.height}
-              </strong>
             </p>
             <p className="text-sm text-gray-600">
               제한된 셀:{" "}
