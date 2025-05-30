@@ -7,7 +7,11 @@ import { FormItem, FormMessage } from "@/components/ui/form";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { measurementRuleQueries } from "@/queries/measurement-rule";
-import { GetMeasurementRuleItemCodeResponse } from "@/services/measurement-rule";
+import {
+  GetMeasurementRuleItemCodeResponse,
+  VALUE_TYPE_LABEL,
+  ValueType,
+} from "@/services/measurement-rule";
 
 const 제외_측정_코드 = [
   "BODY_TOTAL_LENGTH",
@@ -77,6 +81,17 @@ function RuleCheckList({
 }) {
   const form = useFormContext();
   const selectedItems = useWatch({ name: "items" });
+
+  // value_type으로 groupping
+  const groupedItems = sectionItems.reduce<
+    Record<string, GetMeasurementRuleItemCodeResponse[]>
+  >((acc, item) => {
+    if (!acc[item.value_type]) {
+      acc[item.value_type] = [];
+    }
+    acc[item.value_type]?.push(item);
+    return acc;
+  }, {});
 
   // 아이템 선택 처리
   const handleItemChange = (itemCode: string, checked: boolean) => {
@@ -151,14 +166,23 @@ function RuleCheckList({
         </label>
       </div>
       <Separator className="my-2" />
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-3 pl-4">
-        {sectionItems?.map((item) => (
-          <RuleCheckItem
-            key={item.code}
-            checked={selectedItems.includes(item.code)}
-            item={item}
-            onClick={(checked) => handleItemChange(item.code, checked)}
-          />
+      <div className="flex flex-col gap-2 pl-4">
+        {Object.keys(groupedItems).map((valueType) => (
+          <div key={valueType}>
+            <h3 className="text-sm font-medium text-gray-700 mb-2">
+              {VALUE_TYPE_LABEL[valueType as ValueType] ?? valueType}
+            </h3>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-3 pl-4">
+              {groupedItems[valueType]?.map((item) => (
+                <RuleCheckItem
+                  key={item.code}
+                  checked={selectedItems.includes(item.code)}
+                  item={item}
+                  onClick={(checked) => handleItemChange(item.code, checked)}
+                />
+              ))}
+            </div>
+          </div>
         ))}
       </div>
     </div>

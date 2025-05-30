@@ -18,7 +18,16 @@ export interface GetMeasurementRuleItemCodeResponse {
   section: string;
   label: string;
   code: string;
+  value_type: "CIRCUMFERENCE" | "LENGTH" | "WIDTH" | string;
 }
+
+const VALUE_TYPE = ["CIRCUMFERENCE", "LENGTH", "WIDTH"] as const;
+export type ValueType = (typeof VALUE_TYPE)[number];
+export const VALUE_TYPE_LABEL: Record<ValueType, string> = {
+  CIRCUMFERENCE: "둘레",
+  LENGTH: "길이",
+  WIDTH: "너비",
+};
 
 export const getMeasurementRuleItemCode = async () => {
   const response = await privateInstance<{

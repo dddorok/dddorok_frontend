@@ -34,7 +34,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { categories } from "@/constants/category";
 import {
   NECKLINE,
   NecklineTypeSchema,
