@@ -60,6 +60,8 @@ export function EditChartTypeForm({
           }
           svgFileUrl={initialChartType.svg_file_url}
           measurementCodeMaps={initialChartType.measurement_code_maps}
+          chartId={initialChartType.id}
+          chartName={initialChartType.name}
         />
       </Suspense>
     </>

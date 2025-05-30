@@ -1,6 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 import React, { useState } from "react";
 
+import { ChartDeleteDialog } from "../_components/chart.dialog";
 import { SvgUpload } from "../_components/svg-upload";
 import {
   SelectMeasurementList,
@@ -26,6 +27,10 @@ interface SvgMappingFormProps {
     measurement_code: string;
     path_id: string;
   }[];
+
+  // 차트 유형 삭제 함수
+  chartId: string;
+  chartName: string;
 }
 
 export default function SvgMappingForm(props: SvgMappingFormProps) {
@@ -84,6 +89,10 @@ export default function SvgMappingForm(props: SvgMappingFormProps) {
           />
 
           <div className="flex justify-end space-x-3 mt-10">
+            <ChartDeleteDialog
+              chartId={props.chartId}
+              chartName={props.chartName}
+            />
             <Button variant="outline">취소</Button>
             <Button onClick={handleSubmit}>저장</Button>
           </div>
