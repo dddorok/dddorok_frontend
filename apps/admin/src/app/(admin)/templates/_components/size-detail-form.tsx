@@ -188,7 +188,9 @@ const useSizeDetails = (
   const [sizeDetails, setSizeDetails] = useState<SizeDetailFormType>(
     convertToSizeRangeTypeRecord(measurementValues)
   );
-  const [rangeToggleList, setRangeToggleList] = useState<string[]>([]);
+  const [rangeToggleList, setRangeToggleList] = useState<string[]>(
+    measurementValues.filter((item) => item.range_toggle).map((item) => item.id)
+  );
   const tableRef = useRef<HTMLTableElement>(null);
 
   // 붙여넣기 이벤트 처리

@@ -24,6 +24,7 @@ export interface GetTemplateMeasurementValuesItemType {
   size_121_129: number | null;
   min: number | null;
   max: number | null;
+  range_toggle: boolean;
 }
 
 export type GetTemplateMeasurementValuesResponse =

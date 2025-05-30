@@ -1,13 +1,14 @@
 import { UpdateChartTypeClient } from "./client";
 
-export default function UpdateChartTypePage({
+export default async function UpdateChartTypePage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
+  const { id } = await params;
   return (
     <div>
-      <UpdateChartTypeClient id={params.id} />
+      <UpdateChartTypeClient id={id} />
     </div>
   );
 }

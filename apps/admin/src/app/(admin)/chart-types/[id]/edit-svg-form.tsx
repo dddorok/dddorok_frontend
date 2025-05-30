@@ -5,6 +5,7 @@ import {
   SelectPathList,
 } from "../_components/SvgMappingForm";
 
+import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
 import { GetMeasurementRuleItemCodeResponse } from "@/services/measurement-rule";
