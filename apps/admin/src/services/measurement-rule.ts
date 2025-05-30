@@ -119,6 +119,7 @@ export interface GetMeasurementRuleByIdResponse {
     section: string;
     label: string;
     code: string;
+    value_type: ValueType;
   }[];
 }
 // 치수 규칙 단일 조회

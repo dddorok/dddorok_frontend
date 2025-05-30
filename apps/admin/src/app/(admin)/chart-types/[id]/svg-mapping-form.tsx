@@ -9,8 +9,6 @@ import {
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
-import { toast } from "@/hooks/use-toast";
 
 interface PathType {
   pathId: string;
@@ -57,7 +55,7 @@ export default function SvgMappingForm(props: SvgMappingFormProps) {
   };
 
   return (
-    <div className="w-full mx-auto p-6 space-y-6">
+    <div className="w-full mx-auto space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="space-y-4">
           <Card className="p-4 border flex items-center justify-center h-fit">

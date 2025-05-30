@@ -130,7 +130,6 @@ function TemplateItem({ template }: { template: TemplateType }) {
                 actionVariant="default"
                 actionText={template.is_published ? "게시 취소" : "게시"}
                 onAction={() => {
-                  console.log("template: ", template);
                   updateTemplatePublishStatus({
                     template_id: template.id,
                     is_published: !template.is_published,

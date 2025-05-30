@@ -81,7 +81,6 @@ export default function NewChartTypePage() {
       {step === 1 && (
         <InformationForm
           onSubmit={(data) => {
-            console.log(data);
             setFormData({
               ...data,
               section: data.section,
@@ -133,7 +132,6 @@ const useSelectedMeasurements = (formData: FormDataType | null) => {
   });
   const { data: measurementRuleItemCodeList } = useQuery({
     ...measurementRuleQueries.itemCode(),
-    // enabled: formData.section === "SLEEVE",
   });
 
   const measurementList = formData?.measurementRuleId
