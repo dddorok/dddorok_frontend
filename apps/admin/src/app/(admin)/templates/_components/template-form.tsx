@@ -2,11 +2,12 @@
 
 import { DevTool } from "@hookform/devtools";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useForm, useFormContext, useWatch } from "react-hook-form";
 import * as z from "zod";
 
 import { ChartTypeSelect } from "./ChartTypeSelect";
+import { ImageUpload } from "../ImageUpload";
 
 import {
   CommonRadioListField,
@@ -54,7 +55,7 @@ const templateFormSchema = z.object({
 export type TemplateFormData = z.infer<typeof templateFormSchema>;
 
 interface TemplateFormProps {
-  onSubmit: (data: TemplateFormData) => Promise<void>;
+  onSubmit: (data: TemplateFormData, file: File | null) => Promise<void>;
   measurementRuleId: string;
   category: {
     level1: string;
@@ -71,6 +72,7 @@ export function TemplateForm({
   onSubmit,
   initialTemplate,
 }: TemplateFormProps) {
+  const [file, setFile] = useState<File | null>(null); // form으로 옮기기
   const form = useForm<z.infer<typeof templateFormSchema>>({
     resolver: zodResolver(templateFormSchema),
     defaultValues: {
@@ -91,17 +93,8 @@ export function TemplateForm({
         });
         return;
       }
-      if (request.needleType === "KNITTING") {
-        // TODO
-        // if (request.constructionMethods.length === 0) {
-        //   // throw new Error("상의 제작 방식을 1개 이상 입력해주세요.");
-        //   form.setError("constructionMethods", {
-        //     message: "상의 제작 방식을 1개 이상 입력해주세요.",
-        //   });
-        //   return;
-        // }
-      }
-      await onSubmit(request);
+
+      await onSubmit(request, file);
     } catch (error) {
       console.error("error: ", error);
       toast({
@@ -143,6 +136,11 @@ export function TemplateForm({
             </div>
           </CardContent>
         </Card>
+        <ImageUpload
+          file={file}
+          setFile={setFile}
+          onRemove={() => setFile(null)}
+        />
 
         {/* Section 2: 조건부 속성 입력 */}
         <ConstructionMethodSelect category={category} />

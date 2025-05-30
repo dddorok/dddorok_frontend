@@ -5,6 +5,8 @@ import { AlertCircle, Info } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Suspense, useState } from "react";
 
+import { ImageUpload } from "../ImageUpload";
+
 import {
   TemplateForm,
   TemplateFormData,
@@ -15,8 +17,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { NECKLINE, SLEEVE } from "@/constants/top";
 import { useToast } from "@/hooks/use-toast";
 import { measurementRuleQueries } from "@/queries/measurement-rule";
+import { uploadSvg } from "@/services/chart-type";
 import { GetMeasurementRuleListItemType } from "@/services/measurement-rule";
-import { createTemplate } from "@/services/template/template";
+import { createTemplate, uploadThumbnail } from "@/services/template/template";
 
 export default function NewTemplateClient({
   initRuleId,
@@ -36,9 +39,15 @@ export default function NewTemplateClient({
     setRuleName(rule.rule_name);
   };
 
-  const handleSubmit = async (data: TemplateFormData) => {
+  const handleSubmit = async (data: TemplateFormData, file: File | null) => {
     if (!data.needleType) {
       throw new Error("입력 필드가 비어있습니다.");
+    }
+
+    let resourceId: string | null = null;
+
+    if (file) {
+      resourceId = await uploadThumbnail(file);
     }
 
     const request = {
@@ -48,6 +57,7 @@ export default function NewTemplateClient({
       construction_primary: data.constructionPrimary,
       construction_secondary: data.constructionSecondary,
       chart_type_maps: data.chartTypeMaps ?? [],
+      resourceId: resourceId,
     };
     await createTemplate(request);
 

@@ -2,7 +2,6 @@
 import React, { useState } from "react";
 
 import { ChartDeleteDialog } from "../_components/chart.dialog";
-import { SvgUpload } from "../_components/svg-upload";
 import {
   SelectMeasurementList,
   SelectPathList,

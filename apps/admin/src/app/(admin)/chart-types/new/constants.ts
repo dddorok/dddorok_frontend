@@ -30,11 +30,11 @@ export const BODY_DETAIL: Record<
   FRONT_BODY: { label: "앞몸판", value: "FRONT_BODY" },
   BACK_BODY: { label: "뒷몸판", value: "BACK_BODY" },
   UPPER_EXPANDED_VIEW: {
-    label: "상반신 확장 뷰",
+    label: "상단 전개도",
     value: "UPPER_EXPANDED_VIEW",
   },
   LOWER_EXPANDED_VIEW: {
-    label: "하반신 확장 뷰",
+    label: "하단 전개도",
     value: "LOWER_EXPANDED_VIEW",
   },
 };
