@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 
 import { ChartTypeSelect } from "../../_components/ChartTypeSelect";
+import { DeleteTemplateButton } from "../../_components/template-list";
 
 import { CommonInputField } from "@/components/CommonFormField";
 import { Button } from "@/components/ui/button";
@@ -115,6 +116,7 @@ function TemplateEditForm({
 
         <ChartTypeSelect chartTypeMapsName="chartTypeMaps" />
         <div className="flex justify-end gap-4">
+          <DeleteTemplateButton templateId={template.id} buttonSize="default" />
           <Button variant="outline" type="button">
             취소
           </Button>

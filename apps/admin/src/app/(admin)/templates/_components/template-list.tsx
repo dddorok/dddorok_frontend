@@ -107,7 +107,7 @@ function TemplateItem({ template }: { template: TemplateType }) {
           <Button variant="outline" size="sm" asChild>
             <Link href={`/templates/${template.id}/edit`}>수정</Link>
           </Button>
-          <DeleteTemplateButton template={template} />
+          <DeleteTemplateButton templateId={template.id} buttonSize="sm" />
         </div>
       </TableCell>
       <TableCell>
@@ -155,12 +155,19 @@ function TemplateItem({ template }: { template: TemplateType }) {
   );
 }
 
-function DeleteTemplateButton({ template }: { template: TemplateType }) {
+// TODO: 템플릿 삭제 버튼 컴포넌트 리팩토링
+export function DeleteTemplateButton({
+  templateId,
+  buttonSize = "sm",
+}: {
+  templateId: string;
+  buttonSize: "sm" | "default";
+}) {
   const queryClient = useQueryClient();
 
   const handleDeleteTemplate = async () => {
     try {
-      await deleteTemplate(template.id);
+      await deleteTemplate(templateId);
       toast({
         title: "템플릿 삭제 성공",
         description: "템플릿이 성공적으로 삭제되었습니다.",
@@ -174,7 +181,7 @@ function DeleteTemplateButton({ template }: { template: TemplateType }) {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button variant="destructive" size="sm">
+        <Button variant="destructive" size={buttonSize}>
           삭제
         </Button>
       </DialogTrigger>
