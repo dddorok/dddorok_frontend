@@ -7,7 +7,7 @@ import { Suspense, useState } from "react";
 import { SectionType } from "./constants";
 import InformationForm from "./information-form";
 import SvgMappingForm from "./svg-mapping-form";
-import { SvgUpload } from "./svg-upload";
+import { SvgUpload } from "../_components/svg-upload";
 
 import { useToast } from "@/hooks/use-toast";
 import { measurementRuleQueries } from "@/queries/measurement-rule";

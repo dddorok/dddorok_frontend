@@ -1,6 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 import React, { useState } from "react";
 
+import { SvgUpload } from "../_components/svg-upload";
 import {
   SelectMeasurementList,
   SelectPathList,
@@ -8,6 +9,8 @@ import {
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import { toast } from "@/hooks/use-toast";
 
 interface PathType {
   pathId: string;
