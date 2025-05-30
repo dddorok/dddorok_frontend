@@ -12,10 +12,41 @@ export const BODY_DETAIL_TYPE = [
 ] as const;
 
 export const RETAIL_DETAIL_TYPE = [
-  "UPPER_EXPANDED_VIEW",
-  "LOWER_EXPANDED_VIEW",
+  "RAGLAN_SLEEVE",
+  "TOP_DOWN_SLEEVE",
   "SET_IN_SLEEVE",
 ] as const;
+
+export const BodyDetailSchema = z.enum(BODY_DETAIL_TYPE);
+export type BodyDetailType = z.infer<typeof BodyDetailSchema>;
+
+export const RetailDetailSchema = z.enum(RETAIL_DETAIL_TYPE);
+export type RetailDetailType = z.infer<typeof RetailDetailSchema>;
+
+export const BODY_DETAIL: Record<
+  BodyDetailType,
+  { label: string; value: string }
+> = {
+  FRONT_BODY: { label: "앞몸판", value: "FRONT_BODY" },
+  BACK_BODY: { label: "뒷몸판", value: "BACK_BODY" },
+  UPPER_EXPANDED_VIEW: {
+    label: "상반신 확장 뷰",
+    value: "UPPER_EXPANDED_VIEW",
+  },
+  LOWER_EXPANDED_VIEW: {
+    label: "하반신 확장 뷰",
+    value: "LOWER_EXPANDED_VIEW",
+  },
+};
+
+export const RETAIL_DETAIL: Record<
+  RetailDetailType,
+  { label: string; value: string }
+> = {
+  RAGLAN_SLEEVE: { label: "레글런 소매", value: "RAGLAN_SLEEVE" },
+  TOP_DOWN_SLEEVE: { label: "탑 다운 소매", value: "TOP_DOWN_SLEEVE" },
+  SET_IN_SLEEVE: { label: "세트인 소매", value: "SET_IN_SLEEVE" },
+};
 
 export const MEASUREMENT = {
   BODY_SHOULDER_WIDTH: {

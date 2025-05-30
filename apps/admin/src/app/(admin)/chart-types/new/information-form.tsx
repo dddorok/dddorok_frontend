@@ -9,6 +9,10 @@ import {
   SectionType,
   RETAIL_DETAIL_TYPE,
   ChartSectionSchema,
+  RETAIL_DETAIL,
+  BODY_DETAIL,
+  BodyDetailType,
+  RetailDetailType,
 } from "./constants";
 
 import {
@@ -89,8 +93,6 @@ export default function InformationForm({
     [form]
   );
 
-  console.log(form.formState.errors);
-
   return (
     <Form {...form}>
       <form
@@ -153,13 +155,16 @@ function ChartNameForm() {
       // ex) 래글런형 브이넥 스웨터 상단 전개도
       form.setValue(
         "chartName",
-        `${measurementRuleName} ${detailType} 상단 전개도`
+        `${measurementRuleName} ${BODY_DETAIL[detailType as BodyDetailType].label} 상단 전개도`
       );
     }
     if (section === "SLEEVE" && detailType) {
       // {세부유형} 소매 형식으로 자동 생성
       // ex)셋인형 소매
-      form.setValue("chartName", `${detailType} 소매`);
+      form.setValue(
+        "chartName",
+        `${RETAIL_DETAIL[detailType as RetailDetailType].label} 소매`
+      );
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [detailType, section, measurementRuleName]);
@@ -181,9 +186,9 @@ function BodyChart() {
         name="detailType"
         label="몸판 세부유형 선택"
         placeholder="선택하세요"
-        options={BODY_DETAIL_TYPE.map((type) => ({
-          label: type,
-          value: type,
+        options={Object.values(BODY_DETAIL).map((type) => ({
+          label: type.label,
+          value: type.value,
         }))}
       />
       <div className="space-y-2">
@@ -228,9 +233,9 @@ function RetailChart() {
       <CommonSelectField
         name="detailType"
         label="소매 세브유형 선택"
-        options={RETAIL_DETAIL_TYPE.map((type) => ({
-          label: type,
-          value: type,
+        options={Object.values(RETAIL_DETAIL).map((type) => ({
+          label: type.label,
+          value: type.value,
         }))}
         placeholder="선택하세요"
       />

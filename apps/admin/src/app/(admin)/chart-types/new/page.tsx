@@ -9,10 +9,9 @@ import InformationForm from "./information-form";
 import SvgMappingForm from "./svg-mapping-form";
 import { SvgUpload } from "./svg-upload";
 
-import { toast, useToast } from "@/hooks/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { measurementRuleQueries } from "@/queries/measurement-rule";
 import { createChartType, uploadSvg } from "@/services/chart-type";
-import { GetMeasurementRuleItemCodeResponse } from "@/services/measurement-rule";
 
 type FormDataType = {
   section: SectionType;
@@ -36,8 +35,6 @@ export default function NewChartTypePage() {
   } | null>(null);
 
   const measurementList = useSelectedMeasurements(formData);
-  console.log("measurementList: ", measurementList);
-
   const onSubmit = async (data: {
     file: File | null;
     paths: { pathId: string; selectedMeasurement: string }[];
