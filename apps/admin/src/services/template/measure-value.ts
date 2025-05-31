@@ -59,8 +59,8 @@ export interface TemplateMeasurementValueType {
   size_110_114: number;
   size_115_120: number;
   size_121_129: number;
-  min: number;
-  max: number;
+  min?: number;
+  max?: number;
   range_toggle: boolean;
 }
 

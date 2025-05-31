@@ -27,6 +27,7 @@ import {
   SIZE_RANGE_LABEL,
   SizeRangeType,
 } from "@/constants/size-range";
+import { toast } from "@/hooks/use-toast";
 import {
   GetTemplateMeasurementValuesItemType,
   GetTemplateMeasurementValuesResponse,
@@ -56,15 +57,82 @@ export function SizeDetailForm({
     rangeToggleList,
   } = useSizeDetails(measurementValues);
 
-  const handleSubmit = () => {
-    const result = convertToTemplateMeasurementValueType(
-      sizeDetails,
-      rangeToggleList
-    );
+  const handleSubmit = async () => {
     try {
-      onSubmit(result);
+      const result = convertToTemplateMeasurementValueType(
+        sizeDetails,
+        rangeToggleList
+      );
+
+      const finalResult = await Promise.all(
+        result.map(async (item) => {
+          const isRangeToggle = rangeToggleList.includes(item.id);
+
+          // - 숫자만 입력 가능, 0 이하의 숫자 입력 방지
+          await Promise.all(
+            Object.keys(item).map(async (key) => {
+              if (
+                key !== "id" &&
+                key !== "range_toggle" &&
+                key !== "min" &&
+                key !== "max"
+              ) {
+                if (typeof item[key as keyof typeof item] === "undefined")
+                  return;
+                const value = Number(item[key as keyof typeof item]);
+                if (isNaN(value)) {
+                  throw new Error("숫자만 입력 가능합니다.");
+                }
+                if (value < 0) {
+                  throw new Error("0 이하의 숫자는 입력할 수 없습니다.");
+                }
+              }
+            })
+          );
+
+          // - 조정 on 행의 치수값: 0.5 단위로 반올림 (소숫점 첫째 자리)
+          // - 조정 off 된 행의 치수값: 0.01 단위로 반올림 (소숫점 둘째 자리)
+          const roundedItem = { ...item };
+          Object.keys(item).forEach((key) => {
+            if (
+              key !== "id" &&
+              key !== "range_toggle" &&
+              key !== "min" &&
+              key !== "max"
+            ) {
+              const value = Number(item[key as keyof typeof item]);
+              if (!isNaN(value)) {
+                if (isRangeToggle) {
+                  // 0.5 단위, 소수점 첫째 자리
+                  roundedItem[key as (typeof SIZE_RANGE_KEYS)[number]] =
+                    Math.round(value * 2) / 2;
+                } else {
+                  // 0.01 단위, 소수점 둘째 자리
+                  roundedItem[key as (typeof SIZE_RANGE_KEYS)[number]] =
+                    Math.round(value * 100) / 100;
+                }
+              }
+            }
+          });
+
+          if (isRangeToggle) {
+            return {
+              ...roundedItem,
+              min: item.min ? Number(item.min) : undefined,
+              max: item.max ? Number(item.max) : undefined,
+            };
+          }
+          return roundedItem;
+        })
+      );
+
+      onSubmit(finalResult);
     } catch (error) {
-      console.error("Error submitting size details: ", error);
+      toast({
+        title: "오류",
+        description: "치수값 입력 중 오류가 발생했습니다.",
+      });
+      throw error;
     }
   };
 
