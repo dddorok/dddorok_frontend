@@ -168,6 +168,23 @@ export function TemplateForm({
  ** 관리자가 수정 가능하도록 함
  */
 const generateTemplateName = (formData: Partial<TemplateFormData>) => {
+  //탑다운 + 원통형 조합시 원통형 생략
+  // 바텀업 조각잇기 조합시 조각잇기 생략
+
+  if (
+    formData.constructionPrimary === "TOP_DOWN" &&
+    formData.constructionSecondary === "ROUND"
+  ) {
+    return CONSTRUCTION_METHOD["ROUND"].label;
+  }
+
+  if (
+    formData.constructionPrimary === "BOTTOM_UP" &&
+    formData.constructionSecondary === "PIECED"
+  ) {
+    return CONSTRUCTION_METHOD["BOTTOM_UP"].label;
+  }
+
   const list = [formData.constructionPrimary, formData.constructionSecondary]
     ?.filter(Boolean)
     .map(
@@ -191,9 +208,6 @@ function TemplateNameField({
     generateTemplateName(formValues as TemplateFormData) +
     " " +
     initialTemplateName;
-  console.log("initialTemplateName: ", initialTemplateName);
-
-  console.log("templateName: ", templateName);
 
   useEffect(() => {
     form.setValue("name", templateName, { shouldValidate: true });
