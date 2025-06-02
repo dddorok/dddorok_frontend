@@ -2,12 +2,11 @@
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 
 import { ChartTypeSelect } from "../../_components/ChartTypeSelect";
 import { DeleteTemplateButton } from "../../_components/template-list";
-import { ImageUpload } from "../../ImageUpload";
 
 import { CommonInputField } from "@/components/CommonFormField";
 import { FileUploadForm } from "@/components/FileUploadForm";
@@ -27,7 +26,6 @@ import {
   updateTemplate,
   uploadThumbnail,
 } from "@/services/template/template";
-import { createFileFromUrl } from "@/utils/file";
 
 interface EditTemplateClientProps {
   templateId: string;
@@ -48,11 +46,9 @@ export default function EditTemplateClient({
     newImageFile: File | null
   ) => {
     if (!template) return;
-    console.log("data: ", data);
 
     let resourceId: string | null = null;
 
-    console.log("newImageFile: ", newImageFile);
     if (newImageFile) {
       resourceId = await uploadThumbnail(newImageFile);
     }

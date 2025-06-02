@@ -27,7 +27,6 @@ export function FileUploadForm({
     setFile(e.target.files?.[0] || null);
   };
 
-  console.log("initFileImageUrl: ", initFileImageUrl);
   if (file) {
     return (
       <div className="space-y-4">
