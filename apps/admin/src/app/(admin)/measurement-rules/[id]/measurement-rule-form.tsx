@@ -7,7 +7,7 @@ import { useForm, useFormContext } from "react-hook-form";
 import * as z from "zod";
 
 import { BasicAlert } from "@/components/Alert";
-import { MeasurementRuleSelectSection } from "@/components/rule/MeasurementRuleSelectSection";
+import { MeasurementRuleSelectSection } from "@/components/SelectSection/MeasurementRuleSelectSection";
 import { Button } from "@/components/ui/button";
 import {
   Card,

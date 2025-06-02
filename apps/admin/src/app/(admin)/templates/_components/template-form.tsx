@@ -6,13 +6,12 @@ import { useEffect, useState } from "react";
 import { useForm, useFormContext, useWatch } from "react-hook-form";
 import * as z from "zod";
 
-import { ChartTypeSelect } from "./ChartTypeSelect";
-
 import {
   CommonRadioListField,
   CommonSelectField,
 } from "@/components/CommonFormField";
 import { FileUploadForm } from "@/components/FileUploadForm";
+import { ChartTypeSelect } from "@/components/SelectSection/ChartSelectSection";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -154,7 +153,12 @@ export function TemplateForm({
         {/* Section 2: 조건부 속성 입력 */}
         <ConstructionMethodSelect category={category} />
 
-        <ChartTypeSelect chartTypeMapsName="chartTypeMaps" />
+        <ChartTypeSelect
+          chartTypeMaps={form.watch("chartTypeMaps")}
+          onChange={(chartTypeMaps) =>
+            form.setValue("chartTypeMaps", chartTypeMaps)
+          }
+        />
 
         <div className="flex justify-end gap-4">
           <Button variant="outline" type="button">

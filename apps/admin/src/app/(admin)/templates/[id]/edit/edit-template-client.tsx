@@ -5,11 +5,11 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 
-import { ChartTypeSelect } from "../../_components/ChartTypeSelect";
 import { DeleteTemplateButton } from "../../_components/template-list";
 
 import { CommonInputField } from "@/components/CommonFormField";
 import { FileUploadForm } from "@/components/FileUploadForm";
+import { ChartTypeSelect } from "@/components/SelectSection/ChartSelectSection";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -137,7 +137,12 @@ function TemplateEditForm({
           file={file}
           setFile={setFile}
         />
-        <ChartTypeSelect chartTypeMapsName="chartTypeMaps" />
+        <ChartTypeSelect
+          chartTypeMaps={form.watch("chartTypeMaps")}
+          onChange={(chartTypeMaps) =>
+            form.setValue("chartTypeMaps", chartTypeMaps)
+          }
+        />
         <div className="flex justify-end gap-4">
           <DeleteTemplateButton templateId={template.id} buttonSize="default" />
           <Button variant="outline" type="button">
