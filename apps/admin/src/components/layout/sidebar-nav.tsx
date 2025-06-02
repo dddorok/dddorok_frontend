@@ -1,13 +1,6 @@
 "use client";
 
-import {
-  Ruler,
-  BarChart3,
-  LayoutTemplate,
-  Users,
-  FileText,
-  User,
-} from "lucide-react";
+import { Ruler, BarChart3, LayoutTemplate, User, Settings } from "lucide-react";
 
 import type { LucideIcon } from "lucide-react";
 
@@ -17,6 +10,7 @@ interface SidebarNavItem {
   title: string;
   url: string;
   Icon: LucideIcon;
+  subItems?: SidebarNavItem[];
 }
 
 const devItems: SidebarNavItem[] = [
@@ -29,9 +23,21 @@ const devItems: SidebarNavItem[] = [
 
 export const navItems: SidebarNavItem[] = [
   {
-    title: "치수 규칙 설정",
+    title: "인프라관리",
     url: "/measurement-rules",
     Icon: Ruler,
+    subItems: [
+      {
+        title: "치수 규칙 목록",
+        url: "/measurement-rules",
+        Icon: Ruler,
+      },
+      {
+        title: "차트 유형 목록",
+        url: "/chart-types",
+        Icon: BarChart3,
+      },
+    ],
   },
   {
     title: "템플릿 관리",
@@ -39,14 +45,14 @@ export const navItems: SidebarNavItem[] = [
     Icon: LayoutTemplate,
   },
   {
-    title: "차트 유형 관리",
-    url: "/chart-types",
-    Icon: BarChart3,
+    title: "설정",
+    url: "/settings",
+    Icon: Settings,
   },
-  {
-    title: "사용자 관리",
-    url: "/users",
-    Icon: Users,
-  },
+  // {
+  //   title: "사용자 관리",
+  //   url: "/users",
+  //   Icon: Users,
+  // },
   ...(isDev ? devItems : []),
 ];
