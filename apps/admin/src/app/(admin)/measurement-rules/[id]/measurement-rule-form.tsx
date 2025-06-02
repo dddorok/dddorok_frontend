@@ -2,14 +2,12 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Info, CheckSquare } from "lucide-react";
-import { PlusCircle } from "lucide-react";
 import { ComponentProps } from "react";
-import { useForm, useFormContext, useFormState } from "react-hook-form";
+import { useForm, useFormContext } from "react-hook-form";
 import * as z from "zod";
 
-import { MeasurementRuleSelectSection } from "../_components/measurement-rule-form/rule-select-section";
-
 import { BasicAlert } from "@/components/Alert";
+import { MeasurementRuleSelectSection } from "@/components/rule/MeasurementRuleSelectSection";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -144,7 +142,12 @@ export function MeasurementRuleForm({
               </BasicAlert>
             )}
 
-            <MeasurementRuleSelectSection />
+            <MeasurementRuleSelectSection
+              selectedItems={form.watch("items")}
+              onChange={(items: string[]) =>
+                form.setValue("items", items, { shouldValidate: true })
+              }
+            />
           </CardContent>
         </Card>
 

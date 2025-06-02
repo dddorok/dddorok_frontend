@@ -7,9 +7,9 @@ import { useForm, useFormContext, useFormState } from "react-hook-form";
 import * as z from "zod";
 
 import { MeasurementRuleDefaultSection } from "./default-section";
-import { MeasurementRuleSelectSection } from "./rule-select-section";
 
 import { BasicAlert } from "@/components/Alert";
+import { MeasurementRuleSelectSection } from "@/components/rule/MeasurementRuleSelectSection";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -140,7 +140,12 @@ export function MeasurementRuleForm({
               </BasicAlert>
             )}
 
-            <MeasurementRuleSelectSection />
+            <MeasurementRuleSelectSection
+              selectedItems={form.watch("items")}
+              onChange={(items: string[]) =>
+                form.setValue("items", items, { shouldValidate: true })
+              }
+            />
           </CardContent>
         </Card>
 
