@@ -5,8 +5,6 @@ import { AlertCircle, Info } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Suspense, useState } from "react";
 
-import { ImageUpload } from "../ImageUpload";
-
 import {
   TemplateForm,
   TemplateFormData,
@@ -17,7 +15,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { NECKLINE, SLEEVE } from "@/constants/top";
 import { useToast } from "@/hooks/use-toast";
 import { measurementRuleQueries } from "@/queries/measurement-rule";
-import { uploadSvg } from "@/services/chart-type";
 import { GetMeasurementRuleListItemType } from "@/services/measurement-rule";
 import { createTemplate, uploadThumbnail } from "@/services/template/template";
 

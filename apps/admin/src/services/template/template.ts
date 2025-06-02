@@ -85,6 +85,7 @@ export interface GetTemplateByIdResponse {
     name: string;
     order: number;
   }[];
+  thumbnail_url: string | null;
 }
 // 단일 템플릿 조회
 export const getTemplateById = async (templateId: string) => {
@@ -104,6 +105,7 @@ interface UpdateTemplateRequest {
     chart_type_id: string;
     order: number;
   }[];
+  resourceId: string | null;
 }
 
 export const updateTemplate = async (
