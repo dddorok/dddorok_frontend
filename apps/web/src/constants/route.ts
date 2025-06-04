@@ -6,4 +6,5 @@ export const ROUTE = {
     NEW: (templateId: string, name: string) =>
       `/project/new?templateId=${templateId}&name=${name}`,
   },
+  PRICING: "/pricing",
 };

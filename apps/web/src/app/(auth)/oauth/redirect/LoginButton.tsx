@@ -1,23 +1,44 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect } from "react";
 
 import { createSession } from "@/lib/auth";
+import { login, LoginProvider } from "@/services/auth";
 
-export function LoginButton({
-  accessToken,
-  refreshToken,
-}: {
-  accessToken: string;
-  refreshToken: string;
-}) {
+export function LoginButton(
+  {
+    // accessToken,
+    // refreshToken,
+  }: {
+    // accessToken: string;
+    // refreshToken: string;
+  }
+) {
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   const onLogin = async () => {
-    console.log("accessToken, refreshToken: ", accessToken, refreshToken);
-    await createSession({ accessToken, refreshToken });
-    router.push("/");
+    try {
+      const data = await login({
+        provider: searchParams.get("provider") as LoginProvider,
+        code: searchParams.get("code") as string,
+        state: searchParams.get("state") as string,
+      });
+
+      console.log("data: ", data);
+      await createSession({
+        accessToken: data.access_token,
+        refreshToken: data.refresh_token,
+      });
+
+      console.log("redirecting to /");
+      router.replace("/");
+    } catch (error) {
+      console.log("error: ", error);
+    } finally {
+      router.push("/");
+    }
   };
 
   useEffect(() => {

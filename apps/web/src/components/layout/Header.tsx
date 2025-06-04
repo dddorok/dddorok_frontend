@@ -1,4 +1,7 @@
-import { ChevronDownIcon } from "lucide-react";
+"use client";
+
+import { useQuery } from "@tanstack/react-query";
+import { ChevronDownIcon, User2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -6,12 +9,16 @@ import { Button } from "../ui/button";
 
 import { ROUTE } from "@/constants/route";
 import { cn } from "@/lib/utils";
+import { userQueries } from "@/queries/users";
 
 interface HeaderProps {
   className?: string;
 }
 
 export default function Header({ className }: HeaderProps) {
+  const { data: myInfo } = useQuery(userQueries.myInfo());
+  console.log("myInfo: ", myInfo);
+
   return (
     <>
       <div
@@ -33,7 +40,7 @@ export default function Header({ className }: HeaderProps) {
           </div>
           <div className="flex justify-between items-center py-5 w-full">
             <div className="flex gap-10">
-              <div>
+              <Link href={ROUTE.HOME}>
                 <Image
                   src="/logo/logo-01.svg"
                   alt="logo"
@@ -41,18 +48,30 @@ export default function Header({ className }: HeaderProps) {
                   height={42}
                   priority
                 />
-              </div>
+              </Link>
               <ul className="flex gap-16 items-center text-neutral-N800 text-medium-r">
-                <li>템플릿</li>
-                <li>요금제</li>
+                <li>
+                  <Link href={ROUTE.TEMPLATE}>템플릿</Link>
+                </li>
+                <li>
+                  <Link href={ROUTE.PRICING}>요금제</Link>
+                </li>
               </ul>
             </div>
-            <div className="flex gap-2">
-              <Button asChild>
-                <Link href={ROUTE.LOGIN}>로그인</Link>
-              </Button>
-              <Button color="fill">회원가입</Button>
-            </div>
+            {!myInfo ? (
+              <div className="flex gap-2">
+                <Button asChild>
+                  <Link href={ROUTE.LOGIN}>로그인</Link>
+                </Button>
+                <Button color="fill">회원가입</Button>
+              </div>
+            ) : (
+              <div className="flex gap-1 items-center text-primary-PR600">
+                <User2 className="w-6 h-6" />
+                <div className="text-medium-b">{myInfo.user.username}</div>
+                <ChevronDownIcon className="w-4 h-4" />
+              </div>
+            )}
           </div>
         </div>
       </div>
