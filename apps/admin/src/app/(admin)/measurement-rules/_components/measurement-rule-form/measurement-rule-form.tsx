@@ -3,7 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Info, CheckSquare } from "lucide-react";
 import { PlusCircle } from "lucide-react";
-import { useForm, useFormContext, useFormState } from "react-hook-form";
+import { useForm, useFormContext } from "react-hook-form";
 import * as z from "zod";
 
 import { MeasurementRuleDefaultSection } from "./default-section";
@@ -70,7 +70,6 @@ export type MeasurementRuleFormData = z.infer<typeof measurementRuleSchema>;
  */
 export function MeasurementRuleForm({
   initialValues,
-  isEdit = false,
   onSubmit,
 }: MeasurementRuleFormProps) {
   const form = useForm<z.infer<typeof measurementRuleSchema>>({
@@ -160,7 +159,7 @@ export function MeasurementRuleForm({
           >
             취소
           </Button>
-          <SaveButtons isEdit={isEdit} onSubmit={onSubmit} />
+          <SaveButtons onSubmit={onSubmit} />
         </div>
       </form>
       <QueryDevTools control={form.control} />
@@ -169,10 +168,8 @@ export function MeasurementRuleForm({
 }
 
 function SaveButtons({
-  isEdit,
   onSubmit,
 }: {
-  isEdit: boolean;
   onSubmit: (
     data: MeasurementRuleFormData,
     createTemplate: boolean
@@ -215,7 +212,6 @@ function SaveButtons({
 
   return (
     <>
-      {" "}
       <Button
         type="button"
         onClick={() => {
@@ -225,19 +221,17 @@ function SaveButtons({
       >
         저장
       </Button>
-      {!isEdit && (
-        <Button
-          type="button"
-          variant="default"
-          onClick={() => {
-            form.trigger();
-            form.handleSubmit((data) => handleSubmit(data, true))();
-          }}
-        >
-          <PlusCircle className="mr-2 h-4 w-4" />
-          저장 후 템플릿 생성
-        </Button>
-      )}
+      <Button
+        type="button"
+        variant="default"
+        onClick={() => {
+          form.trigger();
+          form.handleSubmit((data) => handleSubmit(data, true))();
+        }}
+      >
+        <PlusCircle className="mr-2 h-4 w-4" />
+        저장 후 템플릿 생성
+      </Button>
     </>
   );
 }

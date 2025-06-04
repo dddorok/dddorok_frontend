@@ -1,23 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
-import { ComponentProps, useEffect } from "react";
+import { useEffect } from "react";
 import { useFormContext, useWatch } from "react-hook-form";
 
 import { BasicAlert } from "@/components/Alert";
-import {
-  FormLabel,
-  FormDescription,
-  FormControl,
-  FormField,
-  FormItem,
-  FormMessage,
-} from "@/components/ui/form";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { CommonSelectField } from "@/components/CommonFormField";
+import { FormLabel, FormDescription, FormMessage } from "@/components/ui/form";
 import { categories, CATEGORY_ID, getCategoryById } from "@/constants/category";
 import {
   NECKLINE,
@@ -40,7 +27,7 @@ export function MeasurementRuleDefaultSection() {
           다른 조합을 선택해주세요.
         </BasicAlert>
       )}
-      {/* 카테고리 선택 */}
+
       <div className="space-y-4">
         <div>
           <FormLabel>카테고리 선택</FormLabel>
@@ -50,7 +37,9 @@ export function MeasurementRuleDefaultSection() {
         </div>
         <CategorySelect />
       </div>
+
       <TopNeedFieldForm />
+
       <MeasurementRuleName />
     </div>
   );
@@ -71,24 +60,33 @@ function CategorySelect() {
 
   return (
     <div className="grid grid-cols-3 gap-4">
-      <FormSelect
+      <CommonSelectField
         name="level1"
-        options={level1Categories}
+        options={level1Categories.map((cat) => ({
+          label: cat.name,
+          value: cat.id,
+        }))}
         placeholder="대분류"
         onChange={() => {
           form.setValue("level2", null);
           form.setValue("level3", null);
         }}
       />
-      <FormSelect
+      <CommonSelectField
         name="level2"
-        options={level2Categories}
+        options={level2Categories.map((cat) => ({
+          label: cat.name,
+          value: cat.id,
+        }))}
         placeholder="중분류"
         onChange={() => form.setValue("level3", null)}
       />
-      <FormSelect
+      <CommonSelectField
         name="level3"
-        options={level3Categories}
+        options={level3Categories.map((cat) => ({
+          label: cat.name,
+          value: cat.id,
+        }))}
         placeholder="소분류"
         onChange={(value) => {
           form.setValue("categoryId", value);
@@ -99,53 +97,6 @@ function CategorySelect() {
   );
 }
 
-function FormSelect({
-  options,
-  label,
-  placeholder,
-  onChange,
-  ...props
-}: {
-  options: { id: string; name: string }[];
-  label?: string;
-  placeholder?: string;
-  name: ComponentProps<typeof FormField>["name"];
-  onChange?: (value: string) => void;
-}) {
-  return (
-    <FormField
-      {...props}
-      render={({ field }) => (
-        <FormItem>
-          {label && <FormLabel>{label}</FormLabel>}
-          <FormControl>
-            <Select
-              value={field.value}
-              onValueChange={(value) => {
-                field.onChange(value);
-                onChange?.(value);
-                field.onBlur();
-              }}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder={placeholder} />
-              </SelectTrigger>
-              <SelectContent>
-                {options.map((option) => (
-                  <SelectItem key={option.id} value={option.id.toString()}>
-                    {option.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </FormControl>
-          <FormMessage />
-        </FormItem>
-      )}
-    />
-  );
-}
-
 function TopNeedFieldForm() {
   const categoryLevel2 = useWatch({ name: "level2" });
 
@@ -153,22 +104,22 @@ function TopNeedFieldForm() {
 
   return (
     <>
-      <FormSelect
+      <CommonSelectField
         label="소매 유형"
         placeholder="소매 유형 선택"
         name="sleeveType"
         options={SLEEVE_OPTIONS.map((type) => ({
-          id: type.value,
-          name: type.label,
+          label: type.label,
+          value: type.value,
         }))}
       />
-      <FormSelect
+      <CommonSelectField
         label="넥라인"
         placeholder="넥라인 선택"
         name="necklineType"
         options={NECKLINE_OPTIONS.map((type) => ({
-          id: type.value,
-          name: type.label,
+          label: type.label,
+          value: type.value,
         }))}
       />
     </>

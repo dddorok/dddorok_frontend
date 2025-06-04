@@ -32,47 +32,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  NECKLINE,
-  NecklineTypeSchema,
-  SLEEVE,
-  SleeveTypeSchema,
-} from "@/constants/top";
+import { NECKLINE, SLEEVE } from "@/constants/top";
 import { QueryDevTools } from "@/lib/react-query";
+import { GetMeasurementRuleByIdResponse } from "@/services/measurement-rule";
 
 interface MeasurementRuleFormProps {
-  initialValues: MeasurementRuleFormData;
+  initialValues: GetMeasurementRuleByIdResponse;
   onSubmit: (data: MeasurementRuleFormData) => Promise<void>;
 }
 
-const measurementRuleSchema = z
-  .object({
-    level1: z.string().min(1, "대분류를 선택해주세요"),
-    level2: z.string().min(1, "중분류를 선택해주세요"),
-    level3: z.string().min(1, "소분류를 선택해주세요"),
-    sleeveType: SleeveTypeSchema.optional(),
-    necklineType: NecklineTypeSchema.optional(),
-    name: z.string().min(1, "규칙 이름을 입력해주세요"),
-    items: z
-      .array(z.string())
-      .min(1, "최소 1개 이상의 치수 항목을 선택해주세요"),
-  })
-  .superRefine((data, ctx) => {
-    if (data.level2 === "상의" && !data.sleeveType) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ["sleeveType"],
-        message: "소매 유형을 선택해주세요.",
-      });
-    }
-    if (data.level2 === "상의" && !data.necklineType) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ["necklineType"],
-        message: "넥라인 유형을 선택해주세요.",
-      });
-    }
-  });
+const measurementRuleSchema = z.object({
+  items: z.array(z.string()).min(1, "최소 1개 이상의 치수 항목을 선택해주세요"),
+});
 
 export type MeasurementRuleFormData = z.infer<typeof measurementRuleSchema>;
 
@@ -82,7 +53,9 @@ export function MeasurementRuleForm({
 }: MeasurementRuleFormProps) {
   const form = useForm<z.infer<typeof measurementRuleSchema>>({
     resolver: zodResolver(measurementRuleSchema),
-    defaultValues: initialValues,
+    defaultValues: {
+      items: initialValues.items.map((item) => item.id),
+    },
     mode: "onSubmit",
     shouldFocusError: true,
   });
@@ -103,18 +76,7 @@ export function MeasurementRuleForm({
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
-            {form.formState.errors["root"] && (
-              <BasicAlert
-                variant="destructive"
-                iconElement={<Info className="h-4 w-4" />}
-              >
-                선택한 카테고리와 소매 유형의 조합으로 이미 치수 규칙이
-                존재합니다.
-                <br /> 다른 조합을 선택해주세요.
-              </BasicAlert>
-            )}
-
-            <MeasurementRuleDefaultSection />
+            <MeasurementRuleDefaultSection {...initialValues} />
           </CardContent>
         </Card>
 
@@ -170,11 +132,7 @@ export function MeasurementRuleForm({
   );
 }
 
-function MeasurementRuleDefaultSection() {
-  const form = useFormContext();
-
-  const formValues = form.getValues();
-
+function MeasurementRuleDefaultSection(props: GetMeasurementRuleByIdResponse) {
   return (
     <div className="space-y-4">
       <div className="space-y-4">
@@ -185,26 +143,24 @@ function MeasurementRuleDefaultSection() {
           </FormDescription>
         </div>
         <div className="grid grid-cols-3 gap-4">
-          <FixedField label="대분류" value={formValues.level1} />
-          <FixedField label="중분류" value={formValues.level2} />
-          <FixedField label="소분류" value={formValues.level3} />
+          <FixedField label="대분류" value={props.category_large} />
+          <FixedField label="중분류" value={props.category_medium} />
+          <FixedField label="소분류" value={props.category_small} />
         </div>
       </div>
-      {formValues.sleeveType && (
+      {props.sleeve_type && (
         <FixedField
           label="소매 유형"
-          value={SLEEVE[formValues.sleeveType as keyof typeof SLEEVE].label}
+          value={SLEEVE[props.sleeve_type as keyof typeof SLEEVE].label}
         />
       )}
-      {formValues.necklineType && (
+      {props.neck_line_type && (
         <FixedField
           label="넥라인"
-          value={
-            NECKLINE[formValues.necklineType as keyof typeof NECKLINE].label
-          }
+          value={NECKLINE[props.neck_line_type as keyof typeof NECKLINE].label}
         />
       )}
-      <FixedField label="규칙 이름" value={formValues.name} />
+      <FixedField label="규칙 이름" value={props.rule_name} />
     </div>
   );
 }
@@ -232,9 +188,7 @@ function SaveButtons({
       ...data,
     };
 
-    try {
-      await onSubmit(requestData);
-    } catch (error) {}
+    await onSubmit(requestData);
   };
 
   return (
@@ -247,55 +201,5 @@ function SaveButtons({
     >
       저장
     </Button>
-  );
-}
-
-function FormSelect({
-  options,
-  label,
-  placeholder,
-  onChange,
-  disabled,
-  ...props
-}: {
-  options: { id: string; name: string }[];
-  label?: string;
-  placeholder?: string;
-  name: ComponentProps<typeof FormField>["name"];
-  onChange?: (value: string) => void;
-  disabled?: boolean;
-}) {
-  return (
-    <FormField
-      {...props}
-      render={({ field }) => (
-        <FormItem>
-          {label && <FormLabel>{label}</FormLabel>}
-          <FormControl>
-            <Select
-              value={field.value}
-              onValueChange={(value) => {
-                field.onChange(value);
-                onChange?.(value);
-                field.onBlur();
-              }}
-              disabled={disabled}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder={placeholder} />
-              </SelectTrigger>
-              <SelectContent>
-                {options.map((option) => (
-                  <SelectItem key={option.id} value={option.id.toString()}>
-                    {option.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </FormControl>
-          <FormMessage />
-        </FormItem>
-      )}
-    />
   );
 }
