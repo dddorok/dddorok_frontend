@@ -34,7 +34,10 @@ import {
   TemplateMeasurementValueType,
 } from "@/services/template/measure-value";
 
-type SizeDetailFormType = Record<SizeRangeType, Record<string, string>>;
+type SizeDetailFormType = Record<
+  SizeRangeType,
+  Record<string, string | undefined>
+>;
 
 interface SizeDetailFormProps {
   onSubmit: (result: TemplateMeasurementValueType[]) => void;
@@ -394,7 +397,7 @@ function convertToSizeRangeTypeRecord(
     SIZE_RANGE_KEYS.forEach((range) => {
       const key = item.id;
       const value = item[range as keyof GetTemplateMeasurementValuesItemType];
-      result[range][key] = value === null ? "" : String(value);
+      result[range][key] = value === null ? undefined : String(value);
     });
   });
 

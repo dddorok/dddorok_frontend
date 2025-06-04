@@ -3,7 +3,9 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { notFound } from "next/navigation";
 
-import { SizeDetailForm } from "@/app/(admin)/templates/_components/size-detail-form"; // Updated import path
+import ExcelTableWithLibrary from "./_components/react-spreadsheet-typescript";
+
+import { SizeDetailForm } from "@/app/(admin)/templates/[id]/size-detail-form"; // Updated import path
 import { toast } from "@/hooks/use-toast";
 import {
   templateMeasurementValuesQueries,
@@ -59,11 +61,14 @@ export default function TemplateDetailClient({
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold">{template.name}</h1>
       </div>
-
-      <SizeDetailForm
-        measurementValues={measurementValues}
+      <ExcelTableWithLibrary
+        initialData={measurementValues}
         onSubmit={handleSaveSizeDetails}
       />
+      {/* <SizeDetailForm
+        measurementValues={measurementValues}
+        onSubmit={handleSaveSizeDetails}
+      /> */}
     </div>
   );
 }

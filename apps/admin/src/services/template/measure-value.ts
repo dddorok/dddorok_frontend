@@ -1,11 +1,7 @@
 import { privateInstance } from "../instance";
 
-export interface GetTemplateMeasurementValuesItemType {
+export interface TemplateMeasurementValuesItemCore {
   id: string;
-  template_id: string;
-  measurement_item_id: string;
-  code: string;
-  label: string;
   size_50_53: number | null;
   size_54_57: number | null;
   size_58_61: number | null;
@@ -27,6 +23,14 @@ export interface GetTemplateMeasurementValuesItemType {
   range_toggle: boolean;
 }
 
+export interface GetTemplateMeasurementValuesItemType
+  extends TemplateMeasurementValuesItemCore {
+  template_id: string;
+  measurement_item_id: string;
+  code: string;
+  label: string;
+}
+
 export type GetTemplateMeasurementValuesResponse =
   GetTemplateMeasurementValuesItemType[];
 
@@ -41,28 +45,8 @@ export const getTemplateMeasurementValues = async (
   return response.data;
 };
 
-export interface TemplateMeasurementValueType {
-  id: string;
-  size_50_53: number;
-  size_54_57: number;
-  size_58_61: number;
-  size_62_65: number;
-  size_66_69: number;
-  size_70_73: number;
-  size_74_79: number;
-  size_80_84: number;
-  size_85_89: number;
-  size_90_94: number;
-  size_95_99: number;
-  size_100_104: number;
-  size_105_109: number;
-  size_110_114: number;
-  size_115_120: number;
-  size_121_129: number;
-  min?: number;
-  max?: number;
-  range_toggle: boolean;
-}
+export interface TemplateMeasurementValueType
+  extends TemplateMeasurementValuesItemCore {}
 
 type UpdateTemplateMeasurementValuesRequest = TemplateMeasurementValueType[];
 
