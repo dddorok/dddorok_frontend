@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 const buttonVariants = cva(
   // 기본 스타일 (모든 버튼에 공통 적용)
   [
-    "inline-flex items-center justify-center gap-2",
+    "inline-flex items-center justify-center gap-0",
     "rounded-lg", // 8px border radius
     "px-4 min-h-[52px]", // 16px padding
     "text-medium-sb",
@@ -16,12 +16,14 @@ const buttonVariants = cva(
     "disabled:cursor-not-allowed",
     "backdrop-blur-[12px]", // blur(12px) effect,
     "[&_svg]:w-5 [&_svg]:h-5",
+    "cursor-pointer",
     // disable
     "disable:bg-neutral-N400",
     "disable:border-0",
     "disable:text-neutral-N0",
     "disable:cursor-not-allowed",
     "disable:opacity-60",
+    "[&_svg]:w-5 [&_svg]:h-5",
   ],
   {
     variants: {
@@ -29,11 +31,12 @@ const buttonVariants = cva(
       color: {
         // Default: 흰색 배경 + 파란색 테두리 + 파란색 텍스트
         default: [
-          "bg-neutral-N0", // #FFFFFF
-          "border border-primary-PR300", // #BFE3F8
+          "bg-transparent",
+          // "bg-neutral-N0", // #FFFFFF
+          "border border-2 border-primary-PR300", // #BFE3F8
           "text-primary-PR", // #75C0EF
-          "hover:bg-primary-PR100", // hover state
-          "active:bg-primary-PR200", // active state
+          // "hover:bg-primary-PR100", // hover state
+          // "active:bg-primary-PR200", // active state
           "focus:ring-primary-PR300",
         ],
 
@@ -42,8 +45,8 @@ const buttonVariants = cva(
           "bg-primary-PR", // #75C0EF
           "border-0",
           "text-neutral-N0", // #FFFFFF
-          "hover:bg-primary-PR600", // hover state
-          "active:bg-primary-PR400", // active state
+          // "hover:bg-primary-PR600", // hover state
+          // "active:bg-primary-PR400", // active state
           "focus:ring-primary-PR300",
         ],
 
@@ -52,8 +55,8 @@ const buttonVariants = cva(
           "bg-neutralAlpha-NA05", // rgba(28, 31, 37, 0.05)
           "border border-neutral-N400", // #C8CDD9
           "text-neutral-N800", // #4B5162
-          "hover:bg-neutralAlpha-NA10", // hover state
-          "active:bg-neutralAlpha-NA20", // active state
+          // "hover:bg-neutralAlpha-NA10", // hover state
+          // "active:bg-neutralAlpha-NA20", // active state
           "focus:ring-neutral-N400",
         ],
       },
@@ -65,7 +68,7 @@ const buttonVariants = cva(
           "text-neutral-N0", // #FFFFFF
           "cursor-not-allowed",
           "opacity-60",
-          "hover:bg-neutral-N400 active:bg-neutral-N400",
+          // "hover:bg-neutral-N400 active:bg-neutral-N400",
         ],
         false: "",
       },
