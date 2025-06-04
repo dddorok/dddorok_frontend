@@ -121,8 +121,8 @@ export function SizeDetailForm({
           if (isRangeToggle) {
             return {
               ...roundedItem,
-              min: item.min ? Number(item.min) : undefined,
-              max: item.max ? Number(item.max) : undefined,
+              min: item.min ? Number(item.min) : null,
+              max: item.max ? Number(item.max) : null,
             };
           }
           return roundedItem;

@@ -1,10 +1,11 @@
-import { errors } from "jose";
-import { useCallback, useMemo, useState } from "react";
+import { useDebounce } from "@toss/react";
+import { useCallback, useMemo, useState, useRef } from "react";
 import { CellBase } from "react-spreadsheet";
 
 import { COLUMN_HEADERS, EDITABLE_COLUMNS } from "../constants";
-import { parseToNumber, validateNumber } from "../utils";
+import { validateNumber } from "../utils";
 
+import { toast } from "@/hooks/use-toast";
 import { GetTemplateMeasurementValuesItemType } from "@/services/template/measure-value";
 
 // 표시할 컬럼들 순서대로
@@ -25,23 +26,34 @@ interface CustomCell extends CellBase {
   className?: string;
 }
 
+// useSheetData 훅의 반환 타입 정의
+interface UseSheetDataReturn {
+  // getCurrentData: () => GetTemplateMeasurementValuesItemType[];
+  spreadsheetData: CustomCell[][];
+  handleDataChange: (newData: (CellBase | undefined)[][]) => void;
+  errors: ErrorState;
+  // validateData: () => boolean;
+  handleSubmit: (
+    callback: (data: GetTemplateMeasurementValuesItemType[]) => Promise<void>
+  ) => Promise<void>;
+}
+
 export const useSheetData = (
   initialData: GetTemplateMeasurementValuesItemType[]
-) => {
-  const [data, setData] =
-    useState<GetTemplateMeasurementValuesItemType[]>(initialData);
+): UseSheetDataReturn => {
+  const dataRef = useRef<GetTemplateMeasurementValuesItemType[]>(initialData);
+
   const [errors, setErrors] = useState<ErrorState>({});
 
-  // 데이터를 Spreadsheet 형식으로 변환
   const spreadsheetData: CustomCell[][] = useMemo(() => {
-    // 헤더 행
+    const currentData = dataRef.current;
+
     const headerRow: CustomCell[] = displayColumns.map((col) => ({
       value: COLUMN_HEADERS[col] || String(col),
       readOnly: true,
     }));
 
-    // 데이터 행들
-    const dataRows: CustomCell[][] = data.map((row, rowIndex) =>
+    const dataRows: CustomCell[][] = currentData.map((row, rowIndex) =>
       displayColumns.map((col, colIndex) => {
         const isEditable = EDITABLE_COLUMNS.includes(col);
         const isToggle = col === "range_toggle";
@@ -49,7 +61,6 @@ export const useSheetData = (
         return {
           value: isToggle ? (row[col] ? "ON" : "OFF") : (row[col] ?? ""),
           readOnly: !isEditable && !isToggle,
-          // className: errors[`${rowIndex}-${colIndex}`] ? "error-cell" : "",
           className: errors[`${rowIndex}-${colIndex}`]
             ? "bg-[#ffebee] border border-red-300"
             : "",
@@ -58,57 +69,61 @@ export const useSheetData = (
     );
 
     return [headerRow, ...dataRows];
-  }, [data, errors]);
+  }, [errors]);
 
-  // 데이터 변경 핸들러
   const handleDataChange = useCallback(
     (newData: (CellBase | undefined)[][]) => {
       const [, ...dataRows] = newData; // 헤더 제거
+      const currentData = dataRef.current;
 
-      const updatedData: GetTemplateMeasurementValuesItemType[] = data.map(
-        (originalRow, rowIndex) => {
-          const newRow: GetTemplateMeasurementValuesItemType = {
-            ...originalRow,
-          };
-
-          displayColumns.forEach((col, colIndex) => {
-            const cellValue = dataRows[rowIndex]?.[colIndex]?.value;
-
-            if (EDITABLE_COLUMNS.includes(col)) {
-              // 편집 가능한 숫자 컬럼들
-              (newRow as any)[col] = parseToNumber(cellValue);
-            } else if (col === "range_toggle") {
-              // 토글 컬럼
-              newRow[col] = String(cellValue) === "ON";
-            }
-          });
-
-          return newRow;
-        }
-      );
-
-      setData(updatedData);
-
-      // 검증 수행
       const newErrors: ErrorState = {};
-      updatedData.forEach((row, rowIndex) => {
-        EDITABLE_COLUMNS.forEach((col, colIndex) => {
-          if (!validateNumber((row as any)[col])) {
-            newErrors[`${rowIndex}-${displayColumns.indexOf(col)}`] = true;
+
+      for (let rowIndex = 0; rowIndex < currentData.length; rowIndex++) {
+        const originalRow = currentData[rowIndex];
+        if (!originalRow) continue;
+
+        for (let colIndex = 0; colIndex < displayColumns.length; colIndex++) {
+          const col = displayColumns[colIndex];
+          if (!col) continue;
+
+          const cellValue = dataRows[rowIndex]?.[colIndex]?.value;
+
+          if (EDITABLE_COLUMNS.includes(col)) {
+            if (!validateNumber(cellValue)) {
+              newErrors[`${rowIndex}-${colIndex}`] = true;
+            }
+            // const newValue = parseToNumber(cellValue);
+            (originalRow as any)[col] = cellValue;
+          } else if (col === "range_toggle") {
+            const newValue = String(cellValue) === "ON";
+            originalRow[col] = newValue;
           }
-        });
-      });
+        }
+      }
+
+      // 에러 상태만 클리어 (필요시에만 리렌더링)
+      if (Object.keys(errors).length > 0) {
+        setErrors({});
+      }
 
       setErrors(newErrors);
     },
-    [data]
+    [errors]
   );
 
-  const validateData = () => {
+  const debouncedHandleDataChange = useDebounce(handleDataChange, 500);
+
+  const getCurrentData = useCallback(() => {
+    return dataRef.current;
+  }, []);
+
+  // 제출 시에만 사용하는 전체 검증 함수
+  const validateData = useCallback(() => {
     let hasErrors = false;
     const newErrors: { [key: string]: boolean } = {};
+    const currentData = dataRef.current;
 
-    data.forEach((row, rowIndex) => {
+    currentData.forEach((row, rowIndex) => {
       EDITABLE_COLUMNS.forEach((col) => {
         const value = (row as any)[col];
         if (value !== null && !validateNumber(value)) {
@@ -118,10 +133,53 @@ export const useSheetData = (
       });
     });
 
+    console.log("newErrors: ", newErrors);
     setErrors(newErrors);
-
     return hasErrors;
-  };
+  }, []);
 
-  return { data, spreadsheetData, handleDataChange, errors, validateData };
+  const handleSubmit = useCallback(
+    async (
+      callback: (data: GetTemplateMeasurementValuesItemType[]) => Promise<void>
+    ) => {
+      try {
+        const hasErrors = validateData();
+
+        if (hasErrors) {
+          toast({
+            title: "숫자가 아닌 값이 있습니다. 확인해주세요.",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        const currentData = getCurrentData();
+
+        // 빈 문자열을 null로 변환
+        const processedData = currentData.map((row) => {
+          const processedRow = { ...row };
+          EDITABLE_COLUMNS.forEach((col) => {
+            if ((processedRow as any)[col] === "") {
+              (processedRow as any)[col] = null;
+            }
+          });
+          return processedRow;
+        });
+
+        callback(processedData);
+      } catch (error) {
+        console.error("Submit error:", error);
+      }
+    },
+    [getCurrentData, validateData]
+  );
+
+  return {
+    // getCurrentData, // ref 데이터 가져오기
+    spreadsheetData,
+    handleDataChange: debouncedHandleDataChange,
+    errors,
+    // validateData,
+    handleSubmit,
+  };
 };
