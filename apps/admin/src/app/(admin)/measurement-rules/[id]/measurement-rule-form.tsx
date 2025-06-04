@@ -1,9 +1,8 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Info, CheckSquare } from "lucide-react";
-import { ComponentProps } from "react";
-import { useForm, useFormContext } from "react-hook-form";
+import { CheckSquare } from "lucide-react";
+import { useForm } from "react-hook-form";
 import * as z from "zod";
 
 import { BasicAlert } from "@/components/Alert";
@@ -16,22 +15,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Form, FormDescription, FormLabel } from "@/components/ui/form";
 import { NECKLINE, SLEEVE } from "@/constants/top";
 import { QueryDevTools } from "@/lib/react-query";
 import { GetMeasurementRuleByIdResponse } from "@/services/measurement-rule";
@@ -124,7 +108,15 @@ export function MeasurementRuleForm({
           >
             취소
           </Button>
-          <SaveButtons onSubmit={onSubmit} />
+          <Button
+            type="button"
+            onClick={() => {
+              form.trigger();
+              form.handleSubmit((data) => onSubmit(data))();
+            }}
+          >
+            저장
+          </Button>{" "}
         </div>
       </form>
       <QueryDevTools control={form.control} />
@@ -173,33 +165,5 @@ function FixedField(props: { label: string; value: string }) {
         {props.value}
       </p>
     </div>
-  );
-}
-
-function SaveButtons({
-  onSubmit,
-}: {
-  onSubmit: (data: MeasurementRuleFormData) => Promise<void>;
-}) {
-  const form = useFormContext<MeasurementRuleFormData>();
-
-  const handleSubmit = async (data: MeasurementRuleFormData) => {
-    const requestData = {
-      ...data,
-    };
-
-    await onSubmit(requestData);
-  };
-
-  return (
-    <Button
-      type="button"
-      onClick={() => {
-        form.trigger();
-        form.handleSubmit((data) => handleSubmit(data))();
-      }}
-    >
-      저장
-    </Button>
   );
 }

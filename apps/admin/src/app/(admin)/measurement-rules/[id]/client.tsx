@@ -62,7 +62,6 @@ export default function EditMeasurementRuleClient({
           description: error.message,
         });
       }
-      console.error("Error updating measurement rule:", error);
     }
   };
 

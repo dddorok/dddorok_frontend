@@ -1,72 +1,10 @@
-"use client";
-
-import { useQueryClient } from "@tanstack/react-query";
 import { Info } from "lucide-react";
-import { useRouter } from "next/navigation";
 
-import {
-  MeasurementRuleForm,
-  MeasurementRuleFormData,
-} from "../_components/measurement-rule-form/measurement-rule-form";
+import { MeasurementRuleForm } from "./measurement-rule-form";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { useToast } from "@/hooks/use-toast";
-import { CustomError } from "@/services/instance";
-import { createMeasurementRule } from "@/services/measurement-rule";
 
 export default function NewMeasurementRulePage() {
-  const queryClient = useQueryClient();
-  const { toast } = useToast();
-  const router = useRouter();
-
-  const handleSubmit = async (
-    data: MeasurementRuleFormData,
-    redirectTo: "LIST" | "TEMPLATE_NEW"
-  ) => {
-    try {
-      const res = await createMeasurementRule({
-        category_large: data.level1,
-        category_medium: data.level2,
-        category_small: data.level3,
-        sleeve_type: data.sleeveType,
-        neck_line_type: data.necklineType,
-        rule_name: data.name,
-        measurement_codes: data.items,
-      });
-
-      toast({
-        title: "치수 규칙 생성 완료",
-        description: `"${data.name}" 치수 규칙이 성공적으로 저장되었습니다.`,
-      });
-
-      queryClient.invalidateQueries();
-
-      switch (redirectTo) {
-        case "LIST":
-          router.push(`/measurement-rules`);
-          router.refresh();
-          break;
-        case "TEMPLATE_NEW":
-          router.push(
-            `/templates/new?ruleId=${encodeURIComponent(res.data.id)}`
-          );
-          break;
-      }
-    } catch (err) {
-      if (err instanceof CustomError) {
-        if (err.error === "RULE_NAME_DUPLICATE") {
-          throw err;
-        }
-      }
-
-      toast({
-        title: "치수 규칙 생성 실패",
-        description: "치수 규칙 생성 중 오류가 발생했습니다.",
-        variant: "destructive",
-      });
-    }
-  };
-
   return (
     <div className="space-y-6">
       <div>
@@ -88,11 +26,7 @@ export default function NewMeasurementRulePage() {
         </AlertDescription>
       </Alert>
 
-      <MeasurementRuleForm
-        onSubmit={(data, createTemplate) =>
-          handleSubmit(data, createTemplate ? "TEMPLATE_NEW" : "LIST")
-        }
-      />
+      <MeasurementRuleForm />
     </div>
   );
 }

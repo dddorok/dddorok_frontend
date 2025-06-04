@@ -1,8 +1,10 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useQueryClient } from "@tanstack/react-query";
 import { Info, CheckSquare } from "lucide-react";
 import { PlusCircle } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useForm, useFormContext } from "react-hook-form";
 import * as z from "zod";
 
@@ -20,61 +22,28 @@ import {
 } from "@/components/ui/card";
 import { Form } from "@/components/ui/form";
 import { categories } from "@/constants/category";
-import { getCategoryById } from "@/constants/category";
 import { NecklineTypeSchema, SleeveTypeSchema } from "@/constants/top";
+import { toast } from "@/hooks/use-toast";
 import { QueryDevTools } from "@/lib/react-query";
 import { CustomError } from "@/services/instance";
+import { createMeasurementRule } from "@/services/measurement-rule";
 
-interface MeasurementRuleFormProps {
-  initialValues?: MeasurementRuleFormData;
-  isEdit?: boolean;
-  onSubmit: (
-    data: MeasurementRuleFormData,
-    createTemplate: boolean
-  ) => Promise<void>;
-}
-
-const measurementRuleSchema = z
-  .object({
-    level1: z.string().min(1, "대분류를 선택해주세요"),
-    level2: z.string().min(1, "중분류를 선택해주세요"),
-    level3: z.string().min(1, "소분류를 선택해주세요"),
-    sleeveType: SleeveTypeSchema.optional(),
-    necklineType: NecklineTypeSchema.optional(),
-    name: z.string().min(1, "규칙 이름을 입력해주세요"),
-    items: z
-      .array(z.string())
-      .min(1, "최소 1개 이상의 치수 항목을 선택해주세요"),
-  })
-  .superRefine((data, ctx) => {
-    if (data.level2 === "상의" && !data.sleeveType) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ["sleeveType"],
-        message: "소매 유형을 선택해주세요.",
-      });
-    }
-    if (data.level2 === "상의" && !data.necklineType) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ["necklineType"],
-        message: "넥라인 유형을 선택해주세요.",
-      });
-    }
-  });
+const measurementRuleSchema = z.object({
+  level1: z.string().min(1, "대분류를 선택해주세요"),
+  level2: z.string().min(1, "중분류를 선택해주세요"),
+  level3: z.string().min(1, "소분류를 선택해주세요"),
+  sleeveType: SleeveTypeSchema.optional(),
+  necklineType: NecklineTypeSchema.optional(),
+  name: z.string().min(1, "규칙 이름을 입력해주세요"),
+  items: z.array(z.string()).min(1, "최소 1개 이상의 치수 항목을 선택해주세요"),
+});
 
 export type MeasurementRuleFormData = z.infer<typeof measurementRuleSchema>;
 
-/**
- * TODO: edit과 공통 부분은 리팩토링 해야함.
- */
-export function MeasurementRuleForm({
-  initialValues,
-  onSubmit,
-}: MeasurementRuleFormProps) {
+export function MeasurementRuleForm() {
   const form = useForm<z.infer<typeof measurementRuleSchema>>({
     resolver: zodResolver(measurementRuleSchema),
-    defaultValues: initialValues || {
+    defaultValues: {
       name: "",
       items: [],
       level1: categories[0]?.id || "",
@@ -83,11 +52,6 @@ export function MeasurementRuleForm({
     mode: "onSubmit",
     shouldFocusError: true,
   });
-
-  // 선택된 항목 개수 확인
-  const getSelectedItemCount = () => {
-    return form.watch("items")?.length || 0;
-  };
 
   return (
     <Form {...form}>
@@ -127,7 +91,8 @@ export function MeasurementRuleForm({
               <div className="flex items-center gap-2 bg-blue-50 text-blue-700 px-3 py-1.5 rounded-full text-sm">
                 <CheckSquare className="h-4 w-4" />
                 <span>
-                  선택된 항목: <strong>{getSelectedItemCount()}</strong>개
+                  선택된 항목:{" "}
+                  <strong>{form.watch("items")?.length || 0}</strong>개
                 </span>
               </div>
             </div>
@@ -159,7 +124,7 @@ export function MeasurementRuleForm({
           >
             취소
           </Button>
-          <SaveButtons onSubmit={onSubmit} />
+          <SaveButtons />
         </div>
       </form>
       <QueryDevTools control={form.control} />
@@ -167,37 +132,38 @@ export function MeasurementRuleForm({
   );
 }
 
-function SaveButtons({
-  onSubmit,
-}: {
-  onSubmit: (
-    data: MeasurementRuleFormData,
-    createTemplate: boolean
-  ) => Promise<void>;
-}) {
+function SaveButtons() {
   const form = useFormContext<MeasurementRuleFormData>();
+  const queryClient = useQueryClient();
+  const router = useRouter();
+  const handleSubmit = async (data: MeasurementRuleFormData) => {
+    form.trigger();
 
-  const handleSubmit = async (
-    data: MeasurementRuleFormData,
-    createTemplate: boolean = false
-  ) => {
-    // 카테고리 소분류, 중분류, 대분류 선택에 따른 필요 항목 조회
-    const needField = [
-      ...(getCategoryById(data.level3)?.needFields || []),
-      ...(getCategoryById(data.level2)?.needFields || []),
-      ...(getCategoryById(data.level1)?.needFields || []),
-    ];
-
-    const requestData = {
-      ...data,
-      sleeveType: needField?.includes("sleeveType") ? data.sleeveType : "NONE",
-      necklineType: needField?.includes("necklineType")
-        ? data.necklineType
-        : "NONE",
-    };
+    if (data.level2 === "상의" && (!data.sleeveType || !data.necklineType)) {
+      toast({
+        title: "소매 유형, 넥라인 유형을 선택해주세요.",
+      });
+      return;
+    }
 
     try {
-      await onSubmit(requestData, createTemplate);
+      const res = await createMeasurementRule({
+        category_large: data.level1,
+        category_medium: data.level2,
+        category_small: data.level3,
+        sleeve_type: data.sleeveType ?? "NONE",
+        neck_line_type: data.necklineType ?? "NONE",
+        rule_name: data.name,
+        measurement_codes: data.items,
+      });
+      toast({
+        title: "치수 규칙 생성 완료",
+        description: `"${data.name}" 치수 규칙이 성공적으로 저장되었습니다.`,
+      });
+
+      queryClient.invalidateQueries();
+
+      return res.data.id;
     } catch (error) {
       if (error instanceof CustomError) {
         if (error.error === "RULE_NAME_DUPLICATE") {
@@ -210,24 +176,28 @@ function SaveButtons({
     }
   };
 
+  const handleSave = async () => {
+    await handleSubmit(form.getValues());
+    router.push(`/measurement-rules`);
+    router.refresh();
+  };
+
+  const handleSaveAndCreateTemplate = async () => {
+    const id = await handleSubmit(form.getValues());
+    if (id) {
+      router.push(`/templates/new?ruleId=${encodeURIComponent(id)}`);
+    }
+  };
+
   return (
     <>
-      <Button
-        type="button"
-        onClick={() => {
-          form.trigger();
-          form.handleSubmit((data) => handleSubmit(data, false))();
-        }}
-      >
+      <Button type="button" onClick={handleSave}>
         저장
       </Button>
       <Button
         type="button"
         variant="default"
-        onClick={() => {
-          form.trigger();
-          form.handleSubmit((data) => handleSubmit(data, true))();
-        }}
+        onClick={handleSaveAndCreateTemplate}
       >
         <PlusCircle className="mr-2 h-4 w-4" />
         저장 후 템플릿 생성

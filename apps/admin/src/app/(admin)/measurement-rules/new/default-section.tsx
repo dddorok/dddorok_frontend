@@ -4,17 +4,16 @@ import { useFormContext, useWatch } from "react-hook-form";
 
 import { BasicAlert } from "@/components/Alert";
 import { CommonSelectField } from "@/components/CommonFormField";
-import { FormLabel, FormDescription, FormMessage } from "@/components/ui/form";
+import { FormLabel, FormDescription } from "@/components/ui/form";
 import { categories, CATEGORY_ID, getCategoryById } from "@/constants/category";
 import {
-  NECKLINE,
   NECKLINE_OPTIONS,
   NecklineType,
-  SLEEVE,
   SLEEVE_OPTIONS,
   SleeveType,
 } from "@/constants/top";
 import { measurementRuleQueries } from "@/queries/measurement-rule";
+import { 치수규칙_이름_셍성 } from "@/utils/naming";
 
 export function MeasurementRuleDefaultSection() {
   const form = useFormContext();
@@ -108,19 +107,13 @@ function TopNeedFieldForm() {
         label="소매 유형"
         placeholder="소매 유형 선택"
         name="sleeveType"
-        options={SLEEVE_OPTIONS.map((type) => ({
-          label: type.label,
-          value: type.value,
-        }))}
+        options={SLEEVE_OPTIONS}
       />
       <CommonSelectField
         label="넥라인"
         placeholder="넥라인 선택"
         name="necklineType"
-        options={NECKLINE_OPTIONS.map((type) => ({
-          label: type.label,
-          value: type.value,
-        }))}
+        options={NECKLINE_OPTIONS}
       />
     </>
   );
@@ -133,40 +126,23 @@ function MeasurementRuleName() {
   const form = useFormContext();
 
   const categoryLevel3 = useWatch({ name: "level3" });
-  const category = getCategoryById(categoryLevel3);
-
   const categoryLevel2 = useWatch({ name: "level2" });
   const selectedSleeveType: SleeveType = useWatch({ name: "sleeveType" });
   const selectedNecklineType: NecklineType = useWatch({ name: "necklineType" });
+
+  const category = getCategoryById(categoryLevel3);
 
   const { data: measurementRulesData } = useQuery({
     ...measurementRuleQueries.list(),
   });
   const measurementRules = measurementRulesData?.data || [];
-  console.log("measurementRules: ", measurementRules);
 
-  const getAuthName = () => {
-    // 자동 생성되며 수동 수정 불가
-    // form.clearErrors("name");
-    const category3Name = category?.name ?? null;
-    switch (categoryLevel2) {
-      // - 상의: `넥라인 + 소매 유형 + 소분류`
-      case CATEGORY_ID.상의: {
-        if (!selectedNecklineType || !selectedSleeveType || !category3Name) {
-          return null;
-        }
-        if (selectedNecklineType === "NONE" || selectedSleeveType === "NONE") {
-          return null;
-        }
-        return `${NECKLINE[selectedNecklineType]?.label ?? ""} ${SLEEVE[selectedSleeveType]?.label ?? ""} ${category3Name}`;
-      }
-      // - 그 외: `소분류명`
-      default:
-        return category3Name;
-    }
-  };
-
-  const authName = getAuthName();
+  const authName = 치수규칙_이름_셍성({
+    categoryLevel2,
+    sleeveType: selectedSleeveType,
+    necklineType: selectedNecklineType,
+    category3Name: category?.name ?? "",
+  });
 
   // TODO: name field는 제거 가능 할 듯
   useEffect(() => {
@@ -178,16 +154,14 @@ function MeasurementRuleName() {
       form.clearErrors("name");
     }
     form.setValue("name", authName);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authName]);
 
   return (
-    <div>
+    <div className="space-y-2">
       <FormLabel>규칙 이름</FormLabel>
       <p className="p-3 bg-gray-50 rounded-md border text-sm mt-1">
         {authName ?? "자동으로 생성됩니다"}
       </p>
-      <FormMessage />
     </div>
   );
 }
