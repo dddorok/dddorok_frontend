@@ -22,6 +22,8 @@ const 제외_측정_코드 = [
 interface MeasurementRuleSelectSectionProps {
   selectedItems: string[];
   onChange: (items: string[]) => void;
+
+  filter?: (item: GetMeasurementRuleItemCodeResponse) => boolean;
 }
 
 export function MeasurementRuleSelectSection(
@@ -30,7 +32,9 @@ export function MeasurementRuleSelectSection(
   const { data: itemCodes } = useQuery({
     ...measurementRuleQueries.itemCode(),
     select: (data) =>
-      data.filter((item) => !제외_측정_코드.includes(item.code)),
+      data
+        .filter((item) => !제외_측정_코드.includes(item.code))
+        .filter(props.filter ?? (() => true)),
   });
 
   const groupedItems = transformMeasurementItems(itemCodes ?? []);
