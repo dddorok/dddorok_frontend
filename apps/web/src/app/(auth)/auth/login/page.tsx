@@ -4,6 +4,7 @@
 import { ArrowLeft, ArrowRight, XIcon } from "lucide-react";
 import { use, useEffect, useState } from "react";
 
+import Footer from "@/components/layout/Footer";
 import Header from "@/components/layout/Header";
 import { Button } from "@/components/ui/button";
 import { CheckboxWithLabel } from "@/components/ui/checkbox";
@@ -20,9 +21,9 @@ import { createTestSession, updateSession } from "@/lib/auth";
 
 export default function Home() {
   return (
-    <div className="flex flex-col items-center h-screen bg-neutral-N100">
+    <div className="flex flex-col items-center h-screen bg-neutral-N0">
       <Header />
-      <div className="my-[112px] mx-8 rounded-2xl border border-neutral-N100 bg-neutral-N0 shadow-[0px_4px_16px_0px_rgba(28,31,37,0.03)] p-4 px-10 space-y-8 pt-[44px] pb-8">
+      <div className="my-[112px] flex-1 mx-8 rounded-2xl border border-neutral-N100 bg-neutral-N0 shadow-[0px_4px_16px_0px_rgba(28,31,37,0.03)] p-4 px-10 space-y-8 pt-[44px] pb-8">
         <h1 className="text-h2 text-neutral-N900 text-center">Log in</h1>
         <div className="flex flex-col gap-4">
           <NaverLogin />
@@ -30,8 +31,7 @@ export default function Home() {
           <KakaoLogin />
         </div>
       </div>
-      {/* <RefreshToken />
-      <TestSession /> */}
+      <Footer />
     </div>
   );
 }

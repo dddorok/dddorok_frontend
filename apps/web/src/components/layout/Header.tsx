@@ -15,6 +15,7 @@ import {
 } from "../ui/dropdown-menu";
 
 import { ROUTE } from "@/constants/route";
+import { deleteSession } from "@/lib/auth";
 import { cn } from "@/lib/utils";
 import { userQueries } from "@/queries/users";
 import { UserType } from "@/services/user";
@@ -113,7 +114,12 @@ function UserMenuDropdown(props: { user: UserType }) {
         <DropdownMenuItem>
           <Settings /> 설정
         </DropdownMenuItem>
-        <DropdownMenuItem className="text-neutral-N700">
+        <DropdownMenuItem
+          className="text-neutral-N700"
+          onClick={() => {
+            deleteSession();
+          }}
+        >
           <LogOut />
           로그아웃
         </DropdownMenuItem>
