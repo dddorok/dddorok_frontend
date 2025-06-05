@@ -8,6 +8,12 @@ const config: Config = {
   content: ["./src/**/*.{js,ts,jsx,tsx,mdx}"],
   theme: {
     colors: colors,
+    container: {
+      center: true,
+      screens: {
+        DEFAULT: "1204px",
+      },
+    },
     extend: {
       borderRadius: {
         lg: "var(--radius)",

@@ -7,6 +7,7 @@ import { useState } from "react";
 import { CarouselSpacing } from "./_components/Slider";
 
 import Header from "@/components/layout/Header";
+import CommonLayout from "@/components/layout/MainLayout";
 import { ROUTE } from "@/constants/route";
 import { cn } from "@/lib/utils";
 import { templateQueries } from "@/queries/template";
@@ -21,8 +22,7 @@ export default function TemplateListPage() {
 
   console.log(templateList);
   return (
-    <div>
-      <Header />
+    <CommonLayout>
       <div className="pt-16 px-8 pb-12">
         <div className="flex items-center justify-between gap-4 flex-col">
           <h2 className="text-[32px] font-semibold text-neutral-1000">
@@ -63,7 +63,7 @@ export default function TemplateListPage() {
       {/* <div className="container pt-12">
         <CarouselSpacing />
       </div> */}
-    </div>
+    </CommonLayout>
   );
 }
 

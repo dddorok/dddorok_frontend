@@ -19,10 +19,7 @@ export default async function OAuthRedirect(props: {
       case "google": {
         return (
           <Suspense>
-            <LoginButton
-            // accessToken={data.access_token}
-            // refreshToken={data.refresh_token}
-            />
+            <LoginButton />
           </Suspense>
         );
       }
@@ -34,5 +31,5 @@ export default async function OAuthRedirect(props: {
     console.error(error);
   }
 
-  // redirect("/");
+  redirect("/");
 }

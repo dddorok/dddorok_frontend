@@ -50,7 +50,7 @@ export function LoginButton() {
         </p>
         <Image src="/assets/logo/gray.svg" width={200} height={80} alt="" />
       </div>
-      <footer className="py-9 text-small text-neutral-N500 text-center">
+      <footer className="py-9 text-small text-neutral-N500 text-center fixed bottom-0 left-0 right-0 w-full">
         ©2025 DDDOROK • All rights reserved.
       </footer>
     </div>

@@ -1,16 +1,16 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ChevronDownIcon, LogOut, Settings, User, User2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 import { Button } from "../ui/button";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
   DropdownMenuContent,
-  DropdownMenuLabel,
   DropdownMenuItem,
 } from "../ui/dropdown-menu";
 
@@ -38,7 +38,7 @@ export default function Header({ className }: HeaderProps) {
           className
         )}
       >
-        <div className="flex flex-col items-start flex-1 max-w-[1204px] mx-auto w-full">
+        <div className="flex flex-col items-start flex-1 container">
           <div className="flex justify-end pt-4 w-full">
             <ul className="flex gap-5 items-center text-small text-neutral-N600">
               <li>About Us</li>
@@ -76,18 +76,6 @@ export default function Header({ className }: HeaderProps) {
               </div>
             ) : (
               <UserMenuDropdown user={myInfo.user} />
-              // <DropdownMenu>
-              //   <DropdownMenuTrigger>
-              //     <div className="flex gap-1 items-center text-primary-PR600">
-              //       <User2 className="w-6 h-6" />
-              //       <div className="text-medium-b">{myInfo.user.username}</div>
-              //       <ChevronDownIcon className="w-4 h-4" />
-              //     </div>
-              //   </DropdownMenuTrigger>
-              //   <DropdownMenuContent>
-              //     <DropdownMenuLabel>Logout</DropdownMenuLabel>
-              //   </DropdownMenuContent>
-              // </DropdownMenu>
             )}
           </div>
         </div>
@@ -98,8 +86,10 @@ export default function Header({ className }: HeaderProps) {
 }
 
 function UserMenuDropdown(props: { user: UserType }) {
+  const queryClient = useQueryClient();
+  const router = useRouter();
   return (
-    <DropdownMenu defaultOpen>
+    <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <div className="flex gap-1 items-center text-primary-PR600 h-[52px]">
           <User2 className="w-6 h-6" />
@@ -108,16 +98,20 @@ function UserMenuDropdown(props: { user: UserType }) {
         </div>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="min-w-[180px]" align="end">
-        <DropdownMenuItem>
-          <User />내 프로젝트
+        <DropdownMenuItem asChild>
+          <Link href={ROUTE.MYPAGE.PROJECT()}>
+            <User />내 프로젝트
+          </Link>
         </DropdownMenuItem>
         <DropdownMenuItem>
           <Settings /> 설정
         </DropdownMenuItem>
         <DropdownMenuItem
           className="text-neutral-N700"
-          onClick={() => {
-            deleteSession();
+          onClick={async () => {
+            await deleteSession();
+            queryClient.removeQueries();
+            router.replace(ROUTE.HOME);
           }}
         >
           <LogOut />
