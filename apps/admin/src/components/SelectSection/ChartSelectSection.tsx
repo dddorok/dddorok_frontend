@@ -28,14 +28,14 @@ type ChartTypeMap = {
 };
 
 interface ChartTypeSelectProps {
-  chartTypeMapsName: string;
+  chartTypeMaps: ChartTypeMap[];
+  onChange: (chartTypeMaps: ChartTypeMap[]) => void;
 }
 
-export function ChartTypeSelect({ chartTypeMapsName }: ChartTypeSelectProps) {
-  const form = useFormContext();
-
-  const chartTypeMaps: ChartTypeMap[] = useWatch({ name: chartTypeMapsName });
-
+export function ChartTypeSelect({
+  chartTypeMaps,
+  onChange,
+}: ChartTypeSelectProps) {
   const { data: chartTypeList } = useQuery(chartTypeQueries.list());
 
   const selectedChartTypes = (chartTypeMaps || [])
@@ -69,49 +69,40 @@ export function ChartTypeSelect({ chartTypeMapsName }: ChartTypeSelectProps) {
         <CardDescription>차트 유형을 설정해주세요.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-        <FormField
-          name={chartTypeMapsName}
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>차트 유형</FormLabel>
-              <FormDescription>
-                차트 유형 관리에 등록된 목록에서 선택할 수 있으며, 다중 선택이
-                가능합니다.
-              </FormDescription>
-              <div className="space-y-2 mt-2">
-                {chartTypeList?.map((chartType) => (
-                  <div
-                    key={chartType.id}
-                    className="flex items-center space-x-2"
-                  >
-                    <Checkbox
-                      id={`chart-type-${chartType.id}`}
-                      checked={(field.value || []).some(
-                        (map: ChartTypeMap) =>
-                          map.chart_type_id === chartType.id
-                      )}
-                      onCheckedChange={(checked) => {
-                        field.onChange(
-                          getChangeArray(field.value, {
-                            checked: checked === true,
-                            chartTypeId: chartType.id,
-                          })
-                        );
-                      }}
-                    />
-                    <label
-                      htmlFor={`chart-type-${chartType.id}`}
-                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                    >
-                      {chartType.name}
-                    </label>
-                  </div>
-                ))}
+        <FormItem>
+          <FormLabel>차트 유형</FormLabel>
+          <FormDescription>
+            차트 유형 관리에 등록된 목록에서 선택할 수 있으며, 다중 선택이
+            가능합니다.
+          </FormDescription>
+          <div className="space-y-2 mt-2">
+            {chartTypeList?.map((chartType) => (
+              <div key={chartType.id} className="flex items-center space-x-2">
+                <Checkbox
+                  id={`chart-type-${chartType.id}`}
+                  checked={(chartTypeMaps || []).some(
+                    (map: ChartTypeMap) => map.chart_type_id === chartType.id
+                  )}
+                  onCheckedChange={(checked) => {
+                    onChange(
+                      getChangeArray(chartTypeMaps, {
+                        checked: checked === true,
+                        chartTypeId: chartType.id,
+                      })
+                    );
+                  }}
+                />
+                <label
+                  htmlFor={`chart-type-${chartType.id}`}
+                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                >
+                  {chartType.name}
+                </label>
               </div>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+            ))}
+          </div>
+          <FormMessage />
+        </FormItem>
         <ChartTypeOrderDialog
           dialogButtonDisabled={selectedChartTypes.length < 2}
           chartTypes={selectedChartTypes}
@@ -123,7 +114,7 @@ export function ChartTypeSelect({ chartTypeMapsName }: ChartTypeSelectProps) {
               ) || {}),
               order: o.order,
             }));
-            form.setValue(chartTypeMapsName, merged as any);
+            onChange(merged as any);
           }}
         />
       </CardContent>

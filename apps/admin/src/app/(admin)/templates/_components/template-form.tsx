@@ -6,13 +6,12 @@ import { useEffect, useState } from "react";
 import { useForm, useFormContext, useWatch } from "react-hook-form";
 import * as z from "zod";
 
-import { ChartTypeSelect } from "./ChartTypeSelect";
-import { ImageUpload } from "../ImageUpload";
-
 import {
   CommonRadioListField,
   CommonSelectField,
 } from "@/components/CommonFormField";
+import { FileUploadForm } from "@/components/FileUploadForm";
+import { ChartTypeSelect } from "@/components/SelectSection/ChartSelectSection";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -136,16 +135,30 @@ export function TemplateForm({
             </div>
           </CardContent>
         </Card>
-        <ImageUpload
-          file={file}
-          setFile={setFile}
-          onRemove={() => setFile(null)}
-        />
+        <Card>
+          <CardHeader>
+            <CardTitle>템플릿 이미지 업로드</CardTitle>
+            <CardDescription>템플릿 이미지를 업로드해주세요.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <FileUploadForm
+              file={file}
+              setFile={setFile}
+              onRemove={() => setFile(null)}
+              type="image"
+            />
+          </CardContent>
+        </Card>
 
         {/* Section 2: 조건부 속성 입력 */}
         <ConstructionMethodSelect category={category} />
 
-        <ChartTypeSelect chartTypeMapsName="chartTypeMaps" />
+        <ChartTypeSelect
+          chartTypeMaps={form.watch("chartTypeMaps")}
+          onChange={(chartTypeMaps) =>
+            form.setValue("chartTypeMaps", chartTypeMaps)
+          }
+        />
 
         <div className="flex justify-end gap-4">
           <Button variant="outline" type="button">

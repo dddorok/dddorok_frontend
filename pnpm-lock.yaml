@@ -86,6 +86,9 @@ importers:
       '@tanstack/react-query-devtools':
         specifier: ^5.75.0
         version: 5.75.0(@tanstack/react-query@5.74.0(react@19.1.0))(react@19.1.0)
+      '@toss/react':
+        specifier: ^1.8.1
+        version: 1.8.1(react@19.1.0)
       '@toss/use-overlay':
         specifier: ^1.4.2
         version: 1.4.2(react@19.1.0)
@@ -122,6 +125,9 @@ importers:
       react-hook-form:
         specifier: ^7.55.0
         version: 7.55.0(react@19.1.0)
+      react-spreadsheet:
+        specifier: ^0.10.1
+        version: 0.10.1(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(scheduler@0.26.0)
       tailwind-merge:
         specifier: ^3.2.0
         version: 3.2.0
@@ -1490,11 +1496,26 @@ packages:
   '@tootallnate/quickjs-emscripten@0.23.0':
     resolution: {integrity: sha512-C5Mc6rdnsaJDjO3UpGW/CQTHtCKaYlScZTly4JIu97Jxo/odCiH0ITnDXSJPTOrEKk/ycSZ0AOgTmkDtkOsvIA==}
 
+  '@toss/react@1.8.1':
+    resolution: {integrity: sha512-jH3oo/7yctexuutj/YgQrddaK1bU2s5659dkJIXOe23bEjkY+lbhvEz2FLEhRjSo6k6ktPagpxO4AcdhCi5k5A==}
+    peerDependencies:
+      react: ^16.0.0 || ^17.0.0 || ^18
+
+  '@toss/storage@1.4.1':
+    resolution: {integrity: sha512-jvnBXAQ/Fqqdt+gqYKeHYk7SzR2LX/FC50JIoVI0RldG1mDh1tebOqD7XkrZ89q77t/RwTuh60+8fjZDgend/g==}
+
   '@toss/use-overlay@1.4.2':
     resolution: {integrity: sha512-OYJKSKkldho8qrJR0xMJLpz85H68+E+y6H3y/N0XUed/b0ytbfU+fuxcPd14uiC8H0xzliTGBlY8GQP9Z/lteQ==}
     deprecated: Package no longer supported. Contact Support at https://www.npmjs.com/support for more info.
     peerDependencies:
       react: ^16.8 || ^17 || ^18
+
+  '@toss/utility-types@1.2.1':
+    resolution: {integrity: sha512-1y8s1bvmuhuMX/d6qR9mmvcgFZIKYIQqJbAIshlGArXkjk/ec67gXc5uByEV1Y7in9ZhrGNRmjD8DTH0988vpQ==}
+
+  '@toss/utils@1.6.1':
+    resolution: {integrity: sha512-x6m8jLKWtAmCbxTLXbgTzJ5wZyRSUQPLpR/oLJP1ZK9ytXcRf03oA46W/+78kErUkEw/yQz2L+t2xFDHSeZ6IQ==}
+    deprecated: Package no longer supported. Contact Support at https://www.npmjs.com/support for more info.
 
   '@tsconfig/node10@1.0.11':
     resolution: {integrity: sha512-DcRjDCujK/kCk/cUe8Xz8ZSpm8mS3mNNpta+jGCA6USEDfktlNvm1+IuZ9eTcDbNk41BHwpHHeW+N1lKCz4zOw==}
@@ -1729,6 +1750,9 @@ packages:
     resolution: {integrity: sha512-Cg7TFGpIr01vOQNODXOOaGz2NpCU5gl8x1qJFbb6hbZxR7XrcE2vtbAsTAbJ7/xwJtUuJEw8K8Zr/AE0LHlesg==}
     engines: {node: '>=10', npm: '>=6'}
 
+  bahttext@1.1.0:
+    resolution: {integrity: sha512-3g7DbmCwYhLnnN5hJFB+Mtbst4q2gfXpAdqOMK6tz6FmgtlrhX1n1uhuzkIhEr+WcnFR6eRvebIE5msGuEtA7Q==}
+
   balanced-match@1.0.2:
     resolution: {integrity: sha512-3oSeUO0TMV67hN1AmbXsK4yaqU7tjiHlbxRDZOpH0KW9+CeX4bRAaX0Anxt0tx2MrpRpWwQaPwIlISEJhYU5Pw==}
 
@@ -1738,6 +1762,10 @@ packages:
   basic-ftp@5.0.5:
     resolution: {integrity: sha512-4Bcg1P8xhUuqcii/S0Z9wiHIrQVPMermM1any+MX5GeGD7faD3/msQUDGLol9wOcz4/jbg/WJnGqoJF6LiBdtg==}
     engines: {node: '>=10.0.0'}
+
+  bessel@1.0.2:
+    resolution: {integrity: sha512-Al3nHGQGqDYqqinXhQzmwmcRToe/3WyBv4N8aZc5Pef8xw2neZlR9VPi84Sa23JtgWcucu18HxVZrnI0fn2etw==}
+    engines: {node: '>=0.8'}
 
   binary-extensions@2.3.0:
     resolution: {integrity: sha512-Ceh+7ox5qe7LJuLHoY0feh3pHuUDHAcRUeyL2VYghZwfpkNIy/+8Ocg0a3UuSoYzavmylwuLWQOf3hl0jjMMIw==}
@@ -1812,12 +1840,18 @@ packages:
   chardet@0.7.0:
     resolution: {integrity: sha512-mT8iDcrh03qDGRRmoA2hmBJnxpllMR+0/0qlzjqZES6NdiWDcZkCNAk4rPFZ9Q85r27unkiNNg8ZOiwZXBHwcA==}
 
+  chevrotain@7.1.2:
+    resolution: {integrity: sha512-9bQsXVQ7UAvzMs7iUBBJ9Yv//exOy7bIR3PByOEk4M64vIE/LsiOiX7VIkMF/vEMlrSStwsaE884Bp9CpjtC5g==}
+
   chokidar@3.6.0:
     resolution: {integrity: sha512-7VT13fmjotKpGipCW9JEQAusEPE+Ei8nl6/g4FBAmIm0GOOLMua9NDDo/DWp0ZAxCr3cPq5ZpBqmPAQgDda2Pw==}
     engines: {node: '>= 8.10.0'}
 
   class-variance-authority@0.7.1:
     resolution: {integrity: sha512-Ka+9Trutv7G8M6WT6SeiRWz792K5qEqIGEGzXKhAE6xOWAY6pPH8U+9IY3oCMv6kqTmLsv7Xh/2w2RigkePMsg==}
+
+  classnames@2.5.1:
+    resolution: {integrity: sha512-saHYOzhIQs6wy2sVxTM6bUDsQO4F50V9RQ22qBpEdCW+I+/Wmke2HOl6lS6dTpdxVhb88/I6+Hs+438c3lfUow==}
 
   clean-stack@2.2.0:
     resolution: {integrity: sha512-4diC9HaTE+KRAMWhDhrGOECgWZxoevMc5TlkObMqNSsVU62PYzXZ/SMTjzyGAFF1YusgxGcSWTEXBhp0CPwQ1A==}
@@ -1930,6 +1964,10 @@ packages:
   data-view-byte-offset@1.0.1:
     resolution: {integrity: sha512-BS8PfmtDGnrgYdOonGZQdLZslWIeCGFP9tpan0hi1Co2Zr2NKADsvGYA8XxuG/4UWgJ6Cjtv+YJnB6MM69QGlQ==}
     engines: {node: '>= 0.4'}
+
+  date-fns@2.30.0:
+    resolution: {integrity: sha512-fnULvOpxnC5/Vg3NCiWelDsLiUc9bRwAPs/+LfTLNvetFCtCTN+yQz15C/fs4AwX1R9K5GLtLfn8QW+dWisaAw==}
+    engines: {node: '>=0.11'}
 
   debug@3.2.7:
     resolution: {integrity: sha512-CFjzYYAi4ThfiQvizrFQevTTXHtnCqWfe7x1AhgEscTz6ZbLbfoLRLPugTQyBth6f8ZERVUSyWHFD/7Wu4t1XQ==}
@@ -2208,6 +2246,9 @@ packages:
 
   fast-deep-equal@3.1.3:
     resolution: {integrity: sha512-f3qQ9oQy9j2AhBe/H9VC91wLmKBCCU/gDOnKNAYG5hswO7BLKj09Hc5HYNz9cGI++xlpDCIgDaitVs03ATR84Q==}
+
+  fast-formula-parser@1.0.19:
+    resolution: {integrity: sha512-8Roq7V1XjuYj3cWZ9tILyqBHGjS7NkejRaHxSWePu0qjIcvimZwe6WfeA9che03dgWrykZqrw691qg3lwiIkMg==}
 
   fast-glob@3.3.1:
     resolution: {integrity: sha512-kNFPyjhh5cKjrUltxs+wFx+ZkbRaxxmZ+X0ZU31SOsxCEtP9VPgtq2teZw1DebupL5GmDaNQ6yKMMVcM41iqDg==}
@@ -2670,6 +2711,9 @@ packages:
   jsonfile@6.1.0:
     resolution: {integrity: sha512-5dgndWOriYSm5cnYaJNhalLNDKOqFwyDB/rr1E9ZsGciGvKPs8R2xYGCacuf3z6K1YKDz182fd+fY3cn3pMqXQ==}
 
+  jstat@1.9.6:
+    resolution: {integrity: sha512-rPBkJbK2TnA8pzs93QcDDPlKcrtZWuuCo2dVR0TFLOJSxhqfWOVCSp8aV3/oSbn+4uY4yw1URtLpHQedtmXfug==}
+
   jsx-ast-utils@3.3.5:
     resolution: {integrity: sha512-ZZow9HBI5O6EPgSJLUb8n2NKgmVWTwCvHGwFuJlMjvLFqlGG6pjirPhtdsseaLZjSibD8eegzmYpUZwoIlj2cQ==}
     engines: {node: '>=4.0'}
@@ -2701,11 +2745,17 @@ packages:
     resolution: {integrity: sha512-iPZK6eYjbxRu3uB4/WZ3EsEIMJFMqAoopl3R+zuq0UjcAm/MO6KCweDgPfP3elTztoKP3KtnVHxTn2NHBSDVUw==}
     engines: {node: '>=10'}
 
+  lodash.debounce@4.0.8:
+    resolution: {integrity: sha512-FT1yDzDYEoYWhnSGnpE/4Kj1fLZkDFyqRb7fNt6FdYOSxlUWAtp42Eh6Wb0rGIv/m9Bgo7x4GhQbm5Ys4SG5ow==}
+
   lodash.get@4.4.2:
     resolution: {integrity: sha512-z+Uw/vLuy6gQe8cfaFWD7p0wVv8fJl3mbzXh33RS+0oW2wvUqiRXiQ69gLWSLpgB5/6sU+r6BlQR0MBILadqTQ==}
 
   lodash.merge@4.6.2:
     resolution: {integrity: sha512-0KpjqXRVvrYyCsX1swR/XTK0va6VQkQM6MNo7PqW77ByjAhoARA8EfrP1N4+KlKj8YS0ZUCtRT/YUuhyYDujIQ==}
+
+  lodash.throttle@4.1.1:
+    resolution: {integrity: sha512-wIkUCfVKpVsWo3JSZlc+8MB5it+2AN5W8J7YVMST30UrvcQNZ1Okbj+rbVniijTWE6FGYy4XJq/rHkas8qJMLQ==}
 
   lodash@4.17.21:
     resolution: {integrity: sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg==}
@@ -3125,6 +3175,13 @@ packages:
     peerDependencies:
       react-dom: ^16.8.0 || ^17 || ^18 || ^19
 
+  react-spreadsheet@0.10.1:
+    resolution: {integrity: sha512-w+KqCCA5H81FQ7dEBMOz1cZm9I8PSx9yNs+XwjYMjBfCDsOBBljiau93US8GQTtMbXtsExX8k3qD7hZLTp3UHw==}
+    peerDependencies:
+      react: '>=16.8.0'
+      react-dom: '>=16.8.0'
+      scheduler: '>=0.19.0'
+
   react-style-singleton@2.2.3:
     resolution: {integrity: sha512-b6jSvxvVnyptAiLjbkWLE/lOnR4lfTtDAl+eUC7RZy+QQWc6wRzIV2CE6xBuMmDxc2qIihtDCZD5NPOFl7fRBQ==}
     engines: {node: '>=10'}
@@ -3156,6 +3213,9 @@ packages:
 
   regenerator-runtime@0.14.1:
     resolution: {integrity: sha512-dYnhHh0nJoMfnkZs6GmmhFknAGRrLznOu5nc9ML+EJxGvrx6H7teuevqVqCuPcPK//3eDrrjQhehXVx9cnkGdw==}
+
+  regexp-to-ast@0.5.0:
+    resolution: {integrity: sha512-tlbJqcMHnPKI9zSrystikWKwHkBqu2a/Sgw01h3zFjvYrMxEDYHzzoMZnUrbIfpTFEsoRnnviOXNCzFiSc54Qw==}
 
   regexp.prototype.flags@1.5.4:
     resolution: {integrity: sha512-dYqgNSZbDwkaJ2ceRd9ojCGjBq+mOm9LmtXnAnEGyHhN/5R7iDW2TRw3h+o/jCFxus3P2LfWIIiwowAjANm7IA==}
@@ -3607,6 +3667,12 @@ packages:
     peerDependenciesMeta:
       '@types/react':
         optional: true
+
+  use-context-selector@2.0.0:
+    resolution: {integrity: sha512-owfuSmUNd3eNp3J9CdDl0kMgfidV+MkDvHPpvthN5ThqM+ibMccNE0k+Iq7TWC6JPFvGZqanqiGCuQx6DyV24g==}
+    peerDependencies:
+      react: '>=18.0.0'
+      scheduler: '>=0.19.0'
 
   use-deep-compare-effect@1.8.1:
     resolution: {integrity: sha512-kbeNVZ9Zkc0RFGpfMN3MNfaKNvcLNyxOAAd9O4CBZ+kCBXXscn9s/4I+8ytUER4RDpEYs5+O6Rs4PqiZ+rHr5Q==}
@@ -4828,9 +4894,31 @@ snapshots:
 
   '@tootallnate/quickjs-emscripten@0.23.0': {}
 
+  '@toss/react@1.8.1(react@19.1.0)':
+    dependencies:
+      '@babel/runtime': 7.27.1
+      '@toss/storage': 1.4.1
+      '@toss/utils': 1.6.1
+      classnames: 2.5.1
+      lodash.debounce: 4.0.8
+      lodash.throttle: 4.1.1
+      react: 19.1.0
+
+  '@toss/storage@1.4.1':
+    dependencies:
+      '@babel/runtime': 7.27.1
+
   '@toss/use-overlay@1.4.2(react@19.1.0)':
     dependencies:
       react: 19.1.0
+
+  '@toss/utility-types@1.2.1': {}
+
+  '@toss/utils@1.6.1':
+    dependencies:
+      '@babel/runtime': 7.27.1
+      '@toss/utility-types': 1.2.1
+      date-fns: 2.30.0
 
   '@tsconfig/node10@1.0.11': {}
 
@@ -5143,11 +5231,15 @@ snapshots:
       cosmiconfig: 7.1.0
       resolve: 1.22.10
 
+  bahttext@1.1.0: {}
+
   balanced-match@1.0.2: {}
 
   base64-js@1.5.1: {}
 
   basic-ftp@5.0.5: {}
+
+  bessel@1.0.2: {}
 
   binary-extensions@2.3.0: {}
 
@@ -5253,6 +5345,10 @@ snapshots:
 
   chardet@0.7.0: {}
 
+  chevrotain@7.1.2:
+    dependencies:
+      regexp-to-ast: 0.5.0
+
   chokidar@3.6.0:
     dependencies:
       anymatch: 3.1.3
@@ -5268,6 +5364,8 @@ snapshots:
   class-variance-authority@0.7.1:
     dependencies:
       clsx: 2.1.1
+
+  classnames@2.5.1: {}
 
   clean-stack@2.2.0: {}
 
@@ -5371,6 +5469,10 @@ snapshots:
       call-bound: 1.0.4
       es-errors: 1.3.0
       is-data-view: 1.0.2
+
+  date-fns@2.30.0:
+    dependencies:
+      '@babel/runtime': 7.27.1
 
   debug@3.2.7:
     dependencies:
@@ -5761,6 +5863,13 @@ snapshots:
       tmp: 0.0.33
 
   fast-deep-equal@3.1.3: {}
+
+  fast-formula-parser@1.0.19:
+    dependencies:
+      bahttext: 1.1.0
+      bessel: 1.0.2
+      chevrotain: 7.1.2
+      jstat: 1.9.6
 
   fast-glob@3.3.1:
     dependencies:
@@ -6271,6 +6380,8 @@ snapshots:
     optionalDependencies:
       graceful-fs: 4.2.11
 
+  jstat@1.9.6: {}
+
   jsx-ast-utils@3.3.5:
     dependencies:
       array-includes: 3.1.8
@@ -6301,9 +6412,13 @@ snapshots:
     dependencies:
       p-locate: 5.0.0
 
+  lodash.debounce@4.0.8: {}
+
   lodash.get@4.4.2: {}
 
   lodash.merge@4.6.2: {}
+
+  lodash.throttle@4.1.1: {}
 
   lodash@4.17.21: {}
 
@@ -6739,6 +6854,16 @@ snapshots:
     dependencies:
       react-dom: 19.1.0(react@19.1.0)
 
+  react-spreadsheet@0.10.1(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(scheduler@0.26.0):
+    dependencies:
+      array.prototype.flatmap: 1.3.3
+      classnames: 2.5.1
+      fast-formula-parser: 1.0.19
+      react: 19.1.0
+      react-dom: 19.1.0(react@19.1.0)
+      scheduler: 0.26.0
+      use-context-selector: 2.0.0(react@19.1.0)(scheduler@0.26.0)
+
   react-style-singleton@2.2.3(@types/react@19.1.0)(react@19.1.0):
     dependencies:
       get-nonce: 1.0.1
@@ -6775,6 +6900,8 @@ snapshots:
       which-builtin-type: 1.2.1
 
   regenerator-runtime@0.14.1: {}
+
+  regexp-to-ast@0.5.0: {}
 
   regexp.prototype.flags@1.5.4:
     dependencies:
@@ -7321,6 +7448,11 @@ snapshots:
       tslib: 2.8.1
     optionalDependencies:
       '@types/react': 19.1.0
+
+  use-context-selector@2.0.0(react@19.1.0)(scheduler@0.26.0):
+    dependencies:
+      react: 19.1.0
+      scheduler: 0.26.0
 
   use-deep-compare-effect@1.8.1(react@19.1.0):
     dependencies:

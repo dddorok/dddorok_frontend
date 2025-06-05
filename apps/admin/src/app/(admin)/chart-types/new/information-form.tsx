@@ -1,13 +1,11 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
+import { useSuspenseQuery } from "@tanstack/react-query";
 import React, { Suspense, useCallback, useEffect } from "react";
 import { useForm, useFormContext, useWatch } from "react-hook-form";
 import { z } from "zod";
 
 import {
-  BODY_DETAIL_TYPE,
   SectionType,
-  RETAIL_DETAIL_TYPE,
   ChartSectionSchema,
   RETAIL_DETAIL,
   BODY_DETAIL,
@@ -16,11 +14,11 @@ import {
 } from "./constants";
 
 import {
-  CommonCheckboxListField,
   CommonInputField,
   CommonSelectField,
 } from "@/components/CommonFormField";
 import { CommonRadioGroup } from "@/components/CommonUI";
+import { MeasurementRuleSelectSection } from "@/components/SelectSection/MeasurementRuleSelectSection";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -218,16 +216,24 @@ function BodyChart() {
         />
       </div>
       {form.watch("ruleType") === "RULE" && (
-        <MeasurementRuleSelectSection key={form.watch("ruleType")} />
+        <MeasurementRuleIdSelectSection key={form.watch("ruleType")} />
       )}
+
       {form.watch("ruleType") === "CODE" && (
-        <MeasurementCodeSelectSection section="몸통" />
+        <MeasurementRuleSelectSection
+          selectedItems={form.watch("selectedMeasurements") ?? []}
+          onChange={(items) => {
+            form.setValue("selectedMeasurements", items);
+          }}
+          filter={(item) => item.section === "몸통"}
+        />
       )}
     </div>
   );
 }
 
 function RetailChart() {
+  const form = useFormContext<FormValues>();
   return (
     <div className="space-y-4">
       <CommonSelectField
@@ -240,12 +246,18 @@ function RetailChart() {
         placeholder="선택하세요"
       />
 
-      <MeasurementCodeSelectSection section="소매" />
+      <MeasurementRuleSelectSection
+        selectedItems={form.watch("selectedMeasurements") ?? []}
+        onChange={(items) => {
+          form.setValue("selectedMeasurements", items);
+        }}
+        filter={(item) => item.section === "소매"}
+      />
     </div>
   );
 }
 
-function MeasurementRuleSelectSection() {
+function MeasurementRuleIdSelectSection() {
   const form = useFormContext<FormValues>();
   const { data: measurementRuleList } = useSuspenseQuery({
     ...measurementRuleQueries.list(),
@@ -266,35 +278,6 @@ function MeasurementRuleSelectSection() {
         form.setValue("measurementRuleName", selectedRule?.rule_name);
       }}
       placeholder="선택하세요"
-    />
-  );
-}
-
-function MeasurementCodeSelectSection({
-  section,
-}: {
-  section: "몸통" | "소매";
-}) {
-  const { data: measurementRuleItemCodeList } = useQuery({
-    ...measurementRuleQueries.itemCode(),
-  });
-
-  const options =
-    measurementRuleItemCodeList
-      ?.filter((item) => item.section === section)
-      .map((item) => ({
-        label: item.label,
-        value: item.code,
-      })) ?? [];
-
-  return (
-    <CommonCheckboxListField
-      name={
-        section === "몸통" ? "selectedMeasurements" : "selectedMeasurements"
-      }
-      label="측정항목 선택"
-      options={options}
-      className="grid grid-cols-2 gap-2"
     />
   );
 }

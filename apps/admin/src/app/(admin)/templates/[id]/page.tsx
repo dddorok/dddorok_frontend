@@ -1,3 +1,4 @@
+import ExcelTableWithLibrary from "./_components/react-spreadsheet-typescript";
 import TemplateDetailClient from "./template-detail-client";
 
 export default async function TemplatePage({
@@ -7,5 +8,6 @@ export default async function TemplatePage({
 }) {
   const { id } = await params;
 
+  // return <ExcelTableWithLibrary />;
   return <TemplateDetailClient templateId={id} />;
 }

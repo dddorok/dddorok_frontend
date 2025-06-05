@@ -1,4 +1,3 @@
-/* eslint-disable @next/next/no-img-element */
 "use client";
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -6,11 +5,11 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 
-import { ChartTypeSelect } from "../../_components/ChartTypeSelect";
 import { DeleteTemplateButton } from "../../_components/template-list";
-import { ImageUpload } from "../../ImageUpload";
 
 import { CommonInputField } from "@/components/CommonFormField";
+import { FileUploadForm } from "@/components/FileUploadForm";
+import { ChartTypeSelect } from "@/components/SelectSection/ChartSelectSection";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -47,7 +46,6 @@ export default function EditTemplateClient({
     newImageFile: File | null
   ) => {
     if (!template) return;
-    console.log("data: ", data);
 
     let resourceId: string | null = null;
 
@@ -139,7 +137,12 @@ function TemplateEditForm({
           file={file}
           setFile={setFile}
         />
-        <ChartTypeSelect chartTypeMapsName="chartTypeMaps" />
+        <ChartTypeSelect
+          chartTypeMaps={form.watch("chartTypeMaps")}
+          onChange={(chartTypeMaps) =>
+            form.setValue("chartTypeMaps", chartTypeMaps)
+          }
+        />
         <div className="flex justify-end gap-4">
           <DeleteTemplateButton templateId={template.id} buttonSize="default" />
           <Button variant="outline" type="button">
@@ -163,58 +166,21 @@ function TemplateImage({
   file: File | null;
   setFile: (file: File | null) => void;
 }) {
-  const [isEditing, setIsEditing] = useState(false);
-
-  if (isEditing || file) {
-    return (
-      <>
-        <ImageUpload
-          file={file}
-          setFile={(file) => {
-            setFile(file);
-          }}
-          onRemove={() => setFile(null)}
-        />
-      </>
-    );
-  }
-
-  if (!isEditing && thumbnailUrl) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>이미지 수정</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="max-h-[200px] overflow-hidden">
-            <img
-              src={thumbnailUrl}
-              alt="thumbnail"
-              className="h-[200px] object-contain"
-            />
-          </div>
-          <div className="flex justify-end mt-2">
-            <Button
-              variant="outline"
-              type="button"
-              onClick={() => setIsEditing(true)}
-            >
-              수정
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
   return (
-    <ImageUpload
-      file={file}
-      setFile={(file) => {
-        setFile(file);
-        setIsEditing(false);
-      }}
-      onRemove={() => setFile(null)}
-    />
+    <Card>
+      <CardHeader>
+        <CardTitle>템플릿 이미지 업로드</CardTitle>
+        <CardDescription>템플릿 이미지를 업로드해주세요.</CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <FileUploadForm
+          file={file}
+          setFile={(file) => setFile(file)}
+          onRemove={() => setFile(null)}
+          type="image"
+          initFileImageUrl={thumbnailUrl}
+        />
+      </CardContent>
+    </Card>
   );
 }

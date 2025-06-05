@@ -16,7 +16,7 @@ import { cn } from "@/lib/utils";
 
 interface CommonFieldProps {
   name: string;
-  label: string;
+  label?: string;
 }
 
 interface CommonSelectFieldProps
@@ -31,13 +31,14 @@ export function CommonSelectField(props: CommonSelectFieldProps) {
       name={props.name}
       render={({ field }) => (
         <FormItem>
-          <FormLabel>{props.label}</FormLabel>
+          {props.label && <FormLabel>{props.label}</FormLabel>}
           <FormControl>
             <CommonSelect
               {...props}
               onChange={(value) => {
                 props.onChange?.(value);
                 field.onChange(value);
+                field.onBlur();
               }}
               value={field.value}
             />
