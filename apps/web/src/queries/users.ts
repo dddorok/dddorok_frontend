@@ -7,7 +7,7 @@ export const userQuerKey = "users";
 const myInfoQueryOptions = () =>
   queryOptions({
     queryKey: [userQuerKey, "my-info"],
-    queryFn: getMyInfo,
+    queryFn: () => getMyInfo(),
   });
 
 export const userQueries = {

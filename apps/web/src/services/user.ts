@@ -12,13 +12,15 @@ export const userTestLogin = async () => {
   return response;
 };
 
-interface MyInfoResponse {
-  user: {
-    id: string;
-    username: string;
-    subscribe: string;
-    role: string;
-  };
+export interface UserType {
+  id: string;
+  username: string;
+  subscribe: string;
+  role: string;
+}
+
+export interface MyInfoResponse {
+  user: UserType;
 }
 
 export const getMyInfo = async () => {

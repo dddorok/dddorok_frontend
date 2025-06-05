@@ -1,15 +1,23 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { ChevronDownIcon, User2 } from "lucide-react";
+import { ChevronDownIcon, LogOut, Settings, User, User2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
 import { Button } from "../ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuItem,
+} from "../ui/dropdown-menu";
 
 import { ROUTE } from "@/constants/route";
 import { cn } from "@/lib/utils";
 import { userQueries } from "@/queries/users";
+import { UserType } from "@/services/user";
 
 interface HeaderProps {
   className?: string;
@@ -66,16 +74,50 @@ export default function Header({ className }: HeaderProps) {
                 <Button color="fill">회원가입</Button>
               </div>
             ) : (
-              <div className="flex gap-1 items-center text-primary-PR600">
-                <User2 className="w-6 h-6" />
-                <div className="text-medium-b">{myInfo.user.username}</div>
-                <ChevronDownIcon className="w-4 h-4" />
-              </div>
+              <UserMenuDropdown user={myInfo.user} />
+              // <DropdownMenu>
+              //   <DropdownMenuTrigger>
+              //     <div className="flex gap-1 items-center text-primary-PR600">
+              //       <User2 className="w-6 h-6" />
+              //       <div className="text-medium-b">{myInfo.user.username}</div>
+              //       <ChevronDownIcon className="w-4 h-4" />
+              //     </div>
+              //   </DropdownMenuTrigger>
+              //   <DropdownMenuContent>
+              //     <DropdownMenuLabel>Logout</DropdownMenuLabel>
+              //   </DropdownMenuContent>
+              // </DropdownMenu>
             )}
           </div>
         </div>
       </div>
       <div className={cn("header-blank", "h-[var(--header-height)]")}></div>
     </>
+  );
+}
+
+function UserMenuDropdown(props: { user: UserType }) {
+  return (
+    <DropdownMenu defaultOpen>
+      <DropdownMenuTrigger asChild>
+        <div className="flex gap-1 items-center text-primary-PR600 h-[52px]">
+          <User2 className="w-6 h-6" />
+          <div className="text-medium-b">{props.user.username}</div>
+          <ChevronDownIcon className="w-4 h-4" />
+        </div>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent className="min-w-[180px]" align="end">
+        <DropdownMenuItem>
+          <User />내 프로젝트
+        </DropdownMenuItem>
+        <DropdownMenuItem>
+          <Settings /> 설정
+        </DropdownMenuItem>
+        <DropdownMenuItem className="text-neutral-N700">
+          <LogOut />
+          로그아웃
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
