@@ -4,9 +4,11 @@ import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { Suspense, useState } from "react";
 
+import ChartRegistration from "./ChartRegistration";
 import { SectionType } from "./constants";
 import InformationForm from "./information-form";
 import SvgMappingForm from "./svg-mapping-form";
+import SvgMappingTool from "./svg-mapping-tool";
 import { SvgUpload } from "../_components/svg-upload";
 
 import { useToast } from "@/hooks/use-toast";
@@ -78,7 +80,9 @@ export default function NewChartTypePage() {
 
   return (
     <>
-      {step === 1 && (
+      <ChartRegistration />
+      {/* <SvgMappingTool /> */}
+      {/* {step === 1 && (
         <InformationForm
           onSubmit={(data) => {
             setFormData({
@@ -120,7 +124,7 @@ export default function NewChartTypePage() {
             measurementCodeList={measurementList ?? []}
           />
         </Suspense>
-      )}
+      )} */}
     </>
   );
 }
