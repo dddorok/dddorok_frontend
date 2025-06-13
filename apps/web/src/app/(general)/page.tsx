@@ -14,7 +14,7 @@ export default function Home() {
         <div className="bg-[url('/main-bg.png')] bg-cover bg-center min-h-screen absolute top-0 left-0 right-0 z-[-1]"></div>
         <div className="flex flex-col min-h-screen">
           <Header className="bg-neutral-N100-25A border-x-primary-PR200A60 shadow-[0px_4px_24px_0px_rgba(28,31,37,0.05)]" />
-          <Body>
+          <Body className="pt-16 pb-20">
             <div className="px-4 flex pb-4 flex-col items-center justify-center">
               <p className="text-neutral-N800 text-h4 font-medium">✦</p>
               <Image

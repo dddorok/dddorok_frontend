@@ -23,24 +23,20 @@ export default function Home() {
   const [url, setUrl] = useState("");
 
   return (
-    <div className="flex flex-col items-center h-screen bg-neutral-N0">
-      <Header />
-      <div className="mt-[112px] mb-20 flex-1 mx-8 border border-neutral-N200 bg-neutral-N0 p-4 px-10 space-y-8 pt-11 pb-8">
-        <h1 className="text-h2 text-neutral-N900 text-center">Log in</h1>
-        <LoginForm
-          type="join"
-          onClick={(url) => {
-            setUrl(url);
-          }}
-        />
-        <p className=" text-[14px] text-neutral-N600 text-center">
-          이미 회원이신가요?{" "}
-          <Link href={ROUTE.LOGIN} className="text-primary-PR ">
-            로그인
-          </Link>
-        </p>
-      </div>
-      <Footer />
+    <>
+      <h1 className="text-h2 text-neutral-N900 text-center">Log in</h1>
+      <LoginForm
+        type="join"
+        onClick={(url) => {
+          setUrl(url);
+        }}
+      />
+      <p className=" text-[14px] text-neutral-N600 text-center">
+        이미 회원이신가요?{" "}
+        <Link href={ROUTE.LOGIN} className="text-primary-PR ">
+          로그인
+        </Link>
+      </p>
       <TermsDialog
         open={url !== ""}
         onOpenChange={() => setUrl("")}
@@ -49,7 +45,7 @@ export default function Home() {
           setUrl("");
         }}
       />
-    </div>
+    </>
   );
 }
 

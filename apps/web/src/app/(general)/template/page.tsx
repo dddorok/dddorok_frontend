@@ -38,7 +38,7 @@ export default function TemplateListPage() {
               key={tab}
               onClick={() => setActiveTab(tab)}
               className={cn(
-                "px-4 py-[6px] text-neutral-N500 text-medium-r rounded-[6px] border border-neutral-N400",
+                "px-4 h-[36px] text-neutral-N500 text-medium-r rounded-[6px] border border-neutral-N400",
                 activeTab === tab &&
                   "bg-primary-PR text-medium-b text-neutral-N0   border-primary-PR"
               )}
@@ -48,7 +48,7 @@ export default function TemplateListPage() {
           ))}
         </div>
       </div>
-      <div className="grid grid-cols-4 gap-x-3 gap-y-16 container py-12 ">
+      <div className="grid  gap-x-[30px] gap-y-16 container py-[64px] grid-cols-3 lg:grid-cols-4 ">
         {templateList?.items.map((template) => (
           <Link
             href={ROUTE.PROJECT.NEW(template.id, template.name)}
@@ -66,7 +66,7 @@ export default function TemplateListPage() {
 function TemplateItem({ template }: { template: TemplateType }) {
   return (
     <div>
-      <div className="bg-primary-PR100 border border-neutralAlpha-NA05 rounded-lg h-[216px]">
+      <div className="bg-primary-PR100 border border-neutralAlpha-NA05 rounded-lg h-[216px] overflow-hidden">
         {template.thumbnail_url && (
           <img
             src={template.thumbnail_url}
