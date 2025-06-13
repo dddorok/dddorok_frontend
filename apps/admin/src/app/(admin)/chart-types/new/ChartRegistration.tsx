@@ -12,7 +12,7 @@ interface ChartPoint {
   pathId?: string;
 }
 
-interface SvgPath {
+export interface SvgPath {
   id: string;
   element: SVGPathElement;
   data: string;
@@ -22,7 +22,7 @@ interface SvgPath {
   matchedEndPointId?: string;
 }
 
-interface MeasurementItem {
+export interface MeasurementItem {
   id: string;
   name: string;
   startPoint: string;
