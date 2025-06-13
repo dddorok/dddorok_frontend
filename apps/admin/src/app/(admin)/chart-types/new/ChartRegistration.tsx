@@ -747,6 +747,120 @@ const ChartRegistration: React.FC = () => {
     return controlPoints;
   }
 
+  // 타입 명시
+  interface AutoMappingTableProps {
+    paths: SvgPath[];
+    extractControlPoints: (pathData: string) => { x: number; y: number }[];
+  }
+  function AutoMappingTable({
+    paths,
+    extractControlPoints,
+  }: AutoMappingTableProps) {
+    return (
+      <table className="w-full border text-xs mb-2">
+        <thead className="bg-gray-100 text-gray-700">
+          <tr>
+            <th className="border px-2 py-1">No.</th>
+            <th className="border px-2 py-1">path ID</th>
+            <th className="border px-2 py-1">타입</th>
+            <th className="border px-2 py-1">시작점</th>
+            <th className="border px-2 py-1">끝점</th>
+            <th className="border px-2 py-1">제어점</th>
+          </tr>
+        </thead>
+        <tbody>
+          {paths.map((p, i) => {
+            const startPoint = p.points[0];
+            const endPoint = p.points[p.points.length - 1];
+            const controlPoints =
+              p.type === "curve" ? extractControlPoints(p.data) : [];
+            return (
+              <tr key={p.id} className="text-gray-700">
+                <td className="border px-2 py-1 text-center">{i + 1}</td>
+                <td className="border px-2 py-1 text-blue-600 underline cursor-pointer">
+                  {p.id}
+                </td>
+                <td className="border px-2 py-1">
+                  {p.type === "line" ? "직선" : "곡선"}
+                </td>
+                <td className="border px-2 py-1">
+                  {startPoint ? `(${startPoint.x}, ${startPoint.y})` : "-"}
+                </td>
+                <td className="border px-2 py-1">
+                  {endPoint ? `(${endPoint.x}, ${endPoint.y})` : "-"}
+                </td>
+                <td className="border px-2 py-1">
+                  {controlPoints.length > 0
+                    ? controlPoints.map((cp) => `(${cp.x}, ${cp.y})`).join(", ")
+                    : "-"}
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    );
+  }
+
+  // 타입 명시
+  interface ManualMappingTableProps {
+    measurementItems: MeasurementItem[];
+    selectedPathId: string | null;
+    selectedPointIndex: number;
+    handlePathIdClick: (pathId: string) => void;
+  }
+
+  function ManualMappingTable({
+    measurementItems,
+    selectedPathId,
+    selectedPointIndex,
+    handlePathIdClick,
+  }: ManualMappingTableProps) {
+    return (
+      <table className="w-full border text-xs">
+        <thead className="bg-gray-100 text-gray-700">
+          <tr>
+            <th className="border px-2 py-1">No.</th>
+            <th className="border px-2 py-1">path ID</th>
+            <th className="border px-2 py-1">측정항목</th>
+            <th className="border px-2 py-1">시작점 - 번호</th>
+            <th className="border px-2 py-1">끝점 - 번호</th>
+            <th className="border px-2 py-1">슬라이더 조정</th>
+          </tr>
+        </thead>
+        <tbody>
+          {measurementItems.map((m, i) => (
+            <tr key={m.id}>
+              <td className="border px-2 py-1 text-center">{i + 1}</td>
+              <td
+                className={`border px-2 py-1 text-blue-600 underline cursor-pointer ${selectedPathId === m.id ? "bg-blue-50" : ""}`}
+                onClick={() => handlePathIdClick(m.id)}
+              >
+                {m.id}
+              </td>
+              <td className="border px-2 py-1">{m.name}</td>
+              <td className="border px-2 py-1">
+                {m.startPoint ||
+                  (selectedPathId === m.id && selectedPointIndex === 0
+                    ? "선택 중..."
+                    : "선택")}
+              </td>
+              <td className="border px-2 py-1">
+                {m.endPoint ||
+                  (selectedPathId === m.id && selectedPointIndex === 1
+                    ? "선택 중..."
+                    : "선택")}
+              </td>
+              <td className="border px-2 py-1 text-center">
+                <input type="checkbox" checked={m.adjustable} readOnly />
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#fafbfc] flex flex-col items-center py-8">
       {/* 상단 타이틀만 */}
@@ -1052,51 +1166,10 @@ const ChartRegistration: React.FC = () => {
           </span>
           <span className="font-semibold text-gray-700">자동 매핑 목록</span>
         </div>
-        <table className="w-full border text-xs mb-2">
-          <thead className="bg-gray-100 text-gray-700">
-            <tr>
-              <th className="border px-2 py-1">No.</th>
-              <th className="border px-2 py-1">path ID</th>
-              <th className="border px-2 py-1">타입</th>
-              <th className="border px-2 py-1">시작점</th>
-              <th className="border px-2 py-1">끝점</th>
-              <th className="border px-2 py-1">제어점</th>
-            </tr>
-          </thead>
-          <tbody>
-            {paths.map((p, i) => {
-              const startPoint = p.points[0];
-              const endPoint = p.points[p.points.length - 1];
-              const controlPoints =
-                p.type === "curve" ? extractControlPoints(p.data) : [];
-
-              return (
-                <tr key={p.id} className="text-gray-700">
-                  <td className="border px-2 py-1 text-center">{i + 1}</td>
-                  <td className="border px-2 py-1 text-blue-600 underline cursor-pointer">
-                    {p.id}
-                  </td>
-                  <td className="border px-2 py-1">
-                    {p.type === "line" ? "직선" : "곡선"}
-                  </td>
-                  <td className="border px-2 py-1">
-                    {startPoint ? `(${startPoint.x}, ${startPoint.y})` : "-"}
-                  </td>
-                  <td className="border px-2 py-1">
-                    {endPoint ? `(${endPoint.x}, ${endPoint.y})` : "-"}
-                  </td>
-                  <td className="border px-2 py-1">
-                    {controlPoints.length > 0
-                      ? controlPoints
-                          .map((cp, idx) => `(${cp.x}, ${cp.y})`)
-                          .join(", ")
-                      : "-"}
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+        <AutoMappingTable
+          paths={paths}
+          extractControlPoints={extractControlPoints}
+        />
       </div>
 
       {/* 3. 관리자 수동 매핑 항목 */}
@@ -1109,49 +1182,12 @@ const ChartRegistration: React.FC = () => {
             관리자 수동 매핑 항목
           </span>
         </div>
-        <table className="w-full border text-xs">
-          <thead className="bg-gray-100 text-gray-700">
-            <tr>
-              <th className="border px-2 py-1">No.</th>
-              <th className="border px-2 py-1">path ID</th>
-              <th className="border px-2 py-1">측정항목</th>
-              <th className="border px-2 py-1">시작점 - 번호</th>
-              <th className="border px-2 py-1">끝점 - 번호</th>
-              <th className="border px-2 py-1">슬라이더 조정</th>
-            </tr>
-          </thead>
-          <tbody>
-            {measurementItems.map((m, i) => (
-              <tr key={m.id}>
-                <td className="border px-2 py-1 text-center">{i + 1}</td>
-                <td
-                  className={`border px-2 py-1 text-blue-600 underline cursor-pointer ${
-                    selectedPathId === m.id ? "bg-blue-50" : ""
-                  }`}
-                  onClick={() => handlePathIdClick(m.id)}
-                >
-                  {m.id}
-                </td>
-                <td className="border px-2 py-1">{m.name}</td>
-                <td className="border px-2 py-1">
-                  {m.startPoint ||
-                    (selectedPathId === m.id && selectedPointIndex === 0
-                      ? "선택 중..."
-                      : "선택")}
-                </td>
-                <td className="border px-2 py-1">
-                  {m.endPoint ||
-                    (selectedPathId === m.id && selectedPointIndex === 1
-                      ? "선택 중..."
-                      : "선택")}
-                </td>
-                <td className="border px-2 py-1 text-center">
-                  <input type="checkbox" checked={m.adjustable} readOnly />
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <ManualMappingTable
+          measurementItems={measurementItems}
+          selectedPathId={selectedPathId}
+          selectedPointIndex={selectedPointIndex}
+          handlePathIdClick={handlePathIdClick}
+        />
         <div className="text-xs text-red-500 mt-2">
           {selectedPathId && selectedPointIndex === 0
             ? "시작점을 선택해주세요."
