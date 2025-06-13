@@ -1,10 +1,11 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import React, { useState, useRef, useEffect } from "react";
 
-import { AutoMappingTable } from "./components/AutoMappingTable";
-import { ManualMappingTable } from "./components/ManualMappingTable";
-import { SvgPreview } from "./components/SvgPreview";
+import { AutoMappingTable } from "./_components/AutoMappingTable";
+import { ManualMappingTable } from "./_components/ManualMappingTable";
+import { SvgPreview } from "./_components/SvgPreview";
 import { ChartPoint } from "./types";
 import { getGridPointsFromPaths, extractControlPoints } from "./utils/svgGrid";
 
@@ -187,14 +188,11 @@ const ChartRegistration: React.FC = () => {
   const [selectedPointId, setSelectedPointId] = useState<string | null>(null);
   const [selectedPathId, setSelectedPathId] = useState<string | null>(null);
   const [selectedPointIndex, setSelectedPointIndex] = useState<number>(0);
-  const [mousePosition, setMousePosition] = useState<{
-    x: number;
-    y: number;
-  } | null>(null);
+
   const { toast } = useToast();
+  const router = useRouter();
 
   const svgViewBox = "";
-  const hoveredPointId = null;
 
   const {
     fileName: svgFileName,
@@ -502,6 +500,65 @@ const ChartRegistration: React.FC = () => {
     }
   };
 
+  const handleAdjustableChange = (id: string, adjustable: boolean) => {
+    setMeasurementItems((prev) =>
+      prev.map((item) => (item.id === id ? { ...item, adjustable } : item))
+    );
+  };
+
+  const handleSubmit = async () => {
+    try {
+      // 모든 측정 항목이 매핑되었는지 확인
+      const unmappedItems = measurementItems.filter(
+        (item) => !item.startPoint || !item.endPoint
+      );
+      if (unmappedItems.length > 0) {
+        toast({
+          title: "경고",
+          variant: "destructive",
+          description: "모든 측정 항목의 매핑을 완료해주세요.",
+        });
+        return;
+      }
+
+      // API 요청 데이터 구성
+      const requestData = {
+        name: "라운드넥 래글런 스웨터 앞몸판", // TODO: 실제 이름으로 변경
+        svgFileUrl: "s3url", // TODO: 실제 S3 URL로 변경
+        points: points.map((point) => ({
+          id: point.id,
+          x: point.x,
+          y: point.y,
+        })),
+        mappings: measurementItems.map((item) => ({
+          measurement_code: item.id,
+          start_point_id: item.startPoint,
+          end_point_id: item.endPoint,
+          // symmetric: true, // TODO: 실제 값으로 변경
+          // curve_type: "cubic" as const, // 타입을 명시적으로 지정
+          control_points: [] as { x: number; y: number }[], // 타입을 명시적으로 지정
+        })),
+      };
+
+      console.log("requestData: ", requestData);
+      // API 호출
+      // await createChartType(requestData);
+
+      // toast({
+      //   title: "성공",
+      //   description: "차트 타입이 등록되었습니다.",
+      // });
+
+      // router.push("/chart-types");
+    } catch (error) {
+      toast({
+        title: "오류",
+        variant: "destructive",
+        description: "차트 타입 등록에 실패했습니다.",
+      });
+    }
+  };
+
   return (
     <div className="container mx-auto py-8 space-y-4">
       <div className="flex items-center">
@@ -579,6 +636,7 @@ const ChartRegistration: React.FC = () => {
             selectedPathId={selectedPathId}
             selectedPointIndex={selectedPointIndex}
             handlePathIdClick={handlePathIdClick}
+            onAdjustableChange={handleAdjustableChange}
           />
           <p className="text-sm text-destructive mt-2">
             {selectedPathId && selectedPointIndex === 0
@@ -592,7 +650,7 @@ const ChartRegistration: React.FC = () => {
 
       <div className="flex justify-end gap-2">
         <Button variant="outline">취소</Button>
-        <Button>등록</Button>
+        <Button onClick={handleSubmit}>등록</Button>
       </div>
     </div>
   );

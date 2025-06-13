@@ -2,62 +2,75 @@ import React from "react";
 
 import { MeasurementItem } from "../ChartRegistration";
 
-export interface ManualMappingTableProps {
+import { Switch } from "@/components/ui/switch";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+
+interface ManualMappingTableProps {
   measurementItems: MeasurementItem[];
   selectedPathId: string | null;
   selectedPointIndex: number;
   handlePathIdClick: (pathId: string) => void;
+  onAdjustableChange: (id: string, adjustable: boolean) => void;
 }
 
-const ManualMappingTable: React.FC<ManualMappingTableProps> = ({
+export function ManualMappingTable({
   measurementItems,
   selectedPathId,
   selectedPointIndex,
   handlePathIdClick,
-}) => {
+  onAdjustableChange,
+}: ManualMappingTableProps) {
   return (
-    <table className="w-full border text-xs">
-      <thead className="bg-gray-100 text-gray-700">
-        <tr>
-          <th className="border px-2 py-1">No.</th>
-          <th className="border px-2 py-1">path ID</th>
-          <th className="border px-2 py-1">측정항목</th>
-          <th className="border px-2 py-1">시작점 - 번호</th>
-          <th className="border px-2 py-1">끝점 - 번호</th>
-          <th className="border px-2 py-1">슬라이더 조정</th>
-        </tr>
-      </thead>
-      <tbody>
+    <Table>
+      <TableHeader>
+        <TableRow>
+          <TableHead>No.</TableHead>
+          <TableHead>path ID</TableHead>
+          <TableHead>측정항목</TableHead>
+          <TableHead>시작점 - 번호</TableHead>
+          <TableHead>끝점 - 번호</TableHead>
+          <TableHead>슬라이더 조정</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
         {measurementItems.map((m, i) => (
-          <tr key={m.id}>
-            <td className="border px-2 py-1 text-center">{i + 1}</td>
-            <td
-              className={`border px-2 py-1 text-blue-600 underline cursor-pointer ${selectedPathId === m.id ? "bg-blue-50" : ""}`}
+          <TableRow key={m.id}>
+            <TableCell>{i + 1}</TableCell>
+            <TableCell
+              className={`text-blue-600 underline cursor-pointer ${selectedPathId === m.id ? "bg-blue-50" : ""}`}
               onClick={() => handlePathIdClick(m.id)}
             >
               {m.id}
-            </td>
-            <td className="border px-2 py-1">{m.name}</td>
-            <td className="border px-2 py-1">
+            </TableCell>
+            <TableCell>{m.name}</TableCell>
+            <TableCell>
               {m.startPoint ||
                 (selectedPathId === m.id && selectedPointIndex === 0
                   ? "선택 중..."
                   : "선택")}
-            </td>
-            <td className="border px-2 py-1">
+            </TableCell>
+            <TableCell>
               {m.endPoint ||
                 (selectedPathId === m.id && selectedPointIndex === 1
                   ? "선택 중..."
                   : "선택")}
-            </td>
-            <td className="border px-2 py-1 text-center">
-              <input type="checkbox" checked={m.adjustable} readOnly />
-            </td>
-          </tr>
+            </TableCell>
+            <TableCell>
+              <Switch
+                checked={m.adjustable}
+                onCheckedChange={(checked) => onAdjustableChange(m.id, checked)}
+              />
+            </TableCell>
+          </TableRow>
         ))}
-      </tbody>
-    </table>
+      </TableBody>
+    </Table>
   );
-};
-
-export default ManualMappingTable;
+}
