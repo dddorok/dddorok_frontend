@@ -370,23 +370,9 @@ const ChartRegistration: React.FC = () => {
         setSelectedPathId(null);
         setSelectedPointIndex(0);
         setIsSelecting(false);
-        setMousePosition(null);
         toast({ title: "끝점 선택 완료!" });
       }
     }
-  };
-
-  const handleSvgMouseMove = (e: React.MouseEvent<SVGSVGElement>) => {
-    if (!isSelecting || !selectedPathId) return;
-    const rect = svgRef.current?.getBoundingClientRect();
-    if (!rect) return;
-    const offsetX = (e.clientX - rect.left) / scale + svgDimensions.minX;
-    const offsetY = (e.clientY - rect.top) / scale + svgDimensions.minY;
-    setMousePosition({ x: offsetX, y: offsetY });
-  };
-
-  const handleSvgMouseLeave = () => {
-    setMousePosition(null);
   };
 
   // SVG 원본 크기 fallback 계산 함수 추가
@@ -512,7 +498,6 @@ const ChartRegistration: React.FC = () => {
       setSelectedPathId(null);
       setSelectedPointIndex(0);
       setIsSelecting(false);
-      setMousePosition(null);
       toast({ title: "끝점 선택 완료!" });
     }
   };
@@ -554,14 +539,10 @@ const ChartRegistration: React.FC = () => {
                 svgBoxW={svgBoxW}
                 svgBoxH={svgBoxH}
                 handleSvgClick={handleSvgClick}
-                handleSvgMouseMove={handleSvgMouseMove}
-                handleSvgMouseLeave={handleSvgMouseLeave}
                 isSelecting={isSelecting}
                 selectedPathId={selectedPathId}
                 selectedPointIndex={selectedPointIndex}
                 selectedPointId={selectedPointId}
-                hoveredPointId={hoveredPointId}
-                mousePosition={mousePosition}
                 measurementItems={measurementItems}
                 onPointClick={handlePointClick}
               />

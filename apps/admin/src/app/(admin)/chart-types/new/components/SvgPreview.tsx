@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 
 import { ChartPoint } from "../types";
 import { getGridLines } from "../utils/svgGrid";
@@ -14,14 +14,10 @@ interface SvgPreviewProps {
   svgBoxW: number;
   svgBoxH: number;
   handleSvgClick: (e: React.MouseEvent<SVGSVGElement>) => void;
-  handleSvgMouseMove: (e: React.MouseEvent<SVGSVGElement>) => void;
-  handleSvgMouseLeave: () => void;
   isSelecting?: boolean;
   selectedPathId?: string | null;
   selectedPointIndex?: number;
   selectedPointId?: string | null;
-  hoveredPointId?: string | null;
-  mousePosition?: { x: number; y: number } | null;
   measurementItems?: any[];
   onPointClick?: (pointId: string) => void;
 }
@@ -37,17 +33,23 @@ export function SvgPreview({
   svgBoxW,
   svgBoxH,
   handleSvgClick,
-  handleSvgMouseMove,
-  handleSvgMouseLeave,
   isSelecting = false,
   selectedPathId = null,
   selectedPointIndex = 0,
   selectedPointId = null,
-  hoveredPointId = null,
-  mousePosition = null,
   measurementItems = [],
   onPointClick,
 }: SvgPreviewProps) {
+  const [hoveredPointId, setHoveredPointId] = useState<string | null>(null);
+
+  const handlePointMouseEnter = (pointId: string) => {
+    setHoveredPointId(pointId);
+  };
+
+  const handlePointMouseLeave = () => {
+    setHoveredPointId(null);
+  };
+
   return (
     <div className="relative">
       {paths.length > 0 && (
@@ -61,8 +63,6 @@ export function SvgPreview({
         viewBox={`${svgBoxX} ${svgBoxY} ${svgBoxW} ${svgBoxH}`}
         className="bg-white block"
         onClick={handleSvgClick}
-        onMouseMove={handleSvgMouseMove}
-        onMouseLeave={handleSvgMouseLeave}
       >
         <g
           dangerouslySetInnerHTML={{
@@ -125,32 +125,6 @@ export function SvgPreview({
           );
         })()}
 
-        {/* 선택 중인 상태 표시 (점선만, 실선 없음) */}
-        {isSelecting &&
-          selectedPathId &&
-          selectedPointIndex === 1 &&
-          mousePosition &&
-          points.map((pt) => {
-            const selectedItem = measurementItems.find(
-              (item) => item.id === selectedPathId
-            );
-            if (selectedItem?.startPoint === pt.id) {
-              return (
-                <line
-                  key="selection-line"
-                  x1={pt.x}
-                  y1={pt.y}
-                  x2={mousePosition.x}
-                  y2={mousePosition.y}
-                  stroke="#2563eb"
-                  strokeWidth={1.5}
-                  strokeDasharray="4 2"
-                />
-              );
-            }
-            return null;
-          })}
-
         {/* 포인트 */}
         {points.map((pt) => {
           // 선택된 path의 시작점이면 초록색
@@ -206,6 +180,8 @@ export function SvgPreview({
                   onPointClick(pt.id);
                 }
               }}
+              onMouseEnter={() => handlePointMouseEnter(pt.id)}
+              onMouseLeave={handlePointMouseLeave}
             />
           );
         })}
