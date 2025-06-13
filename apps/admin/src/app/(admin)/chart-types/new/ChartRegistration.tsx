@@ -5,6 +5,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { AutoMappingTable } from "./components/AutoMappingTable";
 import { ManualMappingTable } from "./components/ManualMappingTable";
 import { SvgPreview } from "./components/SvgPreview";
+import { ChartPoint } from "./types";
 import { getGridPointsFromPaths, extractControlPoints } from "./utils/svgGrid";
 
 import { Badge } from "@/components/ui/badge";
@@ -57,13 +58,7 @@ const useFileUpload = (onFileLoad: (content: string) => void) => {
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
-  return {
-    fileName,
-    error,
-    fileInputRef,
-    handleFileUpload,
-    clearFile,
-  };
+  return { fileName, error, fileInputRef, handleFileUpload, clearFile };
 };
 
 // 파일 업로드 컴포넌트
@@ -151,14 +146,6 @@ const FileUpload: React.FC<FileUploadProps> = ({
   );
 };
 
-interface ChartPoint {
-  id: string;
-  x: number;
-  y: number;
-  type: "path-start" | "path-end" | "grid-intersection" | "grid";
-  pathId?: string;
-}
-
 export interface SvgPath {
   id: string;
   element: SVGPathElement;
@@ -180,23 +167,13 @@ export interface MeasurementItem {
   pathIds?: string[];
 }
 
-interface PointFieldSelection {
-  itemId: string;
-  field: "startPoint" | "endPoint";
-}
-
 const ChartRegistration: React.FC = () => {
-  const [selectedMeasurementId, setSelectedMeasurementId] = useState<
-    string | null
-  >(null);
   const [svgContent, setSvgContent] = useState<string>("");
   const [paths, setPaths] = useState<SvgPath[]>([]);
   const [points, setPoints] = useState<ChartPoint[]>([]);
   const [measurementItems, setMeasurementItems] = useState<MeasurementItem[]>(
     []
   );
-  const [selectedPointField, setSelectedPointField] =
-    useState<PointFieldSelection | null>(null);
   const [isSelecting, setIsSelecting] = useState<boolean>(false);
   const [svgDimensions, setSvgDimensions] = useState<{
     width: number;
@@ -206,10 +183,7 @@ const ChartRegistration: React.FC = () => {
   }>({ width: 0, height: 0, minX: 0, minY: 0 });
   const [scale, setScale] = useState<number>(1);
   const svgRef = useRef<HTMLDivElement>(null);
-  const [svgViewBox, setSvgViewBox] = useState<string>("");
-  const [svgRawWidth, setSvgRawWidth] = useState<number>(0);
-  const [svgRawHeight, setSvgRawHeight] = useState<number>(0);
-  const [hoveredPointId, setHoveredPointId] = useState<string | null>(null);
+
   const [selectedPointId, setSelectedPointId] = useState<string | null>(null);
   const [selectedPathId, setSelectedPathId] = useState<string | null>(null);
   const [selectedPointIndex, setSelectedPointIndex] = useState<number>(0);
@@ -218,6 +192,9 @@ const ChartRegistration: React.FC = () => {
     y: number;
   } | null>(null);
   const { toast } = useToast();
+
+  const svgViewBox = "";
+  const hoveredPointId = null;
 
   const {
     fileName: svgFileName,
@@ -265,20 +242,6 @@ const ChartRegistration: React.FC = () => {
         isMultiPath: true,
       },
     ]);
-
-    // 기본 SVG 설정
-    const defaultSvg = `<svg width="123" height="263" viewBox="0 0 123 263" fill="none" xmlns="http://www.w3.org/2000/svg">
-<g id="&#236;&#133;&#139;&#236;&#157;&#184;&#237;&#152;&#149; &#235;&#146;&#183;&#235;&#170;&#184;&#237;&#140;&#144;">
-<path id="BODY_HEM_WIDTH" d="M3 260H120" stroke="black"/>
-<path id="BODY_WAIST_SLOPE_LENGTH" d="M120 260L120 111" stroke="black"/>
-<path id="BODY_BACK_ARMHOLE_CIRCUMFERENCE" d="M86 63C87 97 108 107.5 120 111" stroke="black"/>
-<path id="BODY_BACK_ARMHOLE_CIRCUMFERENCE_2" d="M86 63V15" stroke="black"/>
-<path id="BODY_SHOULDER_SLOPE_WIDTH" d="M86 15L45 3" stroke="black"/>
-<path id="BODY_BACK_NECK_CIRCUMFERENCE" d="M3 12H37C42.5 12 45 3 45 3" stroke="black"/>
-</g>
-</svg>`;
-    setSvgContent(defaultSvg);
-    analyzeSVGPaths(defaultSvg);
   }, []);
 
   const analyzeSVGPaths = (content: string) => {
@@ -470,12 +433,7 @@ const ChartRegistration: React.FC = () => {
   }
 
   // SVG 좌표계 기준 변환값 계산
-  function getSvgOriginAndSize(
-    svgContent: string,
-    svgViewBox: string,
-    svgRawWidth: number,
-    svgRawHeight: number
-  ) {
+  function getSvgOriginAndSize(svgContent: string, svgViewBox: string) {
     if (svgViewBox) {
       const [vx, vy, vw, vh] = svgViewBox.split(/\s+/).map(Number);
       if (
@@ -506,32 +464,17 @@ const ChartRegistration: React.FC = () => {
   const previewH = 350;
   let svgOriginX = 0,
     svgOriginY = 0,
-    svgContentW = svgRawWidth,
-    svgContentH = svgRawHeight;
+    svgContentW = 0,
+    svgContentH = 0;
   if (svgContent) {
     const { originX, originY, width, height } = getSvgOriginAndSize(
       svgContent,
-      svgViewBox,
-      svgRawWidth,
-      svgRawHeight
+      svgViewBox
     );
     svgOriginX = originX;
     svgOriginY = originY;
     svgContentW = width;
     svgContentH = height;
-  }
-
-  // SVG 원본을 패널 내에서 85%만 차지하도록 scale/offset 계산
-  const svgFitRatio = 0.85;
-  let svgScale = 1,
-    svgOffsetX = 0,
-    svgOffsetY = 0;
-  if (svgContentW && svgContentH) {
-    const scaleW = (previewW * svgFitRatio) / svgContentW;
-    const scaleH = (previewH * svgFitRatio) / svgContentH;
-    svgScale = Math.min(scaleW, scaleH);
-    svgOffsetX = (previewW - svgContentW * svgScale) / 2;
-    svgOffsetY = (previewH - svgContentH * svgScale) / 2;
   }
 
   // 미리보기 패널 SVG viewBox 계산 (여백 포함)

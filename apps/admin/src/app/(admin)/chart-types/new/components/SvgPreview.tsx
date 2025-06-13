@@ -1,6 +1,6 @@
 import React from "react";
 
-import { ChartPoint } from "../ChartRegistration";
+import { ChartPoint } from "../types";
 import { getGridLines } from "../utils/svgGrid";
 
 interface SvgPreviewProps {
