@@ -12,7 +12,6 @@ const buttonVariants = cva(
     "px-4 min-h-[52px]", // 16px padding
     "text-medium-sb",
     "transition-all duration-200",
-    "focus:outline-none focus:ring-2 focus:ring-offset-2",
     "disabled:cursor-not-allowed",
     "backdrop-blur-[12px]", // blur(12px) effect,
     "[&_svg]:w-5 [&_svg]:h-5",
@@ -32,12 +31,12 @@ const buttonVariants = cva(
         // Default: 흰색 배경 + 파란색 테두리 + 파란색 텍스트
         default: [
           "bg-transparent",
-          // "bg-neutral-N0", // #FFFFFF
-          "border border-2 border-primary-PR300", // #BFE3F8
-          "text-primary-PR", // #75C0EF
-          // "hover:bg-primary-PR100", // hover state
-          // "active:bg-primary-PR200", // active state
-          "focus:ring-primary-PR300",
+          "border border-primary-PR600",
+          "text-primary-PR600",
+          // "hover:bg-primary-PR100",
+          // "active:bg-primary-PR200",
+          // "focus:ring-primary-PR300",
+          "backdrop-blur-sm",
         ],
 
         // Fill: 파란색 배경 + 흰색 텍스트

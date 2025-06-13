@@ -72,7 +72,9 @@ export default function Header({ className }: HeaderProps) {
                 <Button asChild>
                   <Link href={ROUTE.LOGIN}>로그인</Link>
                 </Button>
-                <Button color="fill">회원가입</Button>
+                <Button asChild color="fill">
+                  <Link href={ROUTE.JOIN}>회원가입</Link>
+                </Button>
               </div>
             ) : (
               <UserMenuDropdown user={myInfo.user} />
@@ -80,7 +82,9 @@ export default function Header({ className }: HeaderProps) {
           </div>
         </div>
       </div>
-      <div className={cn("header-blank", "h-[var(--header-height)]")}></div>
+      <div
+        className={cn("header-blank", "w-full min-h-[var(--header-height)]")}
+      ></div>
     </>
   );
 }
