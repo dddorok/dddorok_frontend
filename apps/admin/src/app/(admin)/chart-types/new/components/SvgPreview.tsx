@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 
-import { ChartPoint, SvgPath } from "../types";
+import { ChartPoint, MeasurementItem, SvgPath } from "../types";
 import { getGridLines } from "../utils/svgGrid";
 
 interface SvgPreviewProps {
@@ -18,7 +18,7 @@ interface SvgPreviewProps {
   selectedPathId?: string | null;
   selectedPointIndex?: number;
   selectedPointId?: string | null;
-  measurementItems?: any[];
+  measurementItems?: MeasurementItem[];
   onPointClick?: (pointId: string) => void;
 }
 
