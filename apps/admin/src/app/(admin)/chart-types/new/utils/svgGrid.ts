@@ -113,3 +113,19 @@ export const extractControlPoints = (pathData: string) => {
   });
   return controlPoints;
 };
+
+export function findNearestGridPointId(
+  point: { x: number; y: number },
+  gridPoints: { id: string; x: number; y: number }[]
+): string | null {
+  let minDist = Infinity;
+  let nearestId: string | null = null;
+  for (const grid of gridPoints) {
+    const dist = Math.hypot(grid.x - point.x, grid.y - point.y);
+    if (dist < minDist) {
+      minDist = dist;
+      nearestId = grid.id;
+    }
+  }
+  return nearestId;
+}

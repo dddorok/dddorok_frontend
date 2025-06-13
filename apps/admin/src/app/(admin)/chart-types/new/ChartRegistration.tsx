@@ -618,6 +618,7 @@ const ChartRegistration: React.FC = () => {
         <CardContent>
           <AutoMappingTable
             paths={paths}
+            gridPoints={points}
             extractControlPoints={extractControlPoints}
           />
         </CardContent>

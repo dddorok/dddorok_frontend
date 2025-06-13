@@ -2,7 +2,7 @@ export interface ChartPoint {
   id: string;
   x: number;
   y: number;
-  type: "grid";
+  type: string;
   pathId?: string;
 }
 

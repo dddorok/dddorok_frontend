@@ -1,65 +1,67 @@
 import React from "react";
 
-import { SvgPath } from "../ChartRegistration";
+import { SvgPath, ChartPoint } from "../types";
+import { findNearestGridPointId } from "../utils/svgGrid";
 
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-
-interface AutoMappingTableProps {
+export interface AutoMappingTableProps {
   paths: SvgPath[];
+  gridPoints: ChartPoint[];
   extractControlPoints: (pathData: string) => { x: number; y: number }[];
 }
 
 export function AutoMappingTable({
   paths,
+  gridPoints,
   extractControlPoints,
 }: AutoMappingTableProps) {
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>No.</TableHead>
-          <TableHead>path ID</TableHead>
-          <TableHead>타입</TableHead>
-          <TableHead>시작점</TableHead>
-          <TableHead>끝점</TableHead>
-          <TableHead>제어점</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
+    <table className="w-full border text-xs mb-2">
+      <thead className="bg-gray-100 text-gray-700">
+        <tr>
+          <th className="border px-2 py-1">No.</th>
+          <th className="border px-2 py-1">path ID</th>
+          <th className="border px-2 py-1">항목명</th>
+          <th className="border px-2 py-1">제어점</th>
+          <th className="border px-2 py-1">시작점 - 끝점</th>
+        </tr>
+      </thead>
+      <tbody>
         {paths.map((p, i) => {
           const startPoint = p.points[0];
           const endPoint = p.points[p.points.length - 1];
+          const startGridId = startPoint
+            ? findNearestGridPointId(startPoint, gridPoints)
+            : "-";
+          const endGridId = endPoint
+            ? findNearestGridPointId(endPoint, gridPoints)
+            : "-";
           const controlPoints =
-            p.type === "curve" ? extractControlPoints(p.data) : [];
+            p.type === "curve" ? extractControlPoints(p.data || "") : [];
           return (
-            <TableRow key={p.id}>
-              <TableCell>{i + 1}</TableCell>
-              <TableCell className="text-blue-600 underline cursor-pointer">
+            <tr key={p.id} className="text-gray-700">
+              <td className="border px-2 py-1 text-center">{i + 1}</td>
+              <td className="border px-2 py-1 text-blue-600 underline cursor-pointer">
                 {p.id}
-              </TableCell>
-              <TableCell>{p.type === "line" ? "직선" : "곡선"}</TableCell>
-              <TableCell>
-                {startPoint ? `(${startPoint.x}, ${startPoint.y})` : "-"}
-              </TableCell>
-              <TableCell>
-                {endPoint ? `(${endPoint.x}, ${endPoint.y})` : "-"}
-              </TableCell>
-              <TableCell>
+              </td>
+              <td className="border px-2 py-1">-</td>
+              <td className="border px-2 py-1">
                 {controlPoints.length > 0
                   ? controlPoints.map((cp) => `(${cp.x}, ${cp.y})`).join(", ")
                   : "-"}
-              </TableCell>
-            </TableRow>
+              </td>
+              <td className="border px-2 py-1 text-center">
+                <span className="bg-gray-100 rounded px-2 py-1 mr-1">
+                  {startGridId}
+                </span>
+                <span className="mx-1">→</span>
+                <span className="bg-gray-100 rounded px-2 py-1">
+                  {endGridId}
+                </span>
+              </td>
+            </tr>
           );
         })}
-      </TableBody>
-    </Table>
+      </tbody>
+    </table>
   );
 }
