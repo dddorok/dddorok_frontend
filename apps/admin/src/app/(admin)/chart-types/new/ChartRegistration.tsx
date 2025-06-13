@@ -2,12 +2,29 @@
 
 import React, { useState, useRef, useEffect } from "react";
 
+import { AutoMappingTable } from "./components/AutoMappingTable";
+import { ManualMappingTable } from "./components/ManualMappingTable";
+import { SvgPreview } from "./components/SvgPreview";
 import {
   getGridPointsFromPaths,
   getGridLines,
   extractControlPoints,
 } from "./utils/svgGrid";
 
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
 
 interface ChartPoint {
@@ -602,484 +619,209 @@ const ChartRegistration: React.FC = () => {
   const svgBoxW = maxX - minX + previewPadding * 2;
   const svgBoxH = maxY - minY + previewPadding * 2;
 
-  // 타입 명시
-  interface AutoMappingTableProps {
-    paths: SvgPath[];
-    extractControlPoints: (pathData: string) => { x: number; y: number }[];
-  }
-  function AutoMappingTable({
-    paths,
-    extractControlPoints,
-  }: AutoMappingTableProps) {
-    return (
-      <table className="w-full border text-xs mb-2">
-        <thead className="bg-gray-100 text-gray-700">
-          <tr>
-            <th className="border px-2 py-1">No.</th>
-            <th className="border px-2 py-1">path ID</th>
-            <th className="border px-2 py-1">타입</th>
-            <th className="border px-2 py-1">시작점</th>
-            <th className="border px-2 py-1">끝점</th>
-            <th className="border px-2 py-1">제어점</th>
-          </tr>
-        </thead>
-        <tbody>
-          {paths.map((p, i) => {
-            const startPoint = p.points[0];
-            const endPoint = p.points[p.points.length - 1];
-            const controlPoints =
-              p.type === "curve" ? extractControlPoints(p.data) : [];
-            return (
-              <tr key={p.id} className="text-gray-700">
-                <td className="border px-2 py-1 text-center">{i + 1}</td>
-                <td className="border px-2 py-1 text-blue-600 underline cursor-pointer">
-                  {p.id}
-                </td>
-                <td className="border px-2 py-1">
-                  {p.type === "line" ? "직선" : "곡선"}
-                </td>
-                <td className="border px-2 py-1">
-                  {startPoint ? `(${startPoint.x}, ${startPoint.y})` : "-"}
-                </td>
-                <td className="border px-2 py-1">
-                  {endPoint ? `(${endPoint.x}, ${endPoint.y})` : "-"}
-                </td>
-                <td className="border px-2 py-1">
-                  {controlPoints.length > 0
-                    ? controlPoints.map((cp) => `(${cp.x}, ${cp.y})`).join(", ")
-                    : "-"}
-                </td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
-    );
-  }
+  const handlePointClick = (pointId: string) => {
+    if (!isSelecting || !selectedPathId) {
+      setSelectedPointId(pointId);
+      return;
+    }
 
-  // 타입 명시
-  interface ManualMappingTableProps {
-    measurementItems: MeasurementItem[];
-    selectedPathId: string | null;
-    selectedPointIndex: number;
-    handlePathIdClick: (pathId: string) => void;
-  }
+    const isStartPoint = selectedPointIndex === 0;
+    const field = isStartPoint ? "startPoint" : "endPoint";
 
-  function ManualMappingTable({
-    measurementItems,
-    selectedPathId,
-    selectedPointIndex,
-    handlePathIdClick,
-  }: ManualMappingTableProps) {
-    return (
-      <table className="w-full border text-xs">
-        <thead className="bg-gray-100 text-gray-700">
-          <tr>
-            <th className="border px-2 py-1">No.</th>
-            <th className="border px-2 py-1">path ID</th>
-            <th className="border px-2 py-1">측정항목</th>
-            <th className="border px-2 py-1">시작점 - 번호</th>
-            <th className="border px-2 py-1">끝점 - 번호</th>
-            <th className="border px-2 py-1">슬라이더 조정</th>
-          </tr>
-        </thead>
-        <tbody>
-          {measurementItems.map((m, i) => (
-            <tr key={m.id}>
-              <td className="border px-2 py-1 text-center">{i + 1}</td>
-              <td
-                className={`border px-2 py-1 text-blue-600 underline cursor-pointer ${selectedPathId === m.id ? "bg-blue-50" : ""}`}
-                onClick={() => handlePathIdClick(m.id)}
-              >
-                {m.id}
-              </td>
-              <td className="border px-2 py-1">{m.name}</td>
-              <td className="border px-2 py-1">
-                {m.startPoint ||
-                  (selectedPathId === m.id && selectedPointIndex === 0
-                    ? "선택 중..."
-                    : "선택")}
-              </td>
-              <td className="border px-2 py-1">
-                {m.endPoint ||
-                  (selectedPathId === m.id && selectedPointIndex === 1
-                    ? "선택 중..."
-                    : "선택")}
-              </td>
-              <td className="border px-2 py-1 text-center">
-                <input type="checkbox" checked={m.adjustable} readOnly />
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+    setMeasurementItems((prev) =>
+      prev.map((item) =>
+        item.id === selectedPathId ? { ...item, [field]: pointId } : item
+      )
     );
-  }
+
+    if (isStartPoint) {
+      setSelectedPointIndex(1);
+      toast({ title: "끝점 선택 중입니다." });
+    } else {
+      setSelectedPathId(null);
+      setSelectedPointIndex(0);
+      setIsSelecting(false);
+      setMousePosition(null);
+      toast({ title: "끝점 선택 완료!" });
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-[#fafbfc] flex flex-col items-center py-8">
-      {/* 상단 타이틀만 */}
-      <div className="w-[900px] flex items-center mb-4">
-        <div className="text-lg font-bold">차트 유형 등록</div>
+    <div className="container mx-auto py-8 space-y-4">
+      <div className="flex items-center">
+        <h1 className="text-2xl font-bold">차트 유형 등록</h1>
       </div>
 
-      {/* 1. 타입/차트 정보 */}
-      <div className="w-[900px] bg-white border border-gray-200 rounded mb-4 p-5">
-        <div className="flex items-center mb-3">
-          <span className="w-6 h-6 flex items-center justify-center bg-[#f3f4f6] rounded-full text-xs font-bold mr-2 text-blue-600">
-            1
-          </span>
-          <span className="font-semibold text-gray-700">타입/차트 정보</span>
-        </div>
-        <div className="mb-2">
-          {/* 업로드된 파일명 표시 */}
-          {svgFileName ? (
-            <div className="text-xs text-blue-700 underline w-fit">
-              {svgFileName}
-            </div>
-          ) : (
-            <div className="text-xs text-gray-400 w-fit">
-              SVG 파일을 업로드 해주세요.
-            </div>
-          )}
-          <div className="text-xs text-gray-500 mt-1">
-            SVG에서 path 정보를 자동으로 추출할 수 있습니다.
-          </div>
-        </div>
-        {/* 업로드 영역 */}
-        <div className="flex items-center gap-8 mt-4">
-          <div
-            className="border-2 border-dashed border-blue-300 bg-blue-50 flex items-center justify-center"
-            style={{
-              width: previewW,
-              height: previewH,
-              position: "relative",
-              cursor: "pointer",
-            }}
-            onClick={handleUploadAreaClick}
-            onDrop={handleDrop}
-            onDragOver={handleDragOver}
-          >
-            {/* path 개수 우측 상단 표시 */}
-            {paths.length > 0 && (
-              <div
-                style={{
-                  position: "absolute",
-                  top: 8,
-                  right: 16,
-                  zIndex: 10,
-                  fontSize: 13,
-                  color: "#2563eb",
-                  fontWeight: 600,
-                }}
-              >
-                path 개수: {paths.length}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Badge variant="outline">1</Badge>
+            타입/차트 정보
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="space-y-1">
+                {svgFileName ? (
+                  <Label className="text-blue-700 underline">
+                    {svgFileName}
+                  </Label>
+                ) : (
+                  <Label className="text-muted-foreground">
+                    SVG 파일을 업로드 해주세요.
+                  </Label>
+                )}
+                <p className="text-sm text-muted-foreground">
+                  SVG에서 path 정보를 자동으로 추출할 수 있습니다.
+                </p>
               </div>
-            )}
-            {/* SVG 한 개로 모든 요소 렌더링 */}
-            {svgContent ? (
-              <svg
-                width={previewW}
-                height={previewH}
-                viewBox={`${svgBoxX} ${svgBoxY} ${svgBoxW} ${svgBoxH}`}
+              <div className="flex items-center gap-2">
+                <Input
+                  type="file"
+                  accept=".svg"
+                  ref={fileInputRef}
+                  onChange={handleFileUpload}
+                  className="hidden"
+                />
+                {svgFileName ? (
+                  <>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setSvgContent("");
+                        setSvgFileName("");
+                        setPaths([]);
+                        setPoints([]);
+                        setUploadError("");
+                      }}
+                    >
+                      파일 삭제
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => fileInputRef.current?.click()}
+                    >
+                      파일 변경
+                    </Button>
+                  </>
+                ) : (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    파일 업로드
+                  </Button>
+                )}
+              </div>
+            </div>
+
+            <div className="flex items-center gap-8">
+              <div
+                className="border-2 border-dashed rounded-lg p-4 flex items-center justify-center"
                 style={{
-                  background: "white",
                   width: previewW,
                   height: previewH,
-                  display: "block",
+                  position: "relative",
+                  cursor: svgContent ? "default" : "pointer",
                 }}
-                onClick={handleSvgClick}
-                onMouseMove={handleSvgMouseMove}
-                onMouseLeave={handleSvgMouseLeave}
+                onClick={!svgContent ? handleUploadAreaClick : undefined}
+                onDrop={!svgContent ? handleDrop : undefined}
+                onDragOver={!svgContent ? handleDragOver : undefined}
               >
-                {/* path 원본 (스타일 변환 없이 SVG 원본 그대로) */}
-                <g
-                  dangerouslySetInnerHTML={{
-                    __html: svgContent.replace(/<svg[^>]*>|<\/svg>/gi, ""),
-                  }}
-                />
-                {/* 그리드 선/라벨 */}
-                {(() => {
-                  const { xs, ys } = getGridLines(points);
-                  const xLabels = xs.map((x, i) => i + 1);
-                  const yLabels = ys.map((y, i) => String.fromCharCode(97 + i));
-                  return (
-                    <>
-                      {/* 세로선(X) */}
-                      {xs.map((x, i) => (
-                        <React.Fragment key={`vx${i}`}>
-                          <line
-                            x1={x}
-                            y1={svgBoxY}
-                            x2={x}
-                            y2={svgBoxY + svgBoxH}
-                            stroke="#bbb"
-                            strokeDasharray="4 2"
-                            strokeWidth={1}
-                          />
-                          {/* X축 라벨 */}
-                          <text
-                            x={x}
-                            y={svgBoxY + 18}
-                            fontSize={13}
-                            textAnchor="middle"
-                            fill="#888"
-                            fontWeight="bold"
-                          >
-                            {xLabels[i]}
-                          </text>
-                        </React.Fragment>
-                      ))}
-                      {/* 가로선(Y) */}
-                      {ys.map((y, i) => (
-                        <React.Fragment key={`hy${i}`}>
-                          <line
-                            x1={svgBoxX}
-                            y1={y}
-                            x2={svgBoxX + svgBoxW}
-                            y2={y}
-                            stroke="#bbb"
-                            strokeDasharray="4 2"
-                            strokeWidth={1}
-                          />
-                          {/* Y축 라벨 */}
-                          <text
-                            x={svgBoxX + 10}
-                            y={y + 4}
-                            fontSize={13}
-                            textAnchor="start"
-                            fill="#888"
-                            fontWeight="bold"
-                          >
-                            {yLabels[i]}
-                          </text>
-                        </React.Fragment>
-                      ))}
-                    </>
-                  );
-                })()}
-                {/* 선택 중인 상태 표시 (점선만, 실선 없음) */}
-                {isSelecting &&
-                  selectedPathId &&
-                  selectedPointIndex === 1 &&
-                  mousePosition &&
-                  points.map((pt) => {
-                    const selectedItem = measurementItems.find(
-                      (item) => item.id === selectedPathId
-                    );
-                    if (selectedItem?.startPoint === pt.id) {
-                      return (
-                        <line
-                          key="selection-line"
-                          x1={pt.x}
-                          y1={pt.y}
-                          x2={mousePosition.x}
-                          y2={mousePosition.y}
-                          stroke="#2563eb"
-                          strokeWidth={1.5}
-                          strokeDasharray="4 2"
-                        />
-                      );
-                    }
-                    return null;
-                  })}
-                {/* 포인트 */}
-                {points.map((pt) => {
-                  // 선택된 path의 시작점이면 초록색
-                  const isStartSelected =
-                    isSelecting &&
-                    selectedPathId &&
-                    selectedPointIndex === 1 &&
-                    measurementItems.find((item) => item.id === selectedPathId)
-                      ?.startPoint === pt.id;
-                  return (
-                    <circle
-                      key={pt.id}
-                      cx={pt.x}
-                      cy={pt.y}
-                      r={
-                        isStartSelected
-                          ? 8
-                          : pt.id === selectedPointId
-                            ? 6
-                            : pt.id === hoveredPointId
-                              ? 5
-                              : 4
-                      }
-                      fill={
-                        isStartSelected
-                          ? "#22c55e"
-                          : pt.id === selectedPointId
-                            ? "#2563eb"
-                            : pt.id === hoveredPointId
-                              ? "#f59e42"
-                              : "#fff"
-                      }
-                      stroke={
-                        isStartSelected
-                          ? "#22c55e"
-                          : pt.id === selectedPointId
-                            ? "#2563eb"
-                            : pt.id === hoveredPointId
-                              ? "#f59e42"
-                              : "#888"
-                      }
-                      strokeWidth={
-                        isStartSelected
-                          ? 3
-                          : pt.id === selectedPointId ||
-                              pt.id === hoveredPointId
-                            ? 2
-                            : 1
-                      }
-                      style={{ cursor: "pointer" }}
-                      onMouseEnter={() => setHoveredPointId(pt.id)}
-                      onMouseLeave={() => setHoveredPointId(null)}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        if (isSelecting && selectedPathId) {
-                          const isStartPoint = selectedPointIndex === 0;
-                          const field = isStartPoint
-                            ? "startPoint"
-                            : "endPoint";
-
-                          setMeasurementItems((prev) =>
-                            prev.map((item) =>
-                              item.id === selectedPathId
-                                ? { ...item, [field]: pt.id }
-                                : item
-                            )
-                          );
-
-                          if (isStartPoint) {
-                            setSelectedPointIndex(1);
-                            toast({ title: "끝점 선택 중입니다." });
-                          } else {
-                            setSelectedPathId(null);
-                            setSelectedPointIndex(0);
-                            setIsSelecting(false);
-                            setMousePosition(null);
-                            toast({ title: "끝점 선택 완료!" });
-                          }
-                        } else {
-                          setSelectedPointId(pt.id);
-                        }
-                      }}
-                    />
-                  );
-                })}
-                {/* 선택 중인 상태 안내 텍스트 */}
-                {isSelecting && selectedPathId && (
-                  <text
-                    x={svgBoxX + 10}
-                    y={svgBoxY + 20}
-                    fontSize={12}
-                    fill="#2563eb"
-                    fontWeight="bold"
-                  >
-                    {selectedPointIndex === 0
-                      ? "시작점을 선택해주세요"
-                      : "끝점을 선택해주세요"}
-                  </text>
+                {svgContent ? (
+                  <SvgPreview
+                    svgContent={svgContent}
+                    paths={paths}
+                    points={points}
+                    previewW={previewW}
+                    previewH={previewH}
+                    svgBoxX={svgBoxX}
+                    svgBoxY={svgBoxY}
+                    svgBoxW={svgBoxW}
+                    svgBoxH={svgBoxH}
+                    handleSvgClick={handleSvgClick}
+                    handleSvgMouseMove={handleSvgMouseMove}
+                    handleSvgMouseLeave={handleSvgMouseLeave}
+                    isSelecting={isSelecting}
+                    selectedPathId={selectedPathId}
+                    selectedPointIndex={selectedPointIndex}
+                    selectedPointId={selectedPointId}
+                    hoveredPointId={hoveredPointId}
+                    mousePosition={mousePosition}
+                    measurementItems={measurementItems}
+                    onPointClick={handlePointClick}
+                  />
+                ) : (
+                  <div className="flex flex-col items-center gap-2">
+                    <span className="text-muted-foreground text-sm text-center px-2">
+                      SVG 파일을 클릭 또는 드래그하여 업로드하세요.
+                      <br />
+                      (최대 10MB)
+                    </span>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => fileInputRef.current?.click()}
+                    >
+                      파일 업로드
+                    </Button>
+                  </div>
                 )}
-                {/* 포인트 id 툴크 (hover 시) */}
-                {points.map((pt) =>
-                  pt.id === hoveredPointId ? (
-                    <g key={pt.id}>
-                      <rect
-                        x={pt.x - 16}
-                        y={pt.y + 8}
-                        width={32}
-                        height={16}
-                        fill="#fff"
-                        stroke="#bbb"
-                        rx={4}
-                        ry={4}
-                      />
-                      <text
-                        x={pt.x}
-                        y={pt.y + 20}
-                        fontSize={10}
-                        textAnchor="middle"
-                        fill="#333"
-                        style={{ pointerEvents: "none" }}
-                      >
-                        {pt.id}
-                      </text>
-                    </g>
-                  ) : null
-                )}
-              </svg>
-            ) : (
-              <span className="text-gray-400 text-xs text-center px-2">
-                SVG 파일을 클릭 또는 드래그하여 업로드하세요.
-                <br />
-                (최대 10MB)
-              </span>
-            )}
-            <input
-              type="file"
-              accept=".svg"
-              ref={fileInputRef}
-              onChange={handleFileUpload}
-              className="hidden"
-            />
+              </div>
+              {uploadError && (
+                <p className="text-sm text-destructive">{uploadError}</p>
+              )}
+            </div>
           </div>
-          <div className="flex-1">
-            {uploadError && (
-              <div className="text-xs text-red-500 mb-2">{uploadError}</div>
-            )}
-          </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
 
-      {/* 2. 자동 매핑 목록 */}
-      <div className="w-[900px] bg-white border border-gray-200 rounded mb-4 p-5">
-        <div className="flex items-center mb-3">
-          <span className="w-6 h-6 flex items-center justify-center bg-[#f3f4f6] rounded-full text-xs font-bold mr-2 text-orange-500">
-            2
-          </span>
-          <span className="font-semibold text-gray-700">자동 매핑 목록</span>
-        </div>
-        <AutoMappingTable
-          paths={paths}
-          extractControlPoints={extractControlPoints}
-        />
-      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Badge variant="outline">2</Badge>
+            자동 매핑 목록
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <AutoMappingTable
+            paths={paths}
+            extractControlPoints={extractControlPoints}
+          />
+        </CardContent>
+      </Card>
 
-      {/* 3. 관리자 수동 매핑 항목 */}
-      <div className="w-[900px] bg-white border border-gray-200 rounded mb-4 p-5">
-        <div className="flex items-center mb-3">
-          <span className="w-6 h-6 flex items-center justify-center bg-[#f3f4f6] rounded-full text-xs font-bold mr-2 text-green-600">
-            3
-          </span>
-          <span className="font-semibold text-gray-700">
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Badge variant="outline">3</Badge>
             관리자 수동 매핑 항목
-          </span>
-        </div>
-        <ManualMappingTable
-          measurementItems={measurementItems}
-          selectedPathId={selectedPathId}
-          selectedPointIndex={selectedPointIndex}
-          handlePathIdClick={handlePathIdClick}
-        />
-        <div className="text-xs text-red-500 mt-2">
-          {selectedPathId && selectedPointIndex === 0
-            ? "시작점을 선택해주세요."
-            : selectedPathId && selectedPointIndex === 1
-              ? "끝점을 선택해주세요."
-              : "* 매핑되지 않은 항목이 있습니다. 모든 항목의 매핑을 완료해주세요."}
-        </div>
-      </div>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ManualMappingTable
+            measurementItems={measurementItems}
+            selectedPathId={selectedPathId}
+            selectedPointIndex={selectedPointIndex}
+            handlePathIdClick={handlePathIdClick}
+          />
+          <p className="text-sm text-destructive mt-2">
+            {selectedPathId && selectedPointIndex === 0
+              ? "시작점을 선택해주세요."
+              : selectedPathId && selectedPointIndex === 1
+                ? "끝점을 선택해주세요."
+                : "* 매핑되지 않은 항목이 있습니다. 모든 항목의 매핑을 완료해주세요."}
+          </p>
+        </CardContent>
+      </Card>
 
-      {/* 하단 버튼 */}
-      <div className="w-[900px] flex justify-end gap-2 mt-2">
-        <button className="bg-white border border-gray-300 px-4 py-2 rounded">
-          취소
-        </button>
-        <button className="bg-blue-600 text-white px-4 py-2 rounded">
-          등록
-        </button>
+      <div className="flex justify-end gap-2">
+        <Button variant="outline">취소</Button>
+        <Button>등록</Button>
       </div>
     </div>
   );
