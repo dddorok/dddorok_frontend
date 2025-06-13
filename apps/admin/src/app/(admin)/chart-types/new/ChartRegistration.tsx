@@ -228,22 +228,16 @@ const ChartRegistration: React.FC = () => {
     const ys = Array.from(new Set(merged.map((p) => Math.round(p.y)))).sort(
       (a, b) => a - b
     );
-    // 4. 각 교차점에 id 부여 (a1, b2 ...)
+    // 4. 각 교차점에 id 부여 (a1, b2 ...) - 모든 조합에 대해 ChartPoint 생성
     const gridPoints: ChartPoint[] = [];
     ys.forEach((y, row) => {
       xs.forEach((x, col) => {
-        const real = merged.find(
-          (m) =>
-            Math.abs(m.x - x) <= threshold && Math.abs(m.y - y) <= threshold
-        );
-        if (real) {
-          gridPoints.push({
-            id: `${numToAlpha(row)}${col + 1}`,
-            x: real.x,
-            y: real.y,
-            type: "grid",
-          });
-        }
+        gridPoints.push({
+          id: `${numToAlpha(row)}${col + 1}`,
+          x,
+          y,
+          type: "grid",
+        });
       });
     });
     return gridPoints;
@@ -1029,70 +1023,90 @@ const ChartRegistration: React.FC = () => {
                     return null;
                   })}
                 {/* 포인트 */}
-                {points.map((pt) => (
-                  <circle
-                    key={pt.id}
-                    cx={pt.x}
-                    cy={pt.y}
-                    r={
-                      pt.id === selectedPointId
-                        ? 6
-                        : pt.id === hoveredPointId
-                          ? 5
-                          : 4
-                    }
-                    fill={
-                      pt.id === selectedPointId
-                        ? "#2563eb"
-                        : pt.id === hoveredPointId
-                          ? "#f59e42"
-                          : "#fff"
-                    }
-                    stroke={
-                      pt.id === selectedPointId
-                        ? "#2563eb"
-                        : pt.id === hoveredPointId
-                          ? "#f59e42"
-                          : "#888"
-                    }
-                    strokeWidth={
-                      pt.id === selectedPointId || pt.id === hoveredPointId
-                        ? 2
-                        : 1
-                    }
-                    style={{ cursor: "pointer" }}
-                    onMouseEnter={() => setHoveredPointId(pt.id)}
-                    onMouseLeave={() => setHoveredPointId(null)}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (isSelecting && selectedPathId) {
-                        const isStartPoint = selectedPointIndex === 0;
-                        const field = isStartPoint ? "startPoint" : "endPoint";
-
-                        setMeasurementItems((prev) =>
-                          prev.map((item) =>
-                            item.id === selectedPathId
-                              ? { ...item, [field]: pt.id }
-                              : item
-                          )
-                        );
-
-                        if (isStartPoint) {
-                          setSelectedPointIndex(1);
-                          toast({ title: "끝점 선택 중입니다." });
-                        } else {
-                          setSelectedPathId(null);
-                          setSelectedPointIndex(0);
-                          setIsSelecting(false);
-                          setMousePosition(null);
-                          toast({ title: "끝점 선택 완료!" });
-                        }
-                      } else {
-                        setSelectedPointId(pt.id);
+                {points.map((pt) => {
+                  // 선택된 path의 시작점이면 초록색
+                  const isStartSelected =
+                    isSelecting &&
+                    selectedPathId &&
+                    selectedPointIndex === 1 &&
+                    measurementItems.find((item) => item.id === selectedPathId)
+                      ?.startPoint === pt.id;
+                  return (
+                    <circle
+                      key={pt.id}
+                      cx={pt.x}
+                      cy={pt.y}
+                      r={
+                        isStartSelected
+                          ? 8
+                          : pt.id === selectedPointId
+                            ? 6
+                            : pt.id === hoveredPointId
+                              ? 5
+                              : 4
                       }
-                    }}
-                  />
-                ))}
+                      fill={
+                        isStartSelected
+                          ? "#22c55e"
+                          : pt.id === selectedPointId
+                            ? "#2563eb"
+                            : pt.id === hoveredPointId
+                              ? "#f59e42"
+                              : "#fff"
+                      }
+                      stroke={
+                        isStartSelected
+                          ? "#22c55e"
+                          : pt.id === selectedPointId
+                            ? "#2563eb"
+                            : pt.id === hoveredPointId
+                              ? "#f59e42"
+                              : "#888"
+                      }
+                      strokeWidth={
+                        isStartSelected
+                          ? 3
+                          : pt.id === selectedPointId ||
+                              pt.id === hoveredPointId
+                            ? 2
+                            : 1
+                      }
+                      style={{ cursor: "pointer" }}
+                      onMouseEnter={() => setHoveredPointId(pt.id)}
+                      onMouseLeave={() => setHoveredPointId(null)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (isSelecting && selectedPathId) {
+                          const isStartPoint = selectedPointIndex === 0;
+                          const field = isStartPoint
+                            ? "startPoint"
+                            : "endPoint";
+
+                          setMeasurementItems((prev) =>
+                            prev.map((item) =>
+                              item.id === selectedPathId
+                                ? { ...item, [field]: pt.id }
+                                : item
+                            )
+                          );
+
+                          if (isStartPoint) {
+                            setSelectedPointIndex(1);
+                            toast({ title: "끝점 선택 중입니다." });
+                          } else {
+                            setSelectedPathId(null);
+                            setSelectedPointIndex(0);
+                            setIsSelecting(false);
+                            setMousePosition(null);
+                            toast({ title: "끝점 선택 완료!" });
+                          }
+                        } else {
+                          setSelectedPointId(pt.id);
+                        }
+                      }}
+                    />
+                  );
+                })}
                 {/* 선택 중인 상태 안내 텍스트 */}
                 {isSelecting && selectedPathId && (
                   <text
