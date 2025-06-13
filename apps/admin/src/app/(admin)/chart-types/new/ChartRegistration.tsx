@@ -2,6 +2,12 @@
 
 import React, { useState, useRef, useEffect } from "react";
 
+import {
+  getGridPointsFromPaths,
+  getGridLines,
+  extractControlPoints,
+} from "./utils/svgGrid";
+
 import { useToast } from "@/hooks/use-toast";
 
 interface ChartPoint {
@@ -198,89 +204,6 @@ const ChartRegistration: React.FC = () => {
     return String.fromCharCode(97 + n); // 0 -> 'a', 1 -> 'b', ...
   }
 
-  // path의 start/end 좌표만 수집, 병합, 정렬, id 부여
-  function getGridPointsFromPaths(paths: SvgPath[], threshold = 1.5) {
-    // 1. 모든 path의 start/end 좌표 수집
-    const rawPoints: { x: number; y: number }[] = [];
-    paths.forEach((path) => {
-      if (path.points.length > 0) {
-        const startPoint = path.points[0];
-        const endPoint = path.points[path.points.length - 1];
-        if (startPoint && endPoint) {
-          rawPoints.push(startPoint);
-          rawPoints.push(endPoint);
-        }
-      }
-    });
-    // 2. ±1.5px 병합
-    const merged: { x: number; y: number }[] = [];
-    rawPoints.forEach((pt) => {
-      const found = merged.find(
-        (m) =>
-          Math.abs(m.x - pt.x) <= threshold && Math.abs(m.y - pt.y) <= threshold
-      );
-      if (!found) merged.push(pt);
-    });
-    // 3. X/Y 정렬
-    const xs = Array.from(new Set(merged.map((p) => Math.round(p.x)))).sort(
-      (a, b) => a - b
-    );
-    const ys = Array.from(new Set(merged.map((p) => Math.round(p.y)))).sort(
-      (a, b) => a - b
-    );
-    // 4. 각 교차점에 id 부여 (a1, b2 ...) - 모든 조합에 대해 ChartPoint 생성
-    const gridPoints: ChartPoint[] = [];
-    ys.forEach((y, row) => {
-      xs.forEach((x, col) => {
-        gridPoints.push({
-          id: `${numToAlpha(row)}${col + 1}`,
-          x,
-          y,
-          type: "grid",
-        });
-      });
-    });
-    return gridPoints;
-  }
-
-  function extractAllPathPoints(paths: SvgPath[]): { x: number; y: number }[] {
-    const all: { x: number; y: number }[] = [];
-    paths.forEach((path) => {
-      if (path.points.length > 0) {
-        const startPoint = path.points[0];
-        const endPoint = path.points[path.points.length - 1];
-        if (startPoint && endPoint) {
-          all.push(startPoint);
-          all.push(endPoint);
-        }
-      }
-      const d = path.data;
-      const cMatches = d.match(/[CQ]([^CQMLHVZ]+)/gi);
-      if (cMatches) {
-        cMatches.forEach((cmd) => {
-          const coords = cmd
-            .slice(1)
-            .trim()
-            .split(/[\s,]+/)
-            .map(Number);
-          for (let i = 0; i < coords.length; i += 2) {
-            const x = coords[i];
-            const y = coords[i + 1];
-            if (
-              typeof x === "number" &&
-              typeof y === "number" &&
-              !isNaN(x) &&
-              !isNaN(y)
-            ) {
-              all.push({ x, y });
-            }
-          }
-        });
-      }
-    });
-    return all;
-  }
-
   const analyzeSVGPaths = (content: string) => {
     const parser = new DOMParser();
     const svgDoc = parser.parseFromString(content, "image/svg+xml");
@@ -434,15 +357,6 @@ const ChartRegistration: React.FC = () => {
     setScale(calculatedScale);
   };
 
-  const handlePointSelect = (
-    itemId: string,
-    field: "startPoint" | "endPoint"
-  ) => {
-    setSelectedPointField({ itemId, field });
-    setIsSelecting(true);
-    setSelectedMeasurementId(null); // ✅ 수동 선택 시 연결선 초기화
-  };
-
   const handlePathIdClick = (pathId: string) => {
     setSelectedPathId(pathId);
     setSelectedPointIndex(0);
@@ -569,13 +483,6 @@ const ChartRegistration: React.FC = () => {
     return merged;
   }
 
-  // getGridLines에서 X/Y 좌표 병합 적용
-  function getGridLines(points: ChartPoint[]) {
-    const xs = mergeCoords(points.map((p) => p.x));
-    const ys = mergeCoords(points.map((p) => p.y));
-    return { xs, ys };
-  }
-
   // SVG 좌표계 기준 변환값 계산
   function getSvgOriginAndSize(
     svgContent: string,
@@ -627,7 +534,6 @@ const ChartRegistration: React.FC = () => {
     svgContentW = width;
     svgContentH = height;
   }
-  const svgViewBoxStr = `${svgOriginX} ${svgOriginY} ${svgContentW} ${svgContentH}`;
 
   // SVG 원본을 패널 내에서 85%만 차지하도록 scale/offset 계산
   const svgFitRatio = 0.85;
@@ -695,51 +601,6 @@ const ChartRegistration: React.FC = () => {
   const svgBoxY = minY - previewPadding;
   const svgBoxW = maxX - minX + previewPadding * 2;
   const svgBoxH = maxY - minY + previewPadding * 2;
-
-  // 곡선의 제어점 추출 함수 추가
-  function extractControlPoints(pathData: string): { x: number; y: number }[] {
-    const controlPoints: { x: number; y: number }[] = [];
-    const commands = pathData.match(/[MLHVCSQTAZ][^MLHVCSQTAZ]*/gi) || [];
-
-    commands.forEach((command) => {
-      const type = command[0];
-      const coords = command
-        .slice(1)
-        .trim()
-        .split(/[\s,]+/)
-        .map(Number);
-
-      if (type === "C") {
-        // Cubic Bezier curve: C x1 y1 x2 y2 x y
-        for (let i = 0; i < 4; i += 2) {
-          const x = coords[i];
-          const y = coords[i + 1];
-          if (
-            typeof x === "number" &&
-            typeof y === "number" &&
-            !isNaN(x) &&
-            !isNaN(y)
-          ) {
-            controlPoints.push({ x, y });
-          }
-        }
-      } else if (type === "Q") {
-        // Quadratic Bezier curve: Q x1 y1 x y
-        const x = coords[0];
-        const y = coords[1];
-        if (
-          typeof x === "number" &&
-          typeof y === "number" &&
-          !isNaN(x) &&
-          !isNaN(y)
-        ) {
-          controlPoints.push({ x, y });
-        }
-      }
-    });
-
-    return controlPoints;
-  }
 
   // 타입 명시
   interface AutoMappingTableProps {
