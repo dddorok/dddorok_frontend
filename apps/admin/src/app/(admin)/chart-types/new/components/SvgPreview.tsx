@@ -1,11 +1,11 @@
 import React, { useState } from "react";
 
-import { ChartPoint } from "../types";
+import { ChartPoint, SvgPath } from "../types";
 import { getGridLines } from "../utils/svgGrid";
 
 interface SvgPreviewProps {
   svgContent: string;
-  paths: any[];
+  paths: SvgPath[];
   points: ChartPoint[];
   previewW: number;
   previewH: number;

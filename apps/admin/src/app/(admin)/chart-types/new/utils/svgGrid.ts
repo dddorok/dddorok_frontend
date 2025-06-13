@@ -1,5 +1,7 @@
 // SVG/그리드/포인트 관련 유틸 함수 모음
 
+import { SvgPath } from "../types";
+
 export const numToAlpha = (n: number) => String.fromCharCode(97 + n);
 
 export const mergeCoords = (coords: number[], threshold = 1.5) => {
@@ -18,7 +20,7 @@ export const mergeCoords = (coords: number[], threshold = 1.5) => {
 };
 
 export const getGridPointsFromPaths = (
-  paths: any[],
+  paths: SvgPath[],
   threshold = 1.5
 ): { id: string; x: number; y: number; type: "grid"; pathId?: string }[] => {
   const rawPoints: { x: number; y: number }[] = [];

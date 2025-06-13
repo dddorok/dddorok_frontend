@@ -6,9 +6,6 @@ import { Suspense, useState } from "react";
 
 import ChartRegistration from "./ChartRegistration";
 import { SectionType } from "./constants";
-import InformationForm from "./information-form";
-import SvgMappingForm from "./svg-mapping-form";
-import SvgMappingTool from "./svg-mapping-tool";
 import { SvgUpload } from "../_components/svg-upload";
 
 import { useToast } from "@/hooks/use-toast";
