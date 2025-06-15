@@ -40,28 +40,47 @@ export const getTemplates = async (request: GetTemplateListRequest) => {
     .json();
   return response.data;
 };
-
-interface MeasurementType {
-  measurementCode: string;
-  sliderEnabled: boolean;
-  code: string;
-  label: string;
-  value: number;
-  min: number;
-  max: number;
-  rangeToggle: boolean;
-}
-
-export interface ChartType {
-  id: string;
-  name: string;
-  svg_url: string;
-  measurements: MeasurementType[];
-}
+export type MeasurementType = [
+  string,
+  {
+    code: string;
+    label: string;
+    value: number;
+    min: number;
+    max: number;
+    value_type: string;
+  },
+];
 
 export interface GetTemplateChartListResponse {
   template_id: string;
-  chart_types: ChartType[];
+  chart_types: {
+    svg_mapping: {
+      id: {
+        buffer: Record<string, number>;
+      };
+      chart_type_id: string;
+      v: number;
+      created_date: string;
+      mappings: {
+        measurement_code: string;
+        start_point_id: string;
+        end_point_id: string;
+        symmetric: boolean;
+        curve_type: string;
+        control_points: any[];
+      }[];
+      name: string;
+      points: {
+        id: string;
+        x: number;
+        y: number;
+      }[];
+      svg_file_url: string;
+      updated_date: string;
+    };
+  }[];
+  measurements: MeasurementType[];
 }
 
 export const getTemplateChartList = async (templateId: string) => {
