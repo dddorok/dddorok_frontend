@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -53,8 +54,22 @@ export default function EditTemplateClient({
       resourceId = await uploadThumbnail(newImageFile);
     }
 
+    const {
+      id,
+      isPublished,
+      measurementRule,
+      chartTypes,
+      thumbnailUrl,
+      is_published,
+      chart_types,
+      measurement_rule,
+      thumbnail_url,
+      ...requestData
+    } = template as any;
+
+    console.log("requestData: ", requestData);
     await updateTemplate(templateId, {
-      ...template,
+      ...requestData,
       name: data.name,
       chart_type_maps: data.chartTypeMaps,
       resourceId: resourceId,

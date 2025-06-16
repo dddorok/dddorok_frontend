@@ -112,6 +112,7 @@ export const updateTemplate = async (
   templateId: string,
   template: UpdateTemplateRequest
 ) => {
+  console.log("template: ", template);
   const response = await privateInstance.patch(`template/${templateId}`, {
     json: template,
   });
