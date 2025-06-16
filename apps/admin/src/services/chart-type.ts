@@ -61,24 +61,21 @@ export const getChartType = async (id: string) => {
 };
 
 interface CreateChartTypeRequest {
-  category_large: string;
-  category_medium: string;
   section: "BODY" | "SLEEVE";
   detail_type: string;
   name: string;
-  measurement_rule_id?: string;
-  measurement_code_maps: {
-    measurement_code: string;
-    path_id: string;
-  }[];
   resource_id: string;
 }
 
 export const createChartType = async (request: CreateChartTypeRequest) => {
   const response = await privateInstance
-    .post(`chart-type`, { json: request })
+    .post<{
+      data: {
+        id: string;
+      };
+    }>(`chart-type`, { json: request })
     .json();
-  return response;
+  return response.data;
 };
 
 ///api/chart-type/upload-svg
@@ -95,13 +92,16 @@ export const uploadSvg = async (file: File) => {
   const response = await privateInstance
     .post<{
       data: {
+        svg_url: string;
+        svg_name: string;
         resource_id: string;
       };
     }>(`chart-type/upload-svg`, {
       body: formData,
     })
     .json();
-  return response.data.resource_id;
+
+  return response.data;
 };
 
 interface UpdateMeasurementCodeMapsRequest {

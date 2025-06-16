@@ -61,7 +61,9 @@ export function ChartTypeList() {
                   <TableCell className="text-right">
                     <div className="flex flex-wrap justify-end gap-2">
                       <ChartTypeDetailsDialog chartType={chartType} />
-                      <Link href={`/chart-types/${chartType.id}`}>
+                      <Link
+                        href={`/chart-types/svg-mapping?id=${chartType.id}`}
+                      >
                         <Button variant="outline" size="sm">
                           수정
                         </Button>
