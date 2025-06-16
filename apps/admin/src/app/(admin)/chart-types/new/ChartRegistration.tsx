@@ -6,6 +6,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { AutoMappingTable } from "./_components/AutoMappingTable";
 import { ManualMappingTable } from "./_components/ManualMappingTable";
 import { SvgPreview } from "./_components/SvgPreview";
+import { fetchSvg } from "./action";
 import { ChartPoint } from "./types";
 import { getGridPointsFromPaths, extractControlPoints } from "./utils/svgGrid";
 
@@ -15,52 +16,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-
-// 파일 업로드 커스텀 훅
-const useFileUpload = (onFileLoad: (content: string) => void) => {
-  const [fileName, setFileName] = useState<string>("");
-  const [error, setError] = useState<string>("");
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const handleFileUpload = (event: any) => {
-    let file: File | undefined;
-    if (event.dataTransfer) {
-      file = event.dataTransfer.files?.[0];
-    } else {
-      file = event.target.files?.[0];
-    }
-    if (!file) return;
-    if (file.type !== "image/svg+xml") {
-      setError("SVG 파일만 업로드 가능합니다.");
-      return;
-    }
-    if (file.size > 10 * 1024 * 1024) {
-      setError("10MB 이하의 SVG 파일만 업로드할 수 있습니다.");
-      return;
-    }
-    setError("");
-    setFileName(file.name);
-
-    const reader = new FileReader();
-    reader.onload = (e: ProgressEvent<FileReader>) => {
-      const content = e.target?.result;
-      if (typeof content === "string") {
-        onFileLoad(content);
-      }
-    };
-    reader.readAsText(file);
-    // input value 리셋
-    if (fileInputRef.current) fileInputRef.current.value = "";
-  };
-
-  const clearFile = () => {
-    setFileName("");
-    setError("");
-    if (fileInputRef.current) fileInputRef.current.value = "";
-  };
-
-  return { fileName, error, fileInputRef, handleFileUpload, clearFile };
-};
 
 // 파일 업로드 컴포넌트
 interface FileUploadProps {
@@ -168,7 +123,22 @@ export interface MeasurementItem {
   pathIds?: string[];
 }
 
-const ChartRegistration: React.FC = () => {
+const ChartRegistration: React.FC<{
+  data: {
+    svg_url: string;
+    svg_name: string;
+    mapped_path_id: {
+      code: string;
+      label: string;
+      slider_default: boolean;
+    }[];
+    manual_mapped_path_id: {
+      code: string;
+      label: string;
+      slider_default: boolean;
+    }[];
+  };
+}> = ({ data }) => {
   const [svgContent, setSvgContent] = useState<string>("");
   const [paths, setPaths] = useState<SvgPath[]>([]);
   const [points, setPoints] = useState<ChartPoint[]>([]);
@@ -194,53 +164,48 @@ const ChartRegistration: React.FC = () => {
 
   const svgViewBox = "";
 
-  const {
-    fileName: svgFileName,
-    error: uploadError,
-    fileInputRef,
-    handleFileUpload,
-    clearFile,
-  } = useFileUpload((content: string) => {
-    setSvgContent(content);
-    analyzeSVGPaths(content);
-  });
+  // SVG 파일을 가져오는 함수
+  const fetchSvgContent = async () => {
+    try {
+      const { content } = await fetchSvg(data.svg_url);
+      setSvgContent(content);
+      analyzeSVGPaths(content);
+    } catch (error) {
+      toast({
+        title: "오류",
+        variant: "destructive",
+        description: "SVG 파일을 가져오는데 실패했습니다.",
+      });
+    }
+  };
 
+  // 컴포넌트 마운트 시 SVG 파일 가져오기
   useEffect(() => {
-    setMeasurementItems([
-      {
-        id: "BODY_SHOULDER_WIDTH",
-        name: "어깨너비",
-        startPoint: "",
-        endPoint: "",
-        adjustable: true,
-        isMultiPath: false,
-      },
-      {
-        id: "BODY_CHEST_WIDTH",
-        name: "가슴너비",
-        startPoint: "",
-        endPoint: "",
-        adjustable: true,
-        isMultiPath: false,
-      },
-      {
-        id: "BODY_WAIST_WIDTH",
-        name: "허리너비",
-        startPoint: "",
-        endPoint: "",
-        adjustable: false,
-        isMultiPath: false,
-      },
-      {
-        id: "BODY_ARM_LENGTH",
-        name: "팔길이",
-        startPoint: "",
-        endPoint: "",
-        adjustable: true,
-        isMultiPath: true,
-      },
-    ]);
-  }, []);
+    fetchSvgContent();
+  }, [data.svg_url]);
+
+  // 매핑 항목 초기화
+  useEffect(() => {
+    const autoMappingItems = data.mapped_path_id.map((item) => ({
+      id: item.code,
+      name: item.label,
+      startPoint: "",
+      endPoint: "",
+      adjustable: item.slider_default,
+      isMultiPath: false,
+    }));
+
+    const manualMappingItems = data.manual_mapped_path_id.map((item) => ({
+      id: item.code,
+      name: item.label,
+      startPoint: "",
+      endPoint: "",
+      adjustable: item.slider_default,
+      isMultiPath: false,
+    }));
+
+    setMeasurementItems([...autoMappingItems, ...manualMappingItems]);
+  }, [data.mapped_path_id, data.manual_mapped_path_id]);
 
   const analyzeSVGPaths = (content: string) => {
     const parser = new DOMParser();
@@ -573,38 +538,50 @@ const ChartRegistration: React.FC = () => {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <FileUpload
-            fileName={svgFileName}
-            error={uploadError}
-            fileInputRef={fileInputRef}
-            onFileUpload={handleFileUpload}
-            onClearFile={() => {
-              clearFile();
-              setSvgContent("");
-              setPaths([]);
-              setPoints([]);
-            }}
-            previewContent={
-              <SvgPreview
-                svgContent={svgContent}
-                paths={paths}
-                points={points}
-                previewW={previewW}
-                previewH={previewH}
-                svgBoxX={svgBoxX}
-                svgBoxY={svgBoxY}
-                svgBoxW={svgBoxW}
-                svgBoxH={svgBoxH}
-                handleSvgClick={handleSvgClick}
-                isSelecting={isSelecting}
-                selectedPathId={selectedPathId}
-                selectedPointIndex={selectedPointIndex}
-                selectedPointId={selectedPointId}
-                measurementItems={measurementItems}
-                onPointClick={handlePointClick}
-              />
-            }
-          />
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="space-y-1">
+                <Label className="text-blue-700 underline">
+                  {data.svg_name}
+                </Label>
+                <p className="text-sm text-muted-foreground">
+                  SVG에서 path 정보를 자동으로 추출할 수 있습니다.
+                </p>
+              </div>
+            </div>
+
+            {svgContent && (
+              <div className="flex items-center gap-8">
+                <div
+                  className="border-2 border-dashed rounded-lg p-4 flex items-center justify-center"
+                  style={{
+                    width: previewW,
+                    height: previewH,
+                    position: "relative",
+                  }}
+                >
+                  <SvgPreview
+                    svgContent={svgContent}
+                    paths={paths}
+                    points={points}
+                    previewW={previewW}
+                    previewH={previewH}
+                    svgBoxX={svgBoxX}
+                    svgBoxY={svgBoxY}
+                    svgBoxW={svgBoxW}
+                    svgBoxH={svgBoxH}
+                    handleSvgClick={handleSvgClick}
+                    isSelecting={isSelecting}
+                    selectedPathId={selectedPathId}
+                    selectedPointIndex={selectedPointIndex}
+                    selectedPointId={selectedPointId}
+                    measurementItems={measurementItems}
+                    onPointClick={handlePointClick}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
         </CardContent>
       </Card>
 
