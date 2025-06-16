@@ -17,9 +17,11 @@ export interface GetChartTypeSvgMappingResponse {
 
 export const getChartTypeSvgMapping = async (id: string) => {
   const response = await privateInstance
-    .get<GetChartTypeSvgMappingResponse>(`chart-type/${id}/svg-mapping`)
+    .get<{
+      data: GetChartTypeSvgMappingResponse;
+    }>(`chart-type/${id}/svg-mapping`)
     .json();
-  return response;
+  return response.data;
 };
 
 interface UpdateChartTypeSvgMappingRequest {

@@ -51,6 +51,7 @@ export interface GetChartTypeResponse {
     name: string;
   }[];
   svg_file_url: string;
+  svg_mapping: any;
 }
 
 export const getChartType = async (id: string) => {

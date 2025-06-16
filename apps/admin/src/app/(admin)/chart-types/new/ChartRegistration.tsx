@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
+import { getChartType } from "@/services/chart-type";
 import { updateChartTypeSvgMapping } from "@/services/chart-type/new";
 
 // const previewW = 400;
@@ -106,21 +107,46 @@ const ChartRegistration: React.FC<{
     fetchSvgContent();
   }, [data.svg_url]);
 
+  const initMapping = async () => {
+    const chartType = await getChartType(id);
+    console.log("chartType: ", chartType);
+
+    if (chartType) {
+      const manualMappingItems = data.manual_mapped_path_id?.map((item) => {
+        const currentMapping = chartType.svg_mapping.mappings.find(
+          (map: any) => map.measurement_code === item.code
+        );
+        return {
+          id: item.code,
+          name: item.label,
+          startPoint: currentMapping?.start_point_id ?? "",
+          endPoint: currentMapping?.end_point_id ?? "",
+          adjustable: item.slider_default,
+          isMultiPath: false,
+        };
+      });
+
+      setMeasurementItems([...manualMappingItems]);
+    } else {
+      const manualMappingItems = data.manual_mapped_path_id?.map((item) => ({
+        id: item.code,
+        name: item.label,
+        startPoint: "",
+        endPoint: "",
+        // 개발용
+        // startPoint: "f4",
+        // endPoint: "e4",
+        adjustable: item.slider_default,
+        isMultiPath: false,
+      }));
+
+      setMeasurementItems([...manualMappingItems]);
+    }
+  };
+
   // 매핑 항목 초기화
   useEffect(() => {
-    const manualMappingItems = data.manual_mapped_path_id.map((item) => ({
-      id: item.code,
-      name: item.label,
-      startPoint: "",
-      endPoint: "",
-      // 개발용
-      // startPoint: "f4",
-      // endPoint: "e4",
-      adjustable: item.slider_default,
-      isMultiPath: false,
-    }));
-
-    setMeasurementItems([...manualMappingItems]);
+    initMapping();
   }, [data.mapped_path_id, data.manual_mapped_path_id]);
 
   const calculateSVGDimensions = (allPoints: ChartPoint[]) => {
@@ -269,7 +295,7 @@ const ChartRegistration: React.FC<{
 
       toast({
         title: "성공",
-        description: "차트 타입이 등록되었습니다.",
+        description: "차트 타입이 수정되었습니다.",
       });
 
       router.push("/chart-types");
@@ -277,7 +303,7 @@ const ChartRegistration: React.FC<{
       toast({
         title: "오류",
         variant: "destructive",
-        description: "차트 타입 등록에 실패했습니다.",
+        description: "차트 타입 수정에 실패했습니다.",
       });
     }
   };
@@ -285,7 +311,7 @@ const ChartRegistration: React.FC<{
   return (
     <div className="container mx-auto py-8 space-y-4">
       <div className="flex items-center">
-        <h1 className="text-2xl font-bold">차트 유형 등록</h1>
+        <h1 className="text-2xl font-bold">차트 유형 수정</h1>
       </div>
 
       <Card>
@@ -386,7 +412,7 @@ const ChartRegistration: React.FC<{
 
       <div className="flex justify-end gap-2">
         <Button variant="outline">취소</Button>
-        <Button onClick={handleSubmit}>등록</Button>
+        <Button onClick={handleSubmit}>저장</Button>
       </div>
     </div>
   );
