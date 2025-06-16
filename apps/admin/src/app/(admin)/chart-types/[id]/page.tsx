@@ -22,10 +22,6 @@ export default function EditChartTypePage() {
 
   return (
     <div className="space-y-4">
-      <Button onClick={() => router.push(`/chart-types/update/${id}`)}>
-        SVG 재 업로드
-      </Button>
-
       <EditChartTypeForm chartType={chartType} />
     </div>
   );
