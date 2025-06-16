@@ -8,99 +8,19 @@ import { ManualMappingTable } from "./_components/ManualMappingTable";
 import { SvgPreview } from "./_components/SvgPreview";
 import { fetchSvg } from "./action";
 import { ChartPoint } from "./types";
+import { getSvgOriginAndSize, previewH, previewW } from "./utils/etc";
+import { analyzeSVGPaths } from "./utils/svg-paths";
 import { getGridPointsFromPaths, extractControlPoints } from "./utils/svgGrid";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
+import { updateChartTypeSvgMapping } from "@/services/chart-type/new";
 
-// 파일 업로드 컴포넌트
-interface FileUploadProps {
-  fileName: string;
-  error: string;
-  fileInputRef: React.RefObject<HTMLInputElement | null>;
-  onFileUpload: (event: any) => void;
-  onClearFile: () => void;
-  previewContent?: React.ReactNode;
-  previewW?: number;
-  previewH?: number;
-}
-
-const FileUpload: React.FC<FileUploadProps> = ({
-  fileName,
-  error,
-  fileInputRef,
-  onFileUpload,
-  onClearFile,
-  previewContent,
-  previewW = 400,
-  previewH = 350,
-}) => {
-  return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div className="space-y-1">
-          {fileName ? (
-            <Label className="text-blue-700 underline">{fileName}</Label>
-          ) : (
-            <Label className="text-muted-foreground">
-              SVG 파일을 업로드 해주세요.
-            </Label>
-          )}
-          <p className="text-sm text-muted-foreground">
-            SVG에서 path 정보를 자동으로 추출할 수 있습니다.
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Input
-            type="file"
-            accept=".svg"
-            ref={fileInputRef as React.RefObject<HTMLInputElement>}
-            onChange={onFileUpload}
-            className="hidden"
-          />
-          {fileName ? (
-            <>
-              <Button variant="outline" size="sm" onClick={onClearFile}>
-                파일 삭제
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => fileInputRef.current?.click()}
-              >
-                파일 변경
-              </Button>
-            </>
-          ) : (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => fileInputRef.current?.click()}
-            >
-              파일 업로드
-            </Button>
-          )}
-        </div>
-      </div>
-
-      {fileName && (
-        <div className="flex items-center gap-8">
-          <div
-            className="border-2 border-dashed rounded-lg p-4 flex items-center justify-center"
-            style={{ width: previewW, height: previewH, position: "relative" }}
-          >
-            {previewContent}
-          </div>
-          {error && <p className="text-sm text-destructive">{error}</p>}
-        </div>
-      )}
-    </div>
-  );
-};
+// const previewW = 400;
+// const previewH = 350;
 
 export interface SvgPath {
   id: string;
@@ -138,7 +58,8 @@ const ChartRegistration: React.FC<{
       slider_default: boolean;
     }[];
   };
-}> = ({ data }) => {
+  id: string;
+}> = ({ data, id }) => {
   const [svgContent, setSvgContent] = useState<string>("");
   const [paths, setPaths] = useState<SvgPath[]>([]);
   const [points, setPoints] = useState<ChartPoint[]>([]);
@@ -162,14 +83,15 @@ const ChartRegistration: React.FC<{
   const { toast } = useToast();
   const router = useRouter();
 
-  const svgViewBox = "";
-
   // SVG 파일을 가져오는 함수
   const fetchSvgContent = async () => {
     try {
       const { content } = await fetchSvg(data.svg_url);
       setSvgContent(content);
-      analyzeSVGPaths(content);
+      const { gridPoints, rawPaths } = analyzeSVGPaths(content);
+      setPoints(gridPoints);
+      setPaths(rawPaths);
+      calculateSVGDimensions(gridPoints);
     } catch (error) {
       toast({
         title: "오류",
@@ -186,83 +108,20 @@ const ChartRegistration: React.FC<{
 
   // 매핑 항목 초기화
   useEffect(() => {
-    const autoMappingItems = data.mapped_path_id.map((item) => ({
-      id: item.code,
-      name: item.label,
-      startPoint: "",
-      endPoint: "",
-      adjustable: item.slider_default,
-      isMultiPath: false,
-    }));
-
     const manualMappingItems = data.manual_mapped_path_id.map((item) => ({
       id: item.code,
       name: item.label,
       startPoint: "",
       endPoint: "",
+      // 개발용
+      // startPoint: "f4",
+      // endPoint: "e4",
       adjustable: item.slider_default,
       isMultiPath: false,
     }));
 
-    setMeasurementItems([...autoMappingItems, ...manualMappingItems]);
+    setMeasurementItems([...manualMappingItems]);
   }, [data.mapped_path_id, data.manual_mapped_path_id]);
-
-  const analyzeSVGPaths = (content: string) => {
-    const parser = new DOMParser();
-    const svgDoc = parser.parseFromString(content, "image/svg+xml");
-    const pathElements = svgDoc.querySelectorAll("path");
-
-    const rawPaths: SvgPath[] = Array.from(pathElements).map((path, index) => {
-      const d = path.getAttribute("d") ?? "";
-      const pathId = path.getAttribute("id") || `path-${index}`;
-      const isLine = d.includes("L") && !d.includes("C") && !d.includes("Q");
-      const rawPoints = extractPathPoints(d);
-      return {
-        id: pathId,
-        element: path,
-        data: d,
-        type: isLine ? "line" : "curve",
-        points: rawPoints,
-      };
-    });
-    // 디버깅: path 개수 및 d 속성 출력
-    console.log("SVG path 개수:", rawPaths.length);
-    rawPaths.forEach((p, i) => {
-      console.log(`path[${i}] id=${p.id} d=${p.data}`);
-    });
-    const gridPoints = getGridPointsFromPaths(rawPaths);
-    setPoints(gridPoints);
-    setPaths(rawPaths);
-    calculateSVGDimensions(gridPoints);
-  };
-
-  const extractPathPoints = (pathData: string): { x: number; y: number }[] => {
-    const points: { x: number; y: number }[] = [];
-    const commands = pathData.match(/[MLHVCSQTAZ][^MLHVCSQTAZ]*/gi) || [];
-    commands.forEach((command) => {
-      const type = command[0];
-      const coords = command
-        .slice(1)
-        .trim()
-        .split(/[\s,]+/)
-        .map(Number);
-      if (type === "M" || type === "L") {
-        for (let i = 0; i < coords.length; i += 2) {
-          const x = coords[i];
-          const y = coords[i + 1];
-          if (
-            typeof x === "number" &&
-            typeof y === "number" &&
-            !isNaN(x) &&
-            !isNaN(y)
-          ) {
-            points.push({ x, y });
-          }
-        }
-      }
-    });
-    return points;
-  };
 
   const calculateSVGDimensions = (allPoints: ChartPoint[]) => {
     if (allPoints.length === 0) return;
@@ -338,107 +197,6 @@ const ChartRegistration: React.FC<{
     }
   };
 
-  // SVG 원본 크기 fallback 계산 함수 추가
-  function getFallbackSvgSize(svgContent: string) {
-    const matches = Array.from(
-      svgContent.matchAll(/([MLHVCSQTAZ])([^MLHVCSQTAZ]*)/gi)
-    );
-    let minX = Infinity,
-      minY = Infinity,
-      maxX = -Infinity,
-      maxY = -Infinity;
-    matches.forEach((match) => {
-      const coords =
-        match[2]
-          ?.trim()
-          .split(/[\s,]+/)
-          .map(Number)
-          .filter((n) => !isNaN(n)) || [];
-      for (let i = 0; i < coords.length; i += 2) {
-        const x = coords[i];
-        const y = coords[i + 1];
-        if (
-          typeof x === "number" &&
-          typeof y === "number" &&
-          !isNaN(x) &&
-          !isNaN(y)
-        ) {
-          minX = Math.min(minX, x);
-          minY = Math.min(minY, y);
-          maxX = Math.max(maxX, x);
-          maxY = Math.max(maxY, y);
-        }
-      }
-    });
-    if (
-      minX === Infinity ||
-      minY === Infinity ||
-      maxX === -Infinity ||
-      maxY === -Infinity
-    ) {
-      return { width: 200, height: 160 };
-    }
-    return { width: maxX - minX, height: maxY - minY };
-  }
-
-  // SVG 좌표계 기준 변환값 계산
-  function getSvgOriginAndSize(svgContent: string, svgViewBox: string) {
-    if (svgViewBox) {
-      const [vx, vy, vw, vh] = svgViewBox.split(/\s+/).map(Number);
-      if (
-        typeof vx === "number" &&
-        typeof vy === "number" &&
-        typeof vw === "number" &&
-        typeof vh === "number" &&
-        !isNaN(vx) &&
-        !isNaN(vy) &&
-        !isNaN(vw) &&
-        !isNaN(vh)
-      ) {
-        return { originX: vx, originY: vy, width: vw, height: vh };
-      }
-    }
-    // fallback: path bounding box
-    const fallback = getFallbackSvgSize(svgContent);
-    return {
-      originX: 0,
-      originY: 0,
-      width: fallback.width,
-      height: fallback.height,
-    };
-  }
-
-  // 미리보기 패널 크기 및 viewBox 계산
-  const previewW = 400;
-  const previewH = 350;
-  let svgOriginX = 0,
-    svgOriginY = 0,
-    svgContentW = 0,
-    svgContentH = 0;
-  if (svgContent) {
-    const { originX, originY, width, height } = getSvgOriginAndSize(
-      svgContent,
-      svgViewBox
-    );
-    svgOriginX = originX;
-    svgOriginY = originY;
-    svgContentW = width;
-    svgContentH = height;
-  }
-
-  // 미리보기 패널 SVG viewBox 계산 (여백 포함)
-  const previewPadding = 30;
-  const allX = points.map((p) => p.x);
-  const allY = points.map((p) => p.y);
-  const minX = Math.min(...allX, svgOriginX);
-  const maxX = Math.max(...allX, svgOriginX + svgContentW);
-  const minY = Math.min(...allY, svgOriginY);
-  const maxY = Math.max(...allY, svgOriginY + svgContentH);
-  const svgBoxX = minX - previewPadding;
-  const svgBoxY = minY - previewPadding;
-  const svgBoxW = maxX - minX + previewPadding * 2;
-  const svgBoxH = maxY - minY + previewPadding * 2;
-
   const handlePointClick = (pointId: string) => {
     if (!isSelecting || !selectedPathId) {
       setSelectedPointId(pointId);
@@ -488,8 +246,8 @@ const ChartRegistration: React.FC<{
 
       // API 요청 데이터 구성
       const requestData = {
-        name: "라운드넥 래글런 스웨터 앞몸판", // TODO: 실제 이름으로 변경
-        svgFileUrl: "s3url", // TODO: 실제 S3 URL로 변경
+        name: data.svg_name, // TODO: 실제 이름으로 변경
+        svgFileUrl: data.svg_url, // TODO: 실제 S3 URL로 변경
         points: points.map((point) => ({
           id: point.id,
           x: point.x,
@@ -499,22 +257,22 @@ const ChartRegistration: React.FC<{
           measurement_code: item.id,
           start_point_id: item.startPoint,
           end_point_id: item.endPoint,
-          // symmetric: true, // TODO: 실제 값으로 변경
-          // curve_type: "cubic" as const, // 타입을 명시적으로 지정
-          control_points: [] as { x: number; y: number }[], // 타입을 명시적으로 지정
+          symmetric: true, // TODO: 실제 값으로 변경
+          curve_type: "line" as const, // 타입을 명시적으로 지정
+          control_points: [], // 타입을 명시적으로 지정
         })),
       };
 
       console.log("requestData: ", requestData);
-      // API 호출
-      // await createChartType(requestData);
+      const response = await updateChartTypeSvgMapping(id, requestData);
+      console.log("response: ", response);
 
-      // toast({
-      //   title: "성공",
-      //   description: "차트 타입이 등록되었습니다.",
-      // });
+      toast({
+        title: "성공",
+        description: "차트 타입이 등록되었습니다.",
+      });
 
-      // router.push("/chart-types");
+      router.push("/chart-types");
     } catch (error) {
       toast({
         title: "오류",
@@ -564,12 +322,12 @@ const ChartRegistration: React.FC<{
                     svgContent={svgContent}
                     paths={paths}
                     points={points}
-                    previewW={previewW}
-                    previewH={previewH}
-                    svgBoxX={svgBoxX}
-                    svgBoxY={svgBoxY}
-                    svgBoxW={svgBoxW}
-                    svgBoxH={svgBoxH}
+                    // previewW={previewW}
+                    // previewH={previewH}
+                    // svgBoxX={svgBoxX}
+                    // svgBoxY={svgBoxY}
+                    // svgBoxW={svgBoxW}
+                    // svgBoxH={svgBoxH}
                     handleSvgClick={handleSvgClick}
                     isSelecting={isSelecting}
                     selectedPathId={selectedPathId}

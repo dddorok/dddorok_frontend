@@ -78,15 +78,16 @@ export default function NewChartTypePage() {
 
   return (
     <>
-      {step === 1 && (
-        <InformationForm
-          onSubmit={(data) => {
-            setStep(2);
-          }}
-        />
-      )}
+      {/* {step === 1 && ( */}
+      <InformationForm
+        onSubmit={(id, data) => {
+          // setStep(2);
+          router.push(`/chart-types/svg-mapping?id=${id}`);
+        }}
+      />
+      {/* )} */}
 
-      {step === 2 && <ChartRegistration />}
+      {/* {step === 2 && <ChartRegistration />} */}
 
       {/* <ChartRegistration /> */}
       {/* <SvgMappingTool /> */}

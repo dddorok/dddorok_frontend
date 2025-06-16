@@ -102,5 +102,5 @@ function SvgMappingForm() {
     ],
   };
 
-  return <ChartRegistration data={testData} />;
+  return <ChartRegistration data={testData} id={id ?? ""} />;
 }

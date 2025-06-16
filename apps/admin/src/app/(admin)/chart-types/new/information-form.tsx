@@ -65,7 +65,7 @@ type FormValues = z.infer<typeof formSchema>;
 export default function InformationForm({
   onSubmit,
 }: {
-  onSubmit: (data: FormValues) => void;
+  onSubmit: (id: string, data: FormValues) => void;
 }) {
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -99,20 +99,21 @@ export default function InformationForm({
     console.log(values);
 
     // TODO: 파일 업로드 기능 추가
-    const { svg_url } = await uploadSvg(values.svgFile);
+    const { resource_id } = await uploadSvg(values.svgFile);
 
     // "https://dddorok-s3.s3.amazonaws.com/public/chart-svg/766d0a72-c662-4fbd-b859-4ca26d12a811.svg"
 
-    const resourceId = "766d0a72-c662-4fbd-b859-4ca26d12a811";
+    // const resourceId = "766d0a72-c662-4fbd-b859-4ca26d12a811";
 
-    await createChartType({
+    const data = await createChartType({
       section: values.section,
       detail_type: values.detailType,
       name: values.chartName,
-      resource_id: resourceId,
+      resource_id: resource_id,
     });
 
-    onSubmit(values);
+    console.log("data: ", data);
+    onSubmit(data.id, values);
   };
 
   return (

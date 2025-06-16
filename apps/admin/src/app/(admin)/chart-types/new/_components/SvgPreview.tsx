@@ -1,18 +1,19 @@
 import React, { useState } from "react";
 
 import { ChartPoint, MeasurementItem, SvgPath } from "../types";
+import { getSvgPreviewData } from "../utils/etc";
 import { getGridLines } from "../utils/svgGrid";
 
 interface SvgPreviewProps {
   svgContent: string;
   paths: SvgPath[];
   points: ChartPoint[];
-  previewW: number;
-  previewH: number;
-  svgBoxX: number;
-  svgBoxY: number;
-  svgBoxW: number;
-  svgBoxH: number;
+  // previewW: number;
+  // previewH: number;
+  // svgBoxX: number;
+  // svgBoxY: number;
+  // svgBoxW: number;
+  // svgBoxH: number;
   handleSvgClick: (e: React.MouseEvent<SVGSVGElement>) => void;
   isSelecting?: boolean;
   selectedPathId?: string | null;
@@ -26,12 +27,12 @@ export function SvgPreview({
   svgContent,
   paths,
   points,
-  previewW,
-  previewH,
-  svgBoxX,
-  svgBoxY,
-  svgBoxW,
-  svgBoxH,
+  // previewW,
+  // previewH,
+  // svgBoxX,
+  // svgBoxY,
+  // svgBoxW,
+  // svgBoxH,
   handleSvgClick,
   isSelecting = false,
   selectedPathId = null,
@@ -40,6 +41,9 @@ export function SvgPreview({
   measurementItems = [],
   onPointClick,
 }: SvgPreviewProps) {
+  const { previewW, previewH, svgBoxX, svgBoxY, svgBoxW, svgBoxH } =
+    getSvgPreviewData(svgContent, "", points);
+
   const [hoveredPointId, setHoveredPointId] = useState<string | null>(null);
 
   const handlePointMouseEnter = (pointId: string) => {
