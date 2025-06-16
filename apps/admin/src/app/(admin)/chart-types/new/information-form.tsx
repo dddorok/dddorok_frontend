@@ -27,8 +27,11 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { measurementRuleQueries } from "@/queries/measurement-rule";
+import { createChartType, uploadSvg } from "@/services/chart-type";
 
 const baseFormSchema = z.object({
   section: ChartSectionSchema,
@@ -36,6 +39,7 @@ const baseFormSchema = z.object({
   selectedMeasurements: z.array(z.string()).optional(),
   chartName: z.string().min(1, "차트 이름을 입력해주세요"),
   detailType: z.string(),
+  svgFile: z.instanceof(File),
 });
 
 const bodyFormSchema = baseFormSchema.extend({
@@ -91,10 +95,30 @@ export default function InformationForm({
     [form]
   );
 
+  const handleSubmit = async (values: FormValues) => {
+    console.log(values);
+
+    // TODO: 파일 업로드 기능 추가
+    const { svg_url } = await uploadSvg(values.svgFile);
+
+    // "https://dddorok-s3.s3.amazonaws.com/public/chart-svg/766d0a72-c662-4fbd-b859-4ca26d12a811.svg"
+
+    const resourceId = "766d0a72-c662-4fbd-b859-4ca26d12a811";
+
+    await createChartType({
+      section: values.section,
+      detail_type: values.detailType,
+      name: values.chartName,
+      resource_id: resourceId,
+    });
+
+    onSubmit(values);
+  };
+
   return (
     <Form {...form}>
       <form
-        onSubmit={form.handleSubmit(onSubmit)}
+        onSubmit={form.handleSubmit(handleSubmit)}
         className="w-full  mx-auto p-6 space-y-6"
       >
         <h2 className="text-2xl font-bold">Step 1. 기본 정보 입력</h2>
@@ -130,6 +154,51 @@ export default function InformationForm({
         </Tabs>
 
         <ChartNameForm />
+
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="space-y-1">
+              <Label className="text-muted-foreground">
+                SVG 파일을 업로드 해주세요.
+              </Label>
+              <p className="text-sm text-muted-foreground">
+                SVG에서 path 정보를 자동으로 추출할 수 있습니다.
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <Input
+                type="file"
+                accept=".svg"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (!file) return;
+
+                  if (file.type !== "image/svg+xml") {
+                    form.setError("svgFile", {
+                      message: "SVG 파일만 업로드 가능합니다.",
+                    });
+                    return;
+                  }
+
+                  if (file.size > 10 * 1024 * 1024) {
+                    form.setError("svgFile", {
+                      message: "10MB 이하의 SVG 파일만 업로드할 수 있습니다.",
+                    });
+                    return;
+                  }
+
+                  form.setValue("svgFile", file);
+                  form.clearErrors("svgFile");
+                }}
+              />
+            </div>
+          </div>
+          {form.formState.errors.svgFile && (
+            <p className="text-sm text-destructive">
+              {form.formState.errors.svgFile.message}
+            </p>
+          )}
+        </div>
 
         <div className="flex justify-end mt-8">
           <Button type="submit" variant="outline" className="px-8">

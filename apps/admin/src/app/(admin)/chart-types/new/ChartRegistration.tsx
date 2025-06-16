@@ -639,13 +639,13 @@ const ChartRegistration: React.FC = () => {
             handlePathIdClick={handlePathIdClick}
             onAdjustableChange={handleAdjustableChange}
           />
-          <p className="text-sm text-destructive mt-2">
+          {/* <p className="text-sm text-destructive mt-2">
             {selectedPathId && selectedPointIndex === 0
               ? "시작점을 선택해주세요."
               : selectedPathId && selectedPointIndex === 1
                 ? "끝점을 선택해주세요."
                 : "* 매핑되지 않은 항목이 있습니다. 모든 항목의 매핑을 완료해주세요."}
-          </p>
+          </p> */}
         </CardContent>
       </Card>
 
