@@ -8,7 +8,7 @@ import { ManualMappingTable } from "./_components/ManualMappingTable";
 import { SvgPreview } from "./_components/SvgPreview";
 import { useSvgContent } from "./hooks/useSvgContent";
 import { previewH, previewW } from "./utils/etc";
-import { extractControlPoints } from "./utils/svgGrid";
+import { extractControlPoints, findNearestGridPointId } from "./utils/svgGrid";
 
 import { DownloadButton } from "@/components/DownloadButton";
 import { Badge } from "@/components/ui/badge";
@@ -79,6 +79,53 @@ const ChartRegistration: React.FC<{
     svg_url: data.svg_url,
   });
 
+  const autoMappingItems = data.mapped_path_id
+    .map((mappedPath, i) => {
+      const path = paths.find((p) => p.id === mappedPath.code);
+
+      if (!path) {
+        return null;
+      }
+
+      // path의 실제 시작점과 끝점 찾기
+      let startPoint, endPoint;
+
+      if (path?.element) {
+        const pathLength = path.element.getTotalLength();
+        startPoint = {
+          x: path.element.getPointAtLength(0).x,
+          y: path.element.getPointAtLength(0).y,
+        };
+        endPoint = {
+          x: path.element.getPointAtLength(pathLength).x,
+          y: path.element.getPointAtLength(pathLength).y,
+        };
+      } else {
+        // element가 없는 경우 points 배열에서 시작점과 끝점 찾기
+        startPoint = path.points[0];
+        endPoint = path.points[path.points.length - 1];
+      }
+
+      const startGridId = startPoint
+        ? findNearestGridPointId(startPoint, points)
+        : "-";
+      const endGridId = endPoint
+        ? findNearestGridPointId(endPoint, points)
+        : "-";
+
+      const controlPoints =
+        path.type === "curve" ? extractControlPoints(path.data || "") : [];
+
+      return {
+        id: path.id,
+        name: path.id,
+        startPoint: startGridId,
+        endPoint: endGridId,
+        controlPoints: controlPoints,
+      };
+    })
+    .filter((item) => item !== null);
+
   const handleSubmit = async () => {
     try {
       // 모든 측정 항목이 매핑되었는지 확인
@@ -99,15 +146,32 @@ const ChartRegistration: React.FC<{
         name: data.svg_name, // TODO: 실제 이름으로 변경
         svgFileUrl: data.svg_url, // TODO: 실제 S3 URL로 변경
         points: points,
-        mappings: measurementItems.map((item) => ({
-          measurement_code: item.id,
-          start_point_id: item.startPoint,
-          end_point_id: item.endPoint,
-          slider_default: item.adjustable,
-          // symmetric: true, // TODO: 실제 값으로 변경
-          // curve_type: "line" as const, // 타입을 명시적으로 지정
-          // control_points: [], // 타입을 명시적으로 지정
-        })),
+        // mappings: measurementItems.map((item) => ({
+        //   measurement_code: item.id,
+        //   start_point_id: item.startPoint,
+        //   end_point_id: item.endPoint,
+        //   slider_default: item.adjustable,
+        //   // symmetric: true, // TODO: 실제 값으로 변경
+        //   // curve_type: "line" as const, // 타입을 명시적으로 지정
+        //   // control_points: [], // 타입을 명시적으로 지정
+        // })),
+        mappings: {
+          auto: autoMappingItems.map((item) => ({
+            measurement_code: item.id,
+            start_point_id: item.startPoint,
+            end_point_id: item.endPoint,
+            slider_default:
+              data.mapped_path_id.find((p) => p.code === item.id)
+                ?.slider_default ?? false,
+            control_points: item.controlPoints,
+          })),
+          manual: measurementItems.map((item) => ({
+            measurement_code: item.id,
+            start_point_id: item.startPoint,
+            end_point_id: item.endPoint,
+            slider_default: item.adjustable,
+          })),
+        },
       };
 
       console.log("requestData: ", requestData);
@@ -198,6 +262,7 @@ const ChartRegistration: React.FC<{
         <CardContent>
           <AutoMappingTable
             paths={paths}
+            mappingItems={autoMappingItems}
             gridPoints={points}
             extractControlPoints={extractControlPoints}
             onPathClick={setHoveredPathId}

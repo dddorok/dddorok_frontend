@@ -32,15 +32,16 @@ interface UpdateChartTypeSvgMappingRequest {
     x: number;
     y: number;
   }[];
-  mappings: {
-    measurement_code: string;
-    start_point_id: string;
-    end_point_id: string;
-    slider_default: boolean;
-    // symmetric: boolean;
-    // curve_type: string;
-    // control_points: { x: number; y: number }[];
-  }[];
+  // mappings: {
+  //   measurement_code: string;
+  //   start_point_id: string;
+  //   end_point_id: string;
+  //   slider_default: boolean;
+  //   // symmetric: boolean;
+  //   // curve_type: string;
+  //   // control_points: { x: number; y: number }[];
+  // }[];
+  mappings: any;
 }
 
 export const updateChartTypeSvgMapping = async (
