@@ -1,50 +1,45 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 
 import { ChartPoint, MeasurementItem, SvgPath } from "../types";
 import { getSvgPreviewData } from "../utils/etc";
 import { getGridLines } from "../utils/svgGrid";
+// 임시
+const scale = 1;
 
 interface SvgPreviewProps {
   svgContent: string;
   paths: SvgPath[];
   points: ChartPoint[];
-  // previewW: number;
-  // previewH: number;
-  // svgBoxX: number;
-  // svgBoxY: number;
-  // svgBoxW: number;
-  // svgBoxH: number;
-  handleSvgClick: (e: React.MouseEvent<SVGSVGElement>) => void;
-  isSelecting?: boolean;
-  selectedPathId?: string | null;
-  selectedPointIndex?: number;
-  selectedPointId?: string | null;
-  measurementItems?: MeasurementItem[];
-  onPointClick?: (pointId: string) => void;
+  onPointClick: (pointId: string) => void;
   highlightedPathId?: string | null;
+  svgDimensions: { width: number; height: number; minX: number; minY: number };
 }
 
 export function SvgPreview({
   svgContent,
   paths,
   points,
-  // previewW,
-  // previewH,
-  // svgBoxX,
-  // svgBoxY,
-  // svgBoxW,
-  // svgBoxH,
-  handleSvgClick,
-  isSelecting = false,
-  selectedPathId = null,
-  selectedPointIndex = 0,
-  selectedPointId = null,
-  measurementItems = [],
-  onPointClick,
   highlightedPathId = null,
+  ...props
 }: SvgPreviewProps) {
   const { previewW, previewH, svgBoxX, svgBoxY, svgBoxW, svgBoxH } =
     getSvgPreviewData(svgContent, "", points);
+
+  const svgRef = useRef<HTMLDivElement>(null);
+
+  const handleSvgClick = (e: React.MouseEvent<SVGSVGElement>) => {
+    const rect = svgRef.current?.getBoundingClientRect();
+    if (!rect) return;
+
+    const offsetX = (e.clientX - rect.left) / scale + props.svgDimensions.minX;
+    const offsetY = (e.clientY - rect.top) / scale + props.svgDimensions.minY;
+
+    const closest = getClosetPoint({ points, offsetX, offsetY });
+
+    if (closest) {
+      props.onPointClick(closest.id);
+    }
+  };
 
   const [hoveredPointId, setHoveredPointId] = useState<string | null>(null);
 
@@ -152,79 +147,45 @@ export function SvgPreview({
         {/* 포인트 */}
         {points.map((pt) => {
           // 선택된 path의 시작점이면 초록색
-          const isStartSelected =
-            isSelecting &&
-            selectedPathId &&
-            selectedPointIndex === 1 &&
-            measurementItems.find((item) => item.id === selectedPathId)
-              ?.startPoint === pt.id;
+          // const isStartSelected =
+          //   isSelecting &&
+          //   selectedPathId &&
+          //   selectedPointIndex === 1 &&
+          //   measurementItems.find((item) => item.id === selectedPathId)
+          //     ?.startPoint === pt.id;
+
+          const isStartSelected = false;
           return (
             <circle
               key={pt.id}
               cx={pt.x}
               cy={pt.y}
-              r={
-                isStartSelected
-                  ? 8
-                  : pt.id === selectedPointId
-                    ? 6
-                    : pt.id === hoveredPointId
-                      ? 5
-                      : 4
-              }
+              r={isStartSelected ? 8 : pt.id === hoveredPointId ? 5 : 4}
               fill={
                 isStartSelected
                   ? "#22c55e"
-                  : pt.id === selectedPointId
-                    ? "#2563eb"
-                    : pt.id === hoveredPointId
-                      ? "#f59e42"
-                      : "#fff"
+                  : pt.id === hoveredPointId
+                    ? "#f59e42"
+                    : "#fff"
               }
               stroke={
                 isStartSelected
                   ? "#22c55e"
-                  : pt.id === selectedPointId
-                    ? "#2563eb"
-                    : pt.id === hoveredPointId
-                      ? "#f59e42"
-                      : "#888"
+                  : pt.id === hoveredPointId
+                    ? "#f59e42"
+                    : "#888"
               }
-              strokeWidth={
-                isStartSelected
-                  ? 3
-                  : pt.id === selectedPointId || pt.id === hoveredPointId
-                    ? 2
-                    : 1
-              }
+              strokeWidth={isStartSelected ? 3 : 1}
               style={{ cursor: "pointer" }}
               onClick={(e) => {
                 e.stopPropagation();
-                if (onPointClick) {
-                  onPointClick(pt.id);
-                }
+                props.onPointClick(pt.id);
               }}
               onMouseEnter={() => handlePointMouseEnter(pt.id)}
               onMouseLeave={handlePointMouseLeave}
             />
           );
         })}
-
-        {/* 선택 중인 상태 안내 텍스트 */}
-        {isSelecting && selectedPathId && (
-          <text
-            x={svgBoxX + 10}
-            y={svgBoxY + 20}
-            fontSize={12}
-            fill="#2563eb"
-            fontWeight="bold"
-          >
-            {selectedPointIndex === 0
-              ? "시작점을 선택해주세요"
-              : "끝점을 선택해주세요"}
-          </text>
-        )}
-
         {/* 포인트 id 툴팁 (hover 시) */}
         {points.map((pt) =>
           pt.id === hoveredPointId ? (
@@ -261,3 +222,26 @@ export function SvgPreview({
     </div>
   );
 }
+
+const getClosetPoint = ({
+  points,
+  offsetX,
+  offsetY,
+}: {
+  points: ChartPoint[];
+  offsetX: number;
+  offsetY: number;
+}) => {
+  let closest: ChartPoint | null = null;
+  let minDist = Infinity;
+
+  for (const pt of points) {
+    const dist = Math.sqrt((pt.x - offsetX) ** 2 + (pt.y - offsetY) ** 2);
+    if (dist < 10 && dist < minDist) {
+      closest = pt;
+      minDist = dist;
+    }
+  }
+
+  return closest;
+};

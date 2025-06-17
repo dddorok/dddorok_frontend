@@ -75,10 +75,8 @@ const ChartRegistration: React.FC<{
     minY: number;
   }>({ width: 0, height: 0, minX: 0, minY: 0 });
   const [scale, setScale] = useState<number>(1);
-  const svgRef = useRef<HTMLDivElement>(null);
 
-  const [selectedPointId, setSelectedPointId] = useState<string | null>(null);
-  const [selectedPathId, setSelectedPathId] = useState<string | null>(null);
+  const [mappingPathId, setSelectedPathId] = useState<string | null>(null);
   const [selectedPointIndex, setSelectedPointIndex] = useState<number>(0);
   const [hoveredPathId, setHoveredPathId] = useState<string | null>(null);
 
@@ -170,6 +168,7 @@ const ChartRegistration: React.FC<{
     const scaleX = (containerWidth - padding * 2) / width;
     const scaleY = (containerHeight - padding * 2) / height;
     const calculatedScale = Math.min(scaleX, scaleY, 1);
+    console.log("calculatedScale: ", calculatedScale);
 
     setSvgDimensions({ width, height, minX, minY });
     setScale(calculatedScale);
@@ -189,34 +188,8 @@ const ChartRegistration: React.FC<{
     toast({ title: "선택이 중지되었습니다." });
   };
 
-  const handleSvgClick = (e: React.MouseEvent<SVGSVGElement>) => {
-    if (!isSelecting || !selectedPathId) return;
-    const rect = svgRef.current?.getBoundingClientRect();
-    if (!rect) return;
-    const offsetX = (e.clientX - rect.left) / scale + svgDimensions.minX;
-    const offsetY = (e.clientY - rect.top) / scale + svgDimensions.minY;
-
-    const selectedPath = paths.find((p) => p.id === selectedPathId);
-    if (!selectedPath) return;
-
-    let closest: ChartPoint | null = null;
-    let minDist = Infinity;
-    for (const pt of points) {
-      const dist = Math.sqrt((pt.x - offsetX) ** 2 + (pt.y - offsetY) ** 2);
-      if (dist < 10 && dist < minDist) {
-        closest = pt;
-        minDist = dist;
-      }
-    }
-
-    if (closest) {
-      handlePointClick(closest.id);
-    }
-  };
-
   const handlePointClick = (pointId: string) => {
-    if (!isSelecting || !selectedPathId) {
-      setSelectedPointId(pointId);
+    if (!isSelecting || !mappingPathId) {
       return;
     }
 
@@ -225,7 +198,7 @@ const ChartRegistration: React.FC<{
 
     setMeasurementItems((prev) =>
       prev.map((item) =>
-        item.id === selectedPathId ? { ...item, [field]: pointId } : item
+        item.id === mappingPathId ? { ...item, [field]: pointId } : item
       )
     );
 
@@ -235,7 +208,7 @@ const ChartRegistration: React.FC<{
     } else {
       // 현재 항목의 매핑이 완료되면 다음 미완료 항목으로 자동 이동
       const currentIndex = measurementItems.findIndex(
-        (item) => item.id === selectedPathId
+        (item) => item.id === mappingPathId
       );
       const nextUnmappedItem = measurementItems
         .slice(currentIndex + 1)
@@ -391,14 +364,9 @@ const ChartRegistration: React.FC<{
                     svgContent={svgContent}
                     paths={paths}
                     points={points}
-                    handleSvgClick={handleSvgClick}
-                    isSelecting={isSelecting}
-                    selectedPathId={selectedPathId}
-                    selectedPointIndex={selectedPointIndex}
-                    selectedPointId={selectedPointId}
-                    measurementItems={measurementItems}
                     onPointClick={handlePointClick}
                     highlightedPathId={highlightedPathId}
+                    svgDimensions={svgDimensions}
                   />
                 </div>
               </div>
@@ -434,19 +402,12 @@ const ChartRegistration: React.FC<{
         <CardContent>
           <ManualMappingTable
             measurementItems={measurementItems}
-            selectedPathId={selectedPathId}
+            selectedPathId={mappingPathId}
             selectedPointIndex={selectedPointIndex}
             handlePathIdClick={handleStartMapping}
             onAdjustableChange={handleAdjustableChange}
             onStopSelecting={handleStopSelecting}
           />
-          {/* <p className="text-sm text-destructive mt-2">
-            {selectedPathId && selectedPointIndex === 0
-              ? "시작점을 선택해주세요."
-              : selectedPathId && selectedPointIndex === 1
-                ? "끝점을 선택해주세요."
-                : "* 매핑되지 않은 항목이 있습니다. 모든 항목의 매핑을 완료해주세요."}
-          </p> */}
         </CardContent>
       </Card>
 
@@ -459,3 +420,5 @@ const ChartRegistration: React.FC<{
 };
 
 export default ChartRegistration;
+
+const useManualMapping = () => {};
