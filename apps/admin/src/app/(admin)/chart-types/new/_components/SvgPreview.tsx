@@ -21,6 +21,7 @@ interface SvgPreviewProps {
   selectedPointId?: string | null;
   measurementItems?: MeasurementItem[];
   onPointClick?: (pointId: string) => void;
+  highlightedPathId?: string | null;
 }
 
 export function SvgPreview({
@@ -40,6 +41,7 @@ export function SvgPreview({
   selectedPointId = null,
   measurementItems = [],
   onPointClick,
+  highlightedPathId = null,
 }: SvgPreviewProps) {
   const { previewW, previewH, svgBoxX, svgBoxY, svgBoxW, svgBoxH } =
     getSvgPreviewData(svgContent, "", points);
@@ -52,6 +54,24 @@ export function SvgPreview({
 
   const handlePointMouseLeave = () => {
     setHoveredPointId(null);
+  };
+
+  // SVG content를 파싱하여 path 요소들을 추출하고 스타일을 적용하는 함수
+  const getStyledSvgContent = () => {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(svgContent, "image/svg+xml");
+    const svgElement = doc.documentElement;
+
+    // 모든 path 요소에 대해 스타일 적용
+    svgElement.querySelectorAll("path").forEach((path) => {
+      const pathId = path.getAttribute("id");
+      if (pathId && pathId === highlightedPathId) {
+        path.setAttribute("stroke", "#22c55e");
+        path.setAttribute("stroke-width", "3");
+      }
+    });
+
+    return svgElement.innerHTML;
   };
 
   return (
@@ -70,7 +90,7 @@ export function SvgPreview({
       >
         <g
           dangerouslySetInnerHTML={{
-            __html: svgContent.replace(/<svg[^>]*>|<\/svg>/gi, ""),
+            __html: getStyledSvgContent(),
           }}
         />
         {(() => {
@@ -233,6 +253,11 @@ export function SvgPreview({
           ) : null
         )}
       </svg>
+      {highlightedPathId && (
+        <div className="mt-2 text-sm text-green-600 font-medium">
+          강조된 Path: {highlightedPathId}
+        </div>
+      )}
     </div>
   );
 }

@@ -7,12 +7,14 @@ export interface AutoMappingTableProps {
   paths: SvgPath[];
   gridPoints: ChartPoint[];
   extractControlPoints: (pathData: string) => { x: number; y: number }[];
+  onPathClick?: (pathId: string) => void;
 }
 
 export function AutoMappingTable({
   paths,
   gridPoints,
   extractControlPoints,
+  onPathClick,
 }: AutoMappingTableProps) {
   return (
     <table className="w-full border text-xs mb-2">
@@ -27,20 +29,41 @@ export function AutoMappingTable({
       </thead>
       <tbody>
         {paths.map((p, i) => {
-          const startPoint = p.points[0];
-          const endPoint = p.points[p.points.length - 1];
+          // path의 실제 시작점과 끝점 찾기
+          let startPoint, endPoint;
+
+          if (p.element) {
+            const pathLength = p.element.getTotalLength();
+            startPoint = {
+              x: p.element.getPointAtLength(0).x,
+              y: p.element.getPointAtLength(0).y,
+            };
+            endPoint = {
+              x: p.element.getPointAtLength(pathLength).x,
+              y: p.element.getPointAtLength(pathLength).y,
+            };
+          } else {
+            // element가 없는 경우 points 배열에서 시작점과 끝점 찾기
+            startPoint = p.points[0];
+            endPoint = p.points[p.points.length - 1];
+          }
+
           const startGridId = startPoint
             ? findNearestGridPointId(startPoint, gridPoints)
             : "-";
           const endGridId = endPoint
             ? findNearestGridPointId(endPoint, gridPoints)
             : "-";
+
           const controlPoints =
             p.type === "curve" ? extractControlPoints(p.data || "") : [];
           return (
             <tr key={p.id} className="text-gray-700">
               <td className="border px-2 py-1 text-center">{i + 1}</td>
-              <td className="border px-2 py-1 text-blue-600 underline cursor-pointer">
+              <td
+                className="border px-2 py-1 text-blue-600 underline cursor-pointer"
+                onClick={() => onPathClick?.(p.id)}
+              >
                 {p.id}
               </td>
               <td className="border px-2 py-1">-</td>

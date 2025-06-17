@@ -8,9 +8,9 @@ import { ManualMappingTable } from "./_components/ManualMappingTable";
 import { SvgPreview } from "./_components/SvgPreview";
 import { fetchSvg } from "./action";
 import { ChartPoint } from "./types";
-import { getSvgOriginAndSize, previewH, previewW } from "./utils/etc";
+import { previewH, previewW } from "./utils/etc";
 import { analyzeSVGPaths } from "./utils/svg-paths";
-import { getGridPointsFromPaths, extractControlPoints } from "./utils/svgGrid";
+import { extractControlPoints } from "./utils/svgGrid";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -80,9 +80,13 @@ const ChartRegistration: React.FC<{
   const [selectedPointId, setSelectedPointId] = useState<string | null>(null);
   const [selectedPathId, setSelectedPathId] = useState<string | null>(null);
   const [selectedPointIndex, setSelectedPointIndex] = useState<number>(0);
+  const [hoveredPathId, setHoveredPathId] = useState<string | null>(null);
 
   const { toast } = useToast();
   const router = useRouter();
+
+  // 단일 path ID만 강조
+  const highlightedPathId = hoveredPathId;
 
   // SVG 파일을 가져오는 함수
   const fetchSvgContent = async () => {
@@ -325,9 +329,47 @@ const ChartRegistration: React.FC<{
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <div className="space-y-1">
-                <Label className="text-blue-700 underline">
-                  {data.svg_name}
-                </Label>
+                <div className="flex items-center gap-2">
+                  <Label
+                    className="text-blue-700 underline cursor-pointer hover:text-blue-900"
+                    onClick={() => {
+                      const link = document.createElement("a");
+                      link.href = data.svg_url;
+                      link.download = data.svg_name;
+                      document.body.appendChild(link);
+                      link.click();
+                      document.body.removeChild(link);
+                    }}
+                  >
+                    {data.svg_name}
+                  </Label>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      fetch(data.svg_url)
+                        .then((response) => response.blob())
+                        .then((blob) => {
+                          const url = window.URL.createObjectURL(blob);
+                          const link = document.createElement("a");
+                          link.href = url;
+                          link.download = data.svg_name;
+                          document.body.appendChild(link);
+                          link.click();
+                          document.body.removeChild(link);
+                          window.URL.revokeObjectURL(url);
+                        })
+                        .catch((err) => {
+                          console.error(
+                            "파일 다운로드 중 오류가 발생했습니다:",
+                            err
+                          );
+                        });
+                    }}
+                  >
+                    다운로드
+                  </Button>
+                </div>
                 <p className="text-sm text-muted-foreground">
                   SVG에서 path 정보를 자동으로 추출할 수 있습니다.
                 </p>
@@ -348,12 +390,6 @@ const ChartRegistration: React.FC<{
                     svgContent={svgContent}
                     paths={paths}
                     points={points}
-                    // previewW={previewW}
-                    // previewH={previewH}
-                    // svgBoxX={svgBoxX}
-                    // svgBoxY={svgBoxY}
-                    // svgBoxW={svgBoxW}
-                    // svgBoxH={svgBoxH}
                     handleSvgClick={handleSvgClick}
                     isSelecting={isSelecting}
                     selectedPathId={selectedPathId}
@@ -361,6 +397,7 @@ const ChartRegistration: React.FC<{
                     selectedPointId={selectedPointId}
                     measurementItems={measurementItems}
                     onPointClick={handlePointClick}
+                    highlightedPathId={highlightedPathId}
                   />
                 </div>
               </div>
@@ -381,6 +418,7 @@ const ChartRegistration: React.FC<{
             paths={paths}
             gridPoints={points}
             extractControlPoints={extractControlPoints}
+            onPathClick={setHoveredPathId}
           />
         </CardContent>
       </Card>
