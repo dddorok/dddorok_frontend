@@ -1,16 +1,9 @@
 import React from "react";
 
-import { MeasurementItem } from "../ChartRegistration";
+import { MeasurementItem } from "../types";
 
+import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 
 interface ManualMappingTableProps {
   measurementItems: MeasurementItem[];
@@ -28,49 +21,67 @@ export function ManualMappingTable({
   onAdjustableChange,
 }: ManualMappingTableProps) {
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>No.</TableHead>
-          <TableHead>path ID</TableHead>
-          <TableHead>측정항목</TableHead>
-          <TableHead>시작점 - 번호</TableHead>
-          <TableHead>끝점 - 번호</TableHead>
-          <TableHead>슬라이더 조정</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {measurementItems.map((m, i) => (
-          <TableRow key={m.id}>
-            <TableCell>{i + 1}</TableCell>
-            <TableCell
-              className={`text-blue-600 underline cursor-pointer ${selectedPathId === m.id ? "bg-blue-50" : ""}`}
-              onClick={() => handlePathIdClick(m.id)}
-            >
-              {m.id}
-            </TableCell>
-            <TableCell>{m.name}</TableCell>
-            <TableCell>
-              {m.startPoint ||
-                (selectedPathId === m.id && selectedPointIndex === 0
-                  ? "선택 중..."
-                  : "선택")}
-            </TableCell>
-            <TableCell>
-              {m.endPoint ||
-                (selectedPathId === m.id && selectedPointIndex === 1
-                  ? "선택 중..."
-                  : "선택")}
-            </TableCell>
-            <TableCell>
+    <table className="w-full border text-xs mb-2">
+      <thead className="bg-gray-100 text-gray-700">
+        <tr>
+          <th className="border px-2 py-1">No.</th>
+          <th className="border px-2 py-1">path ID</th>
+          <th className="border px-2 py-1">항목명</th>
+          <th className="border px-2 py-1">시작점</th>
+          <th className="border px-2 py-1">끝점</th>
+          <th className="border px-2 py-1">조정 가능</th>
+          <th className="border px-2 py-1">선택</th>
+        </tr>
+      </thead>
+      <tbody>
+        {measurementItems.map((item, i) => (
+          <tr key={item.id} className="text-gray-700">
+            <td className="border px-2 py-1 text-center">{i + 1}</td>
+            <td className="border px-2 py-1">{item.id}</td>
+            <td className="border px-2 py-1">{item.name}</td>
+            <td className="border px-2 py-1 text-center">
+              <span
+                className={`bg-gray-100 rounded px-2 py-1 ${
+                  selectedPathId === item.id && selectedPointIndex === 0
+                    ? "bg-blue-100"
+                    : ""
+                }`}
+              >
+                {item.startPoint || "-"}
+              </span>
+            </td>
+            <td className="border px-2 py-1 text-center">
+              <span
+                className={`bg-gray-100 rounded px-2 py-1 ${
+                  selectedPathId === item.id && selectedPointIndex === 1
+                    ? "bg-blue-100"
+                    : ""
+                }`}
+              >
+                {item.endPoint || "-"}
+              </span>
+            </td>
+            <td className="border px-2 py-1 text-center">
               <Switch
-                checked={m.adjustable}
-                onCheckedChange={(checked) => onAdjustableChange(m.id, checked)}
+                checked={item.adjustable}
+                onCheckedChange={(checked) =>
+                  onAdjustableChange(item.id, checked)
+                }
               />
-            </TableCell>
-          </TableRow>
+            </td>
+            <td className="border px-2 py-1 text-center">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handlePathIdClick(item.id)}
+                className={selectedPathId === item.id ? "bg-blue-100" : ""}
+              >
+                선택
+              </Button>
+            </td>
+          </tr>
         ))}
-      </TableBody>
-    </Table>
+      </tbody>
+    </table>
   );
 }

@@ -175,7 +175,7 @@ const ChartRegistration: React.FC<{
     setScale(calculatedScale);
   };
 
-  const handlePathIdClick = (pathId: string) => {
+  const handleStartMapping = (pathId: string) => {
     setSelectedPathId(pathId);
     setSelectedPointIndex(0);
     setIsSelecting(true);
@@ -435,7 +435,7 @@ const ChartRegistration: React.FC<{
             measurementItems={measurementItems}
             selectedPathId={selectedPathId}
             selectedPointIndex={selectedPointIndex}
-            handlePathIdClick={handlePathIdClick}
+            handlePathIdClick={handleStartMapping}
             onAdjustableChange={handleAdjustableChange}
           />
           {/* <p className="text-sm text-destructive mt-2">
