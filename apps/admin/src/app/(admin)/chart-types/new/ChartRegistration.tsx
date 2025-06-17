@@ -182,6 +182,13 @@ const ChartRegistration: React.FC<{
     toast({ title: "시작점 선택 중입니다." });
   };
 
+  const handleStopSelecting = () => {
+    setSelectedPathId(null);
+    setSelectedPointIndex(0);
+    setIsSelecting(false);
+    toast({ title: "선택이 중지되었습니다." });
+  };
+
   const handleSvgClick = (e: React.MouseEvent<SVGSVGElement>) => {
     if (!isSelecting || !selectedPathId) return;
     const rect = svgRef.current?.getBoundingClientRect();
@@ -203,27 +210,7 @@ const ChartRegistration: React.FC<{
     }
 
     if (closest) {
-      // 현재 선택된 점이 시작점인지 끝점인지 확인
-      const isStartPoint = selectedPointIndex === 0;
-      const field = isStartPoint ? "startPoint" : "endPoint";
-
-      setMeasurementItems((prev) =>
-        prev.map((item) =>
-          item.id === selectedPathId ? { ...item, [field]: closest.id } : item
-        )
-      );
-
-      // 다음 점 선택을 위해 인덱스 증가
-      if (isStartPoint) {
-        setSelectedPointIndex(1);
-        toast({ title: "끝점 선택 중입니다." });
-      } else {
-        // 모든 점이 선택되었으면 초기화
-        setSelectedPathId(null);
-        setSelectedPointIndex(0);
-        setIsSelecting(false);
-        toast({ title: "끝점 선택 완료!" });
-      }
+      handlePointClick(closest.id);
     }
   };
 
@@ -246,10 +233,24 @@ const ChartRegistration: React.FC<{
       setSelectedPointIndex(1);
       toast({ title: "끝점 선택 중입니다." });
     } else {
-      setSelectedPathId(null);
-      setSelectedPointIndex(0);
-      setIsSelecting(false);
-      toast({ title: "끝점 선택 완료!" });
+      // 현재 항목의 매핑이 완료되면 다음 미완료 항목으로 자동 이동
+      const currentIndex = measurementItems.findIndex(
+        (item) => item.id === selectedPathId
+      );
+      const nextUnmappedItem = measurementItems
+        .slice(currentIndex + 1)
+        .find((item) => !item.startPoint || !item.endPoint);
+
+      if (nextUnmappedItem) {
+        setSelectedPathId(nextUnmappedItem.id);
+        setSelectedPointIndex(0);
+        toast({ title: `${nextUnmappedItem.name}의 시작점 선택 중입니다.` });
+      } else {
+        setSelectedPathId(null);
+        setSelectedPointIndex(0);
+        setIsSelecting(false);
+        toast({ title: "모든 항목의 매핑이 완료되었습니다!" });
+      }
     }
   };
 
@@ -437,6 +438,7 @@ const ChartRegistration: React.FC<{
             selectedPointIndex={selectedPointIndex}
             handlePathIdClick={handleStartMapping}
             onAdjustableChange={handleAdjustableChange}
+            onStopSelecting={handleStopSelecting}
           />
           {/* <p className="text-sm text-destructive mt-2">
             {selectedPathId && selectedPointIndex === 0
