@@ -1,17 +1,16 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 
 import { AutoMappingTable } from "./_components/AutoMappingTable";
 import { ManualMappingTable } from "./_components/ManualMappingTable";
 import { SvgPreview } from "./_components/SvgPreview";
-import { fetchSvg } from "./action";
-import { ChartPoint } from "./types";
+import { useSvgContent } from "./hooks/useSvgContent";
 import { previewH, previewW } from "./utils/etc";
-import { analyzeSVGPaths } from "./utils/svg-paths";
 import { extractControlPoints } from "./utils/svgGrid";
 
+import { DownloadButton } from "@/components/DownloadButton";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -19,9 +18,6 @@ import { Label } from "@/components/ui/label";
 import { toast, useToast } from "@/hooks/use-toast";
 import { getChartType } from "@/services/chart-type";
 import { updateChartTypeSvgMapping } from "@/services/chart-type/new";
-
-// const previewW = 400;
-// const previewH = 350;
 
 export interface SvgPath {
   id: string;
@@ -61,70 +57,10 @@ const ChartRegistration: React.FC<{
   };
   id: string;
 }> = ({ data, id }) => {
-  const [svgContent, setSvgContent] = useState<string>("");
-  const [paths, setPaths] = useState<SvgPath[]>([]);
-  const [points, setPoints] = useState<ChartPoint[]>([]);
-  const [svgDimensions, setSvgDimensions] = useState<{
-    width: number;
-    height: number;
-    minX: number;
-    minY: number;
-  }>({ width: 0, height: 0, minX: 0, minY: 0 });
-  const [scale, setScale] = useState<number>(1);
-
   const [hoveredPathId, setHoveredPathId] = useState<string | null>(null);
 
   const { toast } = useToast();
   const router = useRouter();
-
-  // 단일 path ID만 강조
-  const highlightedPathId = hoveredPathId;
-
-  // SVG 파일을 가져오는 함수
-  const fetchSvgContent = async () => {
-    try {
-      const { content } = await fetchSvg(data.svg_url);
-      setSvgContent(content);
-      const { gridPoints, rawPaths } = analyzeSVGPaths(content);
-      setPoints(gridPoints);
-      setPaths(rawPaths);
-      calculateSVGDimensions(gridPoints);
-    } catch (error) {
-      toast({
-        title: "오류",
-        variant: "destructive",
-        description: "SVG 파일을 가져오는데 실패했습니다.",
-      });
-    }
-  };
-
-  // 컴포넌트 마운트 시 SVG 파일 가져오기
-  useEffect(() => {
-    fetchSvgContent();
-  }, [data.svg_url]);
-
-  const calculateSVGDimensions = (allPoints: ChartPoint[]) => {
-    if (allPoints.length === 0) return;
-    const xCoords = allPoints.map((p) => p.x);
-    const yCoords = allPoints.map((p) => p.y);
-    const minX = Math.min(...xCoords);
-    const maxX = Math.max(...xCoords);
-    const minY = Math.min(...yCoords);
-    const maxY = Math.max(...yCoords);
-    const width = maxX - minX;
-    const height = maxY - minY;
-
-    const containerWidth = 560;
-    const containerHeight = 384;
-    const padding = 40;
-    const scaleX = (containerWidth - padding * 2) / width;
-    const scaleY = (containerHeight - padding * 2) / height;
-    const calculatedScale = Math.min(scaleX, scaleY, 1);
-    console.log("calculatedScale: ", calculatedScale);
-
-    setSvgDimensions({ width, height, minX, minY });
-    setScale(calculatedScale);
-  };
 
   const {
     handleStartMapping,
@@ -137,6 +73,10 @@ const ChartRegistration: React.FC<{
   } = useManualMapping({
     manual_mapped_path_id: data.manual_mapped_path_id,
     chartTypeId: id,
+  });
+
+  const { svgContent, paths, points, svgDimensions } = useSvgContent({
+    svg_url: data.svg_url,
   });
 
   const handleSubmit = async () => {
@@ -158,18 +98,15 @@ const ChartRegistration: React.FC<{
       const requestData = {
         name: data.svg_name, // TODO: 실제 이름으로 변경
         svgFileUrl: data.svg_url, // TODO: 실제 S3 URL로 변경
-        points: points.map((point) => ({
-          id: point.id,
-          x: point.x,
-          y: point.y,
-        })),
+        points: points,
         mappings: measurementItems.map((item) => ({
           measurement_code: item.id,
           start_point_id: item.startPoint,
           end_point_id: item.endPoint,
-          symmetric: true, // TODO: 실제 값으로 변경
-          curve_type: "line" as const, // 타입을 명시적으로 지정
-          control_points: [], // 타입을 명시적으로 지정
+          slider_default: item.adjustable,
+          // symmetric: true, // TODO: 실제 값으로 변경
+          // curve_type: "line" as const, // 타입을 명시적으로 지정
+          // control_points: [], // 타입을 명시적으로 지정
         })),
       };
 
@@ -210,45 +147,15 @@ const ChartRegistration: React.FC<{
             <div className="flex items-center justify-between">
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
-                  <Label
-                    className="text-blue-700 underline cursor-pointer hover:text-blue-900"
-                    onClick={() => {
-                      const link = document.createElement("a");
-                      link.href = data.svg_url;
-                      link.download = data.svg_name;
-                      document.body.appendChild(link);
-                      link.click();
-                      document.body.removeChild(link);
-                    }}
-                  >
+                  <Label className="text-blue-700 underline cursor-pointer hover:text-blue-900">
                     {data.svg_name}
                   </Label>
-                  <Button
+                  <DownloadButton
                     variant="outline"
                     size="sm"
-                    onClick={() => {
-                      fetch(data.svg_url)
-                        .then((response) => response.blob())
-                        .then((blob) => {
-                          const url = window.URL.createObjectURL(blob);
-                          const link = document.createElement("a");
-                          link.href = url;
-                          link.download = data.svg_name;
-                          document.body.appendChild(link);
-                          link.click();
-                          document.body.removeChild(link);
-                          window.URL.revokeObjectURL(url);
-                        })
-                        .catch((err) => {
-                          console.error(
-                            "파일 다운로드 중 오류가 발생했습니다:",
-                            err
-                          );
-                        });
-                    }}
-                  >
-                    다운로드
-                  </Button>
+                    fileUrl={data.svg_url}
+                    fileName={data.svg_name}
+                  />
                 </div>
                 <p className="text-sm text-muted-foreground">
                   SVG에서 path 정보를 자동으로 추출할 수 있습니다.
@@ -271,7 +178,7 @@ const ChartRegistration: React.FC<{
                     paths={paths}
                     points={points}
                     onPointClick={handleMappingPointClick}
-                    highlightedPathId={highlightedPathId}
+                    highlightedPathId={hoveredPathId}
                     svgDimensions={svgDimensions}
                   />
                 </div>

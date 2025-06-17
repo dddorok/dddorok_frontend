@@ -36,9 +36,10 @@ interface UpdateChartTypeSvgMappingRequest {
     measurement_code: string;
     start_point_id: string;
     end_point_id: string;
-    symmetric: boolean;
-    curve_type: string;
-    control_points: { x: number; y: number }[];
+    slider_default: boolean;
+    // symmetric: boolean;
+    // curve_type: string;
+    // control_points: { x: number; y: number }[];
   }[];
 }
 
