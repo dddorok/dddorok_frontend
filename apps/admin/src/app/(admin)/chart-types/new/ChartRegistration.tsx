@@ -16,7 +16,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { useToast } from "@/hooks/use-toast";
+import { toast, useToast } from "@/hooks/use-toast";
 import { getChartType } from "@/services/chart-type";
 import { updateChartTypeSvgMapping } from "@/services/chart-type/new";
 
@@ -64,10 +64,6 @@ const ChartRegistration: React.FC<{
   const [svgContent, setSvgContent] = useState<string>("");
   const [paths, setPaths] = useState<SvgPath[]>([]);
   const [points, setPoints] = useState<ChartPoint[]>([]);
-  const [measurementItems, setMeasurementItems] = useState<MeasurementItem[]>(
-    []
-  );
-  const [isSelecting, setIsSelecting] = useState<boolean>(false);
   const [svgDimensions, setSvgDimensions] = useState<{
     width: number;
     height: number;
@@ -76,8 +72,6 @@ const ChartRegistration: React.FC<{
   }>({ width: 0, height: 0, minX: 0, minY: 0 });
   const [scale, setScale] = useState<number>(1);
 
-  const [mappingPathId, setSelectedPathId] = useState<string | null>(null);
-  const [selectedPointIndex, setSelectedPointIndex] = useState<number>(0);
   const [hoveredPathId, setHoveredPathId] = useState<string | null>(null);
 
   const { toast } = useToast();
@@ -109,48 +103,6 @@ const ChartRegistration: React.FC<{
     fetchSvgContent();
   }, [data.svg_url]);
 
-  const initMapping = async () => {
-    const chartType = await getChartType(id);
-    console.log("chartType: ", chartType);
-
-    if (chartType) {
-      const manualMappingItems = data.manual_mapped_path_id?.map((item) => {
-        const currentMapping = chartType.svg_mapping.mappings.find(
-          (map: any) => map.measurement_code === item.code
-        );
-        return {
-          id: item.code,
-          name: item.label,
-          startPoint: currentMapping?.start_point_id ?? "",
-          endPoint: currentMapping?.end_point_id ?? "",
-          adjustable: item.slider_default,
-          isMultiPath: false,
-        };
-      });
-
-      setMeasurementItems([...manualMappingItems]);
-    } else {
-      const manualMappingItems = data.manual_mapped_path_id?.map((item) => ({
-        id: item.code,
-        name: item.label,
-        startPoint: "",
-        endPoint: "",
-        // 개발용
-        // startPoint: "f4",
-        // endPoint: "e4",
-        adjustable: item.slider_default,
-        isMultiPath: false,
-      }));
-
-      setMeasurementItems([...manualMappingItems]);
-    }
-  };
-
-  // 매핑 항목 초기화
-  useEffect(() => {
-    initMapping();
-  }, [data.mapped_path_id, data.manual_mapped_path_id]);
-
   const calculateSVGDimensions = (allPoints: ChartPoint[]) => {
     if (allPoints.length === 0) return;
     const xCoords = allPoints.map((p) => p.x);
@@ -174,64 +126,18 @@ const ChartRegistration: React.FC<{
     setScale(calculatedScale);
   };
 
-  const handleStartMapping = (pathId: string) => {
-    setSelectedPathId(pathId);
-    setSelectedPointIndex(0);
-    setIsSelecting(true);
-    toast({ title: "시작점 선택 중입니다." });
-  };
-
-  const handleStopSelecting = () => {
-    setSelectedPathId(null);
-    setSelectedPointIndex(0);
-    setIsSelecting(false);
-    toast({ title: "선택이 중지되었습니다." });
-  };
-
-  const handlePointClick = (pointId: string) => {
-    if (!isSelecting || !mappingPathId) {
-      return;
-    }
-
-    const isStartPoint = selectedPointIndex === 0;
-    const field = isStartPoint ? "startPoint" : "endPoint";
-
-    setMeasurementItems((prev) =>
-      prev.map((item) =>
-        item.id === mappingPathId ? { ...item, [field]: pointId } : item
-      )
-    );
-
-    if (isStartPoint) {
-      setSelectedPointIndex(1);
-      toast({ title: "끝점 선택 중입니다." });
-    } else {
-      // 현재 항목의 매핑이 완료되면 다음 미완료 항목으로 자동 이동
-      const currentIndex = measurementItems.findIndex(
-        (item) => item.id === mappingPathId
-      );
-      const nextUnmappedItem = measurementItems
-        .slice(currentIndex + 1)
-        .find((item) => !item.startPoint || !item.endPoint);
-
-      if (nextUnmappedItem) {
-        setSelectedPathId(nextUnmappedItem.id);
-        setSelectedPointIndex(0);
-        toast({ title: `${nextUnmappedItem.name}의 시작점 선택 중입니다.` });
-      } else {
-        setSelectedPathId(null);
-        setSelectedPointIndex(0);
-        setIsSelecting(false);
-        toast({ title: "모든 항목의 매핑이 완료되었습니다!" });
-      }
-    }
-  };
-
-  const handleAdjustableChange = (id: string, adjustable: boolean) => {
-    setMeasurementItems((prev) =>
-      prev.map((item) => (item.id === id ? { ...item, adjustable } : item))
-    );
-  };
+  const {
+    handleStartMapping,
+    handleStopSelecting,
+    handleMappingPointClick,
+    mappingPathId,
+    selectedPointIndex,
+    measurementItems,
+    handleAdjustableChange,
+  } = useManualMapping({
+    manual_mapped_path_id: data.manual_mapped_path_id,
+    chartTypeId: id,
+  });
 
   const handleSubmit = async () => {
     try {
@@ -364,7 +270,7 @@ const ChartRegistration: React.FC<{
                     svgContent={svgContent}
                     paths={paths}
                     points={points}
-                    onPointClick={handlePointClick}
+                    onPointClick={handleMappingPointClick}
                     highlightedPathId={highlightedPathId}
                     svgDimensions={svgDimensions}
                   />
@@ -421,4 +327,126 @@ const ChartRegistration: React.FC<{
 
 export default ChartRegistration;
 
-const useManualMapping = () => {};
+const useManualMapping = (props: {
+  manual_mapped_path_id: {
+    code: string;
+    label: string;
+    slider_default: boolean;
+  }[];
+  chartTypeId: string;
+}) => {
+  const [measurementItems, setMeasurementItems] = useState<MeasurementItem[]>(
+    []
+  );
+
+  const [mappingPathId, setSelectedPathId] = useState<string | null>(null);
+  const [selectedPointIndex, setSelectedPointIndex] = useState<number>(0);
+  const [isSelecting, setIsSelecting] = useState<boolean>(false);
+
+  const handleStartMapping = (pathId: string) => {
+    setSelectedPathId(pathId);
+    setSelectedPointIndex(0);
+    setIsSelecting(true);
+    toast({ title: "시작점 선택 중입니다." });
+  };
+
+  const handleStopSelecting = () => {
+    setSelectedPathId(null);
+    setSelectedPointIndex(0);
+    setIsSelecting(false);
+    toast({ title: "선택이 중지되었습니다." });
+  };
+
+  const handleMappingPointClick = (pointId: string) => {
+    if (!isSelecting || !mappingPathId) {
+      return;
+    }
+
+    const isStartPoint = selectedPointIndex === 0;
+    const field = isStartPoint ? "startPoint" : "endPoint";
+
+    setMeasurementItems((prev) =>
+      prev.map((item) =>
+        item.id === mappingPathId ? { ...item, [field]: pointId } : item
+      )
+    );
+
+    if (isStartPoint) {
+      setSelectedPointIndex(1);
+      toast({ title: "끝점 선택 중입니다." });
+    } else {
+      // 현재 항목의 매핑이 완료되면 다음 미완료 항목으로 자동 이동
+      const currentIndex = measurementItems.findIndex(
+        (item) => item.id === mappingPathId
+      );
+      const nextUnmappedItem = measurementItems
+        .slice(currentIndex + 1)
+        .find((item) => !item.startPoint || !item.endPoint);
+
+      if (nextUnmappedItem) {
+        setSelectedPathId(nextUnmappedItem.id);
+        setSelectedPointIndex(0);
+        toast({ title: `${nextUnmappedItem.name}의 시작점 선택 중입니다.` });
+      } else {
+        setSelectedPathId(null);
+        setSelectedPointIndex(0);
+        setIsSelecting(false);
+        toast({ title: "모든 항목의 매핑이 완료되었습니다!" });
+      }
+    }
+  };
+
+  const initMapping = async () => {
+    const chartType = await getChartType(props.chartTypeId);
+
+    if (chartType) {
+      const manualMappingItems = props.manual_mapped_path_id?.map((item) => {
+        const currentMapping = chartType.svg_mapping.mappings.find(
+          (map: any) => map.measurement_code === item.code
+        );
+        return {
+          id: item.code,
+          name: item.label,
+          startPoint: currentMapping?.start_point_id ?? "",
+          endPoint: currentMapping?.end_point_id ?? "",
+          adjustable: item.slider_default,
+          isMultiPath: false,
+        };
+      });
+
+      setMeasurementItems([...manualMappingItems]);
+    } else {
+      const manualMappingItems = props.manual_mapped_path_id?.map((item) => ({
+        id: item.code,
+        name: item.label,
+        startPoint: "",
+        endPoint: "",
+        adjustable: item.slider_default,
+        isMultiPath: false,
+      }));
+
+      setMeasurementItems([...manualMappingItems]);
+    }
+  };
+
+  const handleAdjustableChange = (id: string, adjustable: boolean) => {
+    setMeasurementItems((prev) =>
+      prev.map((item) => (item.id === id ? { ...item, adjustable } : item))
+    );
+  };
+
+  // 매핑 항목 초기화
+  useEffect(() => {
+    initMapping();
+  }, [props.manual_mapped_path_id]);
+
+  return {
+    handleStartMapping,
+    handleStopSelecting,
+    handleMappingPointClick,
+    mappingPathId,
+    selectedPointIndex,
+    measurementItems,
+    handleAdjustableChange,
+  };
+};
