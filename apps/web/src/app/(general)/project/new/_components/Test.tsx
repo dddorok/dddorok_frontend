@@ -1,4 +1,9 @@
-import { getGridPointsFromPaths, SvgPath } from "@dddorok/utils/chart/svg-grid";
+import {
+  analyzeSVGPaths,
+  getGridPointsFromPaths,
+  numToAlpha,
+  SvgPath,
+} from "@dddorok/utils/chart/svg-grid";
 import React, { useState, useEffect } from "react";
 
 // 타입 정의
@@ -48,88 +53,6 @@ const SVGPointEditor: React.FC = () => {
 </g>
 </svg>`;
 
-  // 숫자를 알파벳으로 변환하는 함수
-  const numToAlpha = (num: number): string => {
-    return String.fromCharCode(97 + num); // a, b, c, d, ...
-  };
-
-  // SVG Path 파싱 함수
-  const analyzeSVGPaths = (svgContent: string): SvgPath[] => {
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(svgContent, "image/svg+xml");
-    const pathElements = doc.querySelectorAll("path");
-
-    const paths: SvgPath[] = [];
-
-    pathElements.forEach((pathElement: SVGPathElement) => {
-      const id = pathElement.getAttribute("id") || "";
-      const d = pathElement.getAttribute("d") || "";
-
-      // 간단한 path 파싱 (M, L, C, H, V 명령어)
-      const points: Point[] = [];
-      const commands = d.match(/[MLHVCSQTAZ][^MLHVCSQTAZ]*/gi) || [];
-
-      let currentX = 0;
-      let currentY = 0;
-
-      commands.forEach((command: string) => {
-        const type = command[0];
-        const coords = command
-          .slice(1)
-          .trim()
-          .split(/[\s,]+/)
-          .map(Number)
-          .filter((n) => !isNaN(n));
-
-        switch (type) {
-          case "M": // Move to
-            currentX = coords[0];
-            currentY = coords[1];
-            points.push({ id: "", x: currentX, y: currentY });
-            break;
-          case "L": // Line to
-            currentX = coords[0];
-            currentY = coords[1];
-            points.push({ id: "", x: currentX, y: currentY });
-            break;
-          case "H": // Horizontal line
-            currentX = coords[0];
-            points.push({ id: "", x: currentX, y: currentY });
-            break;
-          case "V": // Vertical line
-            currentY = coords[0];
-            points.push({ id: "", x: currentX, y: currentY });
-            break;
-          case "C": // Cubic Bezier curve
-            // 제어점들도 저장하되, 끝점만 points에 추가
-            const endX = coords[4];
-            const endY = coords[5];
-            currentX = endX;
-            currentY = endY;
-            points.push({ id: "", x: currentX, y: currentY });
-            break;
-        }
-      });
-
-      // 곡선인지 직선인지 판단
-      const isCurve =
-        d.includes("C") ||
-        d.includes("Q") ||
-        d.includes("S") ||
-        d.includes("T");
-
-      paths.push({
-        id,
-        points,
-        type: isCurve ? "curve" : "line",
-        data: d,
-        element: pathElement,
-      });
-    });
-
-    return paths;
-  };
-
   // SVG Path에서 제어점 추출
   const extractControlPoints = (pathData: string): ControlPoint[] => {
     const controlPoints: ControlPoint[] = [];
@@ -147,8 +70,8 @@ const SVGPointEditor: React.FC = () => {
       if (type === "C") {
         // Cubic Bezier: C x1 y1 x2 y2 x y
         controlPoints.push(
-          { x: coords[0], y: coords[1] }, // 첫 번째 제어점
-          { x: coords[2], y: coords[3] } // 두 번째 제어점
+          { x: coords[0] || 0, y: coords[1] || 0 }, // 첫 번째 제어점
+          { x: coords[2] || 0, y: coords[3] || 0 } // 두 번째 제어점
         );
       }
     });
