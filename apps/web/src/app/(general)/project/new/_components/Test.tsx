@@ -1,30 +1,17 @@
-import {
-  ControlPoint,
-  extractControlPoints,
-} from "@dddorok/utils/chart/control-point";
+import { getPathDefs } from "@dddorok/utils";
+import { extractControlPoints } from "@dddorok/utils/chart/control-point";
 import {
   analyzeSVGPaths,
   getGridPointsFromPaths,
   numToAlpha,
   SvgPath,
 } from "@dddorok/utils/chart/svg-grid";
+import {
+  PathDefinition,
+  Point,
+  ControlPoint,
+} from "@dddorok/utils/chart/types";
 import React, { useState, useEffect } from "react";
-
-// 타입 정의
-interface Point {
-  id: string;
-  x: number;
-  y: number;
-  type?: "grid";
-}
-
-interface PathDefinition {
-  id: string;
-  points: [string, string]; // 시작점 ID, 끝점 ID
-  type: "curve" | "line";
-  color: string;
-  controlPoints?: ControlPoint[];
-}
 
 interface AdjustedPath extends PathDefinition {
   start: Point;
@@ -71,38 +58,10 @@ const SVGPointEditor: React.FC = () => {
     // Path 정의 생성
     const pathDefs = parsedPaths
       .map((path: SvgPath, index: number): PathDefinition | null => {
-        const startPoint = path.points[0];
-        const endPoint = path.points[path.points.length - 1];
-
-        // 시작점과 끝점에 해당하는 그리드 포인트 ID 찾기
-        const findGridPointId = (targetPoint: Point): string | null => {
-          const gridPoint = gridPoints.find(
-            (gp: Point) =>
-              Math.abs(gp.x - targetPoint.x) <= 1.5 &&
-              Math.abs(gp.y - targetPoint.y) <= 1.5
-          );
-          return gridPoint ? gridPoint.id : null;
-        };
-
-        if (!startPoint || !endPoint) return null;
-
-        const startId = findGridPointId(startPoint);
-        const endId = findGridPointId(endPoint);
-
-        if (!startId || !endId) return null;
-
-        const pathDef: PathDefinition = {
-          id: path.id,
-          points: [startId, endId],
-          type: path.type,
-          color: colors[index % colors.length] || "#000000",
-        };
-
-        // 곡선인 경우 제어점 추가
-        if (path.type === "curve") {
-          pathDef.controlPoints = extractControlPoints(path.data);
+        const pathDef = getPathDefs(path, gridPoints);
+        if (pathDef) {
+          pathDef.color = colors[index % colors.length] || "#000000";
         }
-
         return pathDef;
       })
       .filter((pathDef): pathDef is PathDefinition => pathDef !== null);

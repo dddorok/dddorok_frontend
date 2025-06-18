@@ -1,6 +1,6 @@
+import { ChartPoint, SvgPath } from "@dddorok/utils";
 import React, { useRef, useState } from "react";
 
-import { ChartPoint, MeasurementItem, SvgPath } from "../types";
 import { getSvgPreviewData } from "../utils/etc";
 import { getGridLines } from "../utils/svgGrid";
 // 임시

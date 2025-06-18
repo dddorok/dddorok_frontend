@@ -1,18 +1,11 @@
+import { SvgPath, ChartPoint, PathDefinition } from "@dddorok/utils";
 import React from "react";
-
-import { SvgPath, ChartPoint } from "../types";
 
 export interface AutoMappingTableProps {
   paths: SvgPath[];
   gridPoints: ChartPoint[];
   onPathClick?: (pathId: string) => void;
-  mappingItems: {
-    id: string;
-    name: string;
-    startPoint: string | null;
-    endPoint: string | null;
-    controlPoints: { x: number; y: number }[] | null;
-  }[];
+  mappingItems: PathDefinition[];
 }
 
 export function AutoMappingTable({
@@ -49,11 +42,11 @@ export function AutoMappingTable({
               </td>
               <td className="border px-2 py-1 text-center">
                 <span className="bg-gray-100 rounded px-2 py-1 mr-1">
-                  {p.startPoint}
+                  {p.points[0]}
                 </span>
                 <span className="mx-1">→</span>
                 <span className="bg-gray-100 rounded px-2 py-1">
-                  {p.endPoint}
+                  {p.points[1]}
                 </span>
               </td>
             </tr>

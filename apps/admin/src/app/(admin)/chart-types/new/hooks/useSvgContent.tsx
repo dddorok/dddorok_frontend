@@ -1,23 +1,14 @@
 import {
   analyzeSVGPaths,
   getGridPointsFromPaths,
+  SvgPath,
 } from "@dddorok/utils/chart/svg-grid";
+import { ChartPoint } from "@dddorok/utils/chart/types";
 import { useState, useEffect } from "react";
 
 import { fetchSvg } from "../action";
-import { ChartPoint } from "../types";
 
 import { toast } from "@/hooks/use-toast";
-
-interface SvgPath {
-  id: string;
-  element: SVGPathElement;
-  data: string;
-  type: "line" | "curve";
-  points: { x: number; y: number }[];
-  matchedStartPointId?: string;
-  matchedEndPointId?: string;
-}
 
 export const useSvgContent = (props: { svg_url: string }) => {
   const [svgContent, setSvgContent] = useState<string>("");

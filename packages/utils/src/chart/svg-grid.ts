@@ -1,18 +1,4 @@
-export interface ChartPoint {
-  id: string;
-  x: number;
-  y: number;
-  type: string;
-  pathId?: string;
-}
-
-// 타입 정의
-interface Point {
-  id: string;
-  x: number;
-  y: number;
-  type?: "grid";
-}
+import { Point } from "./types";
 
 export interface SvgPath {
   id: string;

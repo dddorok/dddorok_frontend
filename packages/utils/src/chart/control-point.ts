@@ -1,8 +1,3 @@
-export interface ControlPoint {
-  x: number;
-  y: number;
-}
-
 export const extractControlPoints = (pathData: string) => {
   const controlPoints: ControlPoint[] = [];
   const commands = pathData.match(/[MLHVCSQTAZ][^MLHVCSQTAZ]*/gi) || [];

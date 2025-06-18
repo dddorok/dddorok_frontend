@@ -1,6 +1,6 @@
 "use client";
 
-import { extractControlPoints } from "@dddorok/utils/chart/control-point";
+import { getPathDefs } from "@dddorok/utils/chart/svg-path";
 import { useRouter } from "next/navigation";
 import React, { useState, useEffect } from "react";
 
@@ -9,7 +9,6 @@ import { ManualMappingTable } from "./_components/ManualMappingTable";
 import { SvgPreview } from "./_components/SvgPreview";
 import { useSvgContent } from "./hooks/useSvgContent";
 import { previewH, previewW } from "./utils/etc";
-import { findNearestGridPointId } from "./utils/svgGrid";
 
 import { DownloadButton } from "@/components/DownloadButton";
 import { Badge } from "@/components/ui/badge";
@@ -19,16 +18,6 @@ import { Label } from "@/components/ui/label";
 import { toast, useToast } from "@/hooks/use-toast";
 import { getChartType } from "@/services/chart-type";
 import { updateChartTypeSvgMapping } from "@/services/chart-type/new";
-
-export interface SvgPath {
-  id: string;
-  element: SVGPathElement;
-  data: string;
-  type: "line" | "curve";
-  points: { x: number; y: number }[];
-  matchedStartPointId?: string;
-  matchedEndPointId?: string;
-}
 
 export interface MeasurementItem {
   id: string;
@@ -88,42 +77,7 @@ const ChartRegistration: React.FC<{
         return null;
       }
 
-      // path의 실제 시작점과 끝점 찾기
-      let startPoint, endPoint;
-
-      if (path?.element) {
-        const pathLength = path.element.getTotalLength();
-        startPoint = {
-          x: path.element.getPointAtLength(0).x,
-          y: path.element.getPointAtLength(0).y,
-        };
-        endPoint = {
-          x: path.element.getPointAtLength(pathLength).x,
-          y: path.element.getPointAtLength(pathLength).y,
-        };
-      } else {
-        // element가 없는 경우 points 배열에서 시작점과 끝점 찾기
-        startPoint = path.points[0];
-        endPoint = path.points[path.points.length - 1];
-      }
-
-      const startGridId = startPoint
-        ? findNearestGridPointId(startPoint, points)
-        : "-";
-      const endGridId = endPoint
-        ? findNearestGridPointId(endPoint, points)
-        : "-";
-
-      const controlPoints =
-        path.type === "curve" ? extractControlPoints(path.data || "") : [];
-
-      return {
-        id: path.id,
-        name: path.id,
-        startPoint: startGridId,
-        endPoint: endGridId,
-        controlPoints: controlPoints,
-      };
+      return getPathDefs(path, points);
     })
     .filter((item) => item !== null);
 
@@ -147,20 +101,11 @@ const ChartRegistration: React.FC<{
         name: data.svg_name, // TODO: 실제 이름으로 변경
         svgFileUrl: data.svg_url, // TODO: 실제 S3 URL로 변경
         points: points,
-        // mappings: measurementItems.map((item) => ({
-        //   measurement_code: item.id,
-        //   start_point_id: item.startPoint,
-        //   end_point_id: item.endPoint,
-        //   slider_default: item.adjustable,
-        //   // symmetric: true, // TODO: 실제 값으로 변경
-        //   // curve_type: "line" as const, // 타입을 명시적으로 지정
-        //   // control_points: [], // 타입을 명시적으로 지정
-        // })),
         mappings: {
           auto: autoMappingItems.map((item) => ({
             measurement_code: item.id,
-            start_point_id: item.startPoint,
-            end_point_id: item.endPoint,
+            start_point_id: item.points[0],
+            end_point_id: item.points[1],
             slider_default:
               data.mapped_path_id.find((p) => p.code === item.id)
                 ?.slider_default ?? false,
