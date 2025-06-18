@@ -1,11 +1,10 @@
 "use client";
 import { isEmpty } from "@dddorok/utils";
-import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
-import { AlertCircle } from "lucide-react";
 import { useRef, useState } from "react";
 
 import Step1 from "./Step1";
 import Step2 from "./Step2";
+import SVGPointEditor from "./Test";
 
 import { cn } from "@/lib/utils";
 
@@ -26,11 +25,12 @@ export default function NewProjectClient({
     chest_width: 0,
   });
   const [step, setStep] = useState(1);
-  console.log(isEmpty(formData.current));
+  console.log(isEmpty());
 
   return (
     <>
-      {step === 1 && (
+      <SVGPointEditor />
+      {/* {step === 1 && (
         <div className=" space-y-2 w-[450px]">
           <h3 className="text-h3 text-primary-PR py-[10px] text-center">
             Step 1. 가슴둘레/게이지 입력
@@ -59,7 +59,7 @@ export default function NewProjectClient({
             />
           </div>
         </div>
-      )}
+      )} */}
     </>
   );
 }

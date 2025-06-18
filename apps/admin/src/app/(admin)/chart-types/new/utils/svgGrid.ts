@@ -48,6 +48,7 @@ export const getGridPointsFromPaths = (
   const ys = Array.from(new Set(merged.map((p) => Math.round(p.y)))).sort(
     (a, b) => a - b
   );
+
   const gridPoints: {
     id: string;
     x: number;
@@ -55,6 +56,7 @@ export const getGridPointsFromPaths = (
     type: "grid";
     pathId?: string;
   }[] = [];
+
   ys.forEach((y, row) => {
     xs.forEach((x, col) => {
       gridPoints.push({
