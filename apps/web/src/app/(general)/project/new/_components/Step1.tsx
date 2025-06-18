@@ -56,14 +56,14 @@ export default function Step1({
               <SelectValue placeholder="가슴둘레를 선택해주세요." />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="80">80-85 cm</SelectItem>
-              <SelectItem value="85">85-90 cm</SelectItem>
-              <SelectItem value="90">90-95 cm</SelectItem>
-              <SelectItem value="95">95-100 cm</SelectItem>
-              <SelectItem value="100">100-105 cm</SelectItem>
-              <SelectItem value="105">105-110 cm</SelectItem>
-              <SelectItem value="110">110-115 cm</SelectItem>
-              <SelectItem value="115">115-120 cm</SelectItem>
+              <SelectItem value="85">80-85 cm</SelectItem>
+              <SelectItem value="90">85-90 cm</SelectItem>
+              <SelectItem value="95">90-95 cm</SelectItem>
+              <SelectItem value="100">95-100 cm</SelectItem>
+              <SelectItem value="105">100-105 cm</SelectItem>
+              <SelectItem value="110">105-110 cm</SelectItem>
+              <SelectItem value="115">110-115 cm</SelectItem>
+              <SelectItem value="120">115-120 cm</SelectItem>
             </SelectContent>
           </Select>
         </div>

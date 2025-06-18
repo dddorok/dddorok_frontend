@@ -83,11 +83,18 @@ export interface GetTemplateChartListResponse {
   measurements: MeasurementType[];
 }
 
-export const getTemplateChartList = async (templateId: string) => {
+export const getTemplateChartList = async (
+  templateId: string,
+  chest_circumference: number
+) => {
   const response = await privateInstance
     .get<{
       data: GetTemplateChartListResponse;
-    }>(`template/${templateId}/chart-list`)
+    }>(`template/${templateId}/chart-list`, {
+      searchParams: {
+        chest_circumference: chest_circumference.toString(),
+      },
+    })
     .json();
   return response.data;
 };

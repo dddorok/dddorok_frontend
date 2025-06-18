@@ -27,19 +27,6 @@ export default function NewProjectClient({
   });
   const [step, setStep] = useState(1);
 
-  const { data: template } = useSuspenseQuery({
-    ...templateQueries.chartList(templateId),
-  });
-
-  if (template.chart_types.length === 0) {
-    return (
-      <div className="w-full h-full flex justify-center items-center gap-2">
-        <AlertCircle className="w-6 h-6 text-primary-PR" />
-        <p className="text-neutral-N500 text-body">차트 데이터가 없습니다.</p>
-      </div>
-    );
-  }
-
   return (
     <>
       {step === 1 && (
@@ -64,10 +51,10 @@ export default function NewProjectClient({
           <ProgressDot current={2} total={2} />
           <div className="py-4 px-5 w-full">
             <Step2
-              measurements={template.measurements}
+              templateId={templateId}
+              chest_circumference={formData.current.chest_width}
               onNext={() => setStep(3)}
               onPrev={() => setStep(1)}
-              chest_width={formData.current.chest_width}
             />
           </div>
         </div>

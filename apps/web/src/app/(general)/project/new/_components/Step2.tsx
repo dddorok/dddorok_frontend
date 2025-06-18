@@ -1,25 +1,34 @@
+import { useSuspenseQuery } from "@tanstack/react-query";
+import { AlertCircle } from "lucide-react";
 import { useState } from "react";
 
 import { SliderSection } from "./korean-slider-component";
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { templateQueries } from "@/queries/template";
 import {
   GetTemplateChartListResponse,
   MeasurementType,
 } from "@/services/template";
 
 export default function Step2({
-  measurements,
-  chest_width,
+  chest_circumference,
   onNext,
   onPrev,
+  templateId,
 }: {
-  measurements: GetTemplateChartListResponse["measurements"];
   onNext: () => void;
   onPrev: () => void;
-  chest_width: number;
+  chest_circumference: number;
+  templateId: string;
 }) {
+  const { data: template } = useSuspenseQuery({
+    ...templateQueries.chartList(templateId, chest_circumference),
+  });
+
+  const measurements = template.measurements;
+
   const onSubmit = () => {
     console.log("submit");
   };
@@ -54,6 +63,15 @@ export default function Step2({
     },
     {} as Record<string, GetTemplateChartListResponse["measurements"][number][]>
   );
+
+  if (template.chart_types.length === 0) {
+    return (
+      <div className="w-full h-full flex justify-center items-center gap-2">
+        <AlertCircle className="w-6 h-6 text-primary-PR" />
+        <p className="text-neutral-N500 text-body">차트 데이터가 없습니다.</p>
+      </div>
+    );
+  }
 
   return (
     <div>
