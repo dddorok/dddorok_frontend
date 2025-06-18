@@ -151,6 +151,7 @@ function ChartSection({
                 label={measurement.label}
                 min={measurement.min}
                 max={measurement.max}
+                code={measurement.code}
                 snapValues={getSnapValues(measurement.min, measurement.max)}
                 initialValue={measurement.value}
                 average={measurement.min}

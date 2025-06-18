@@ -12,6 +12,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
+const DEV_DUMMY_DATA = {
+  name: "test",
+  gauge_ko: 20,
+  gauge_dan: 28,
+  chest_width: 85,
+};
+
 interface FormData {
   name: string;
   gauge_ko: number;
@@ -24,12 +31,16 @@ export default function Step1({
 }: {
   onNext: (data: FormData) => void;
 }) {
-  const [data, setData] = useState<Partial<FormData>>({
-    name: "",
-    gauge_ko: undefined,
-    gauge_dan: undefined,
-    chest_width: undefined,
-  });
+  const [data, setData] = useState<Partial<FormData>>(
+    process.env.NODE_ENV === "development"
+      ? DEV_DUMMY_DATA
+      : {
+          name: "",
+          gauge_ko: undefined,
+          gauge_dan: undefined,
+          chest_width: undefined,
+        }
+  );
 
   const handleChange = (key: keyof typeof data, value: string) => {
     setData({ ...data, [key]: value });

@@ -149,6 +149,7 @@ interface SliderSectionProps {
   leftLabel?: string;
   rightLabel?: string;
   average: number;
+  code: string;
 }
 
 export const SliderSection = ({
@@ -160,6 +161,7 @@ export const SliderSection = ({
   leftLabel,
   rightLabel,
   average,
+  code,
 }: SliderSectionProps) => {
   const {
     value,
@@ -184,6 +186,7 @@ export const SliderSection = ({
       <div className="flex items-center mb-4">
         <span className="text-[14px] font-semibold text-neutral-N900">
           {label}
+          {process.env.NODE_ENV === "development" && `(${code})`}
         </span>
       </div>
 
