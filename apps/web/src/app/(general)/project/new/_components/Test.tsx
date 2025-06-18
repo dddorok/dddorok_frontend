@@ -13,6 +13,7 @@ import {
 import React, { useState, useEffect } from "react";
 
 import { useAdjuestment } from "./useAdjuestment";
+import { adjustControlPoints } from "../_utils/adjustControlPoints";
 
 interface AdjustedPath extends PathDefinition {
   start: Point;
@@ -98,46 +99,18 @@ const SVGPointEditor: React.FC = () => {
 
     if (!originalStart || !originalEnd) return null;
 
-    // 각 제어점을 개별적으로 조정
-    const adjustedControlPoints = pathDef.controlPoints.map(
-      (cp: ControlPoint): ControlPoint => {
-        // 원본 시작점-끝점을 기준으로 한 제어점의 상대적 위치 계산
-        const originalDx = originalEnd.x - originalStart.x;
-        const originalDy = originalEnd.y - originalStart.y;
-
-        // 제어점의 원본 상대 위치 (0~1 범위)
-        let relativeX: number, relativeY: number;
-
-        if (Math.abs(originalDx) > 0.1) {
-          relativeX = (cp.x - originalStart.x) / originalDx;
-        } else {
-          relativeX = 0;
-        }
-
-        if (Math.abs(originalDy) > 0.1) {
-          relativeY = (cp.y - originalStart.y) / originalDy;
-        } else {
-          relativeY = 0;
-        }
-
-        // 현재 시작점-끝점을 기준으로 제어점 위치 재계산
-        const currentDx = currentEnd.x - currentStart.x;
-        const currentDy = currentEnd.y - currentStart.y;
-
-        return {
-          x: currentStart.x + relativeX * currentDx,
-          y: currentStart.y + relativeY * currentDy,
-        };
-      }
+    // 유틸 함수를 사용하여 제어점 조정
+    return adjustControlPoints(
+      pathDef.controlPoints,
+      originalStart,
+      originalEnd,
+      currentStart,
+      currentEnd
     );
-
-    return adjustedControlPoints;
   };
 
   // 현재 조정값으로 계산된 패스 라인들 가져오기
   const getAdjustedPaths = (): AdjustedPath[] => {
-    // const adjustedPoints = getAdjustedPoints();
-
     return pathDefinitions
       .map((pathDef: PathDefinition): AdjustedPath | null => {
         const startPoint = findPoint(pathDef.points[0], adjustedPoints);
@@ -166,16 +139,6 @@ const SVGPointEditor: React.FC = () => {
     return Math.sqrt(Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2));
   };
 
-  // 리셋 함수
-  // const resetAdjustments = (): void => {
-  //   const resetObj: GridAdjustments = {};
-  //   Object.keys(originalGridSpacing).forEach((key: string) => {
-  //     resetObj[key] = 1;
-  //   });
-  //   setGridAdjustments(resetObj);
-  // };
-
-  // const adjustedPoints = getAdjustedPoints();
   const adjustedPaths = getAdjustedPaths();
 
   if (initialPoints.length === 0) {
