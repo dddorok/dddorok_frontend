@@ -11,6 +11,7 @@ import {
 } from "@dddorok/utils/chart/types";
 import React, { useState, useEffect } from "react";
 
+import { GridAdjustments, OriginalGridSpacing } from "../types";
 import { useAdjuestment } from "./useAdjuestment";
 import { useAdjustedPaths } from "./useAdjustedPaths";
 
@@ -104,33 +105,15 @@ const SVGPointEditor: React.FC = () => {
                   (key: string) => key.includes("-") && key.match(/[a-z]/)
                 )
                 .map((rowKey: string) => (
-                  <div key={rowKey} className="mb-4">
-                    <label className="block text-sm font-medium mb-1">
-                      {rowKey.toUpperCase()} 간격
-                    </label>
-                    <div className="text-xs text-gray-600 mb-1">
-                      원본: {originalGridSpacing[rowKey]?.toFixed(1)}px
-                    </div>
-                    <input
-                      type="range"
-                      min="0.1"
-                      max="3"
-                      step="0.1"
-                      value={gridAdjustments[rowKey] || 1}
-                      onChange={(e) =>
-                        handleGridAdjustment(rowKey, e.target.value)
-                      }
-                      className="w-full"
-                    />
-                    <span className="text-xs text-gray-600">
-                      {gridAdjustments[rowKey] || 1}x (
-                      {(
-                        (originalGridSpacing[rowKey] || 0) *
-                        (gridAdjustments[rowKey] || 1)
-                      ).toFixed(1)}
-                      px)
-                    </span>
-                  </div>
+                  <GapAdjustmentItem
+                    key={rowKey}
+                    label={rowKey.toUpperCase()}
+                    initialValue={originalGridSpacing[rowKey]}
+                    value={gridAdjustments[rowKey]}
+                    handleGridAdjustment={(value) =>
+                      handleGridAdjustment(rowKey, value)
+                    }
+                  />
                 ))}
             </div>
 
@@ -145,33 +128,15 @@ const SVGPointEditor: React.FC = () => {
                   (key: string) => key.includes("-") && !key.match(/[a-z]/)
                 )
                 .map((colKey: string) => (
-                  <div key={colKey} className="mb-4">
-                    <label className="block text-sm font-medium mb-1">
-                      {colKey} 간격
-                    </label>
-                    <div className="text-xs text-gray-600 mb-1">
-                      원본: {originalGridSpacing[colKey]?.toFixed(1)}px
-                    </div>
-                    <input
-                      type="range"
-                      min="0.1"
-                      max="3"
-                      step="0.1"
-                      value={gridAdjustments[colKey] || 1}
-                      onChange={(e) =>
-                        handleGridAdjustment(colKey, e.target.value)
-                      }
-                      className="w-full"
-                    />
-                    <span className="text-xs text-gray-600">
-                      {gridAdjustments[colKey] || 1}x (
-                      {(
-                        (originalGridSpacing[colKey] || 0) *
-                        (gridAdjustments[colKey] || 1)
-                      ).toFixed(1)}
-                      px)
-                    </span>
-                  </div>
+                  <GapAdjustmentItem
+                    key={colKey}
+                    label={colKey.toUpperCase()}
+                    initialValue={originalGridSpacing[colKey]}
+                    value={gridAdjustments[colKey]}
+                    handleGridAdjustment={(value) =>
+                      handleGridAdjustment(colKey, value)
+                    }
+                  />
                 ))}
             </div>
 
@@ -405,23 +370,79 @@ const SVGPointEditor: React.FC = () => {
       </div>
 
       {/* 파싱된 데이터 정보 */}
-      <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+      {/* <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="bg-gray-50 p-4 rounded-lg">
           <h3 className="text-lg font-semibold mb-2">추출된 그리드 포인트</h3>
           <pre className="bg-white p-3 rounded border text-sm overflow-x-auto max-h-40">
             {JSON.stringify(adjustedPoints, null, 2)}
           </pre>
         </div>
-
-        {/* <div className="bg-gray-50 p-4 rounded-lg">
-          <h3 className="text-lg font-semibold mb-2">파싱된 패스 정의</h3>
-          <pre className="bg-white p-3 rounded border text-sm overflow-x-auto max-h-40">
-            {JSON.stringify(pathDefinitions, null, 2)}
-          </pre>
-        </div> */}
-      </div>
+      </div> */}
     </div>
   );
 };
 
 export default SVGPointEditor;
+
+function RowGapAdjustment({
+  originalGridSpacing,
+  gridAdjustments,
+  handleGridAdjustment,
+}: {
+  originalGridSpacing: OriginalGridSpacing;
+  gridAdjustments: GridAdjustments;
+  handleGridAdjustment: (key: string, value: string) => void;
+}) {
+  return (
+    <div>
+      <h3 className="text-md font-medium mb-3 text-blue-600">행 간격 (세로)</h3>
+
+      {Object.keys(originalGridSpacing)
+        .filter((key: string) => key.includes("-") && key.match(/[a-z]/))
+        .map((rowKey: string) => (
+          <GapAdjustmentItem
+            key={rowKey}
+            label={rowKey.toUpperCase()}
+            initialValue={originalGridSpacing[rowKey]}
+            value={gridAdjustments[rowKey]}
+            handleGridAdjustment={(value) =>
+              handleGridAdjustment(rowKey, value)
+            }
+          />
+        ))}
+    </div>
+  );
+}
+
+function GapAdjustmentItem({
+  initialValue,
+  value,
+  handleGridAdjustment,
+  label,
+}: {
+  initialValue?: number;
+  value?: number;
+  label: string;
+  handleGridAdjustment: (value: string) => void;
+}) {
+  return (
+    <div className="mb-4">
+      <label className="block text-sm font-medium mb-1">{label}</label>
+      <div className="text-xs text-gray-600 mb-1">
+        원본: {initialValue?.toFixed(1)}px
+      </div>
+      <input
+        type="range"
+        min="0.1"
+        max="3"
+        step="0.1"
+        value={value || 1}
+        onChange={(e) => handleGridAdjustment(e.target.value)}
+        className="w-full"
+      />
+      <span className="text-xs text-gray-600">
+        {value || 1}x ({((initialValue || 0) * (value || 1)).toFixed(1)} px)
+      </span>
+    </div>
+  );
+}
