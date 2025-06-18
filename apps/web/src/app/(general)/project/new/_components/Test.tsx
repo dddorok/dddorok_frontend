@@ -82,45 +82,80 @@ const SVGPointEditor: React.FC = () => {
   const getAdjustedPoints = (): Point[] => {
     if (initialPoints.length === 0) return [];
 
+    const { adjustedXs, adjustedYs } = calculateAdjustedCoordinates();
+    return generateGridPoints(adjustedXs, adjustedYs);
+  };
+
+  // 고유한 X, Y 좌표 추출
+  const extractUniqueCoordinates = () => {
     const xs = Array.from(new Set(initialPoints.map((p: Point) => p.x))).sort(
       (a, b) => a - b
     );
     const ys = Array.from(new Set(initialPoints.map((p: Point) => p.y))).sort(
       (a, b) => a - b
     );
+    return { xs, ys };
+  };
 
-    // 기준점 (첫 번째 점)
+  // 조정된 X 좌표들 계산
+  const calculateAdjustedXs = (xs: number[]): number[] => {
     const baseX = xs[0];
-    const baseY = ys[0];
+    if (!baseX) return [];
 
-    if (!baseX || !baseY) return [];
-
-    // 각 열의 X 좌표 계산
     const adjustedXs = [baseX];
 
     for (let i = 1; i < xs.length; i++) {
       const colKey = `${i}-${i + 1}`;
       const multiplier = gridAdjustments[colKey] || 1;
-      const spacing =
+      const originalSpacing =
         originalGridSpacing[colKey] || (xs[i] || 0) - (xs[i - 1] || 0);
-      adjustedXs.push((adjustedXs[i - 1] || 0) + spacing * multiplier);
+      const adjustedSpacing = originalSpacing * multiplier;
+
+      adjustedXs.push((adjustedXs[i - 1] || 0) + adjustedSpacing);
     }
 
-    // 각 행의 Y 좌표 계산
+    return adjustedXs;
+  };
+
+  // 조정된 Y 좌표들 계산
+  const calculateAdjustedYs = (ys: number[]): number[] => {
+    const baseY = ys[0];
+    if (!baseY) return [];
+
     const adjustedYs = [baseY];
+
     for (let i = 1; i < ys.length; i++) {
       const rowKey = `${numToAlpha(i - 1)}-${numToAlpha(i)}`;
       const multiplier = gridAdjustments[rowKey] || 1;
-      const spacing =
+      const originalSpacing =
         originalGridSpacing[rowKey] || (ys[i] || 0) - (ys[i - 1] || 0);
-      adjustedYs.push((adjustedYs[i - 1] || 0) + spacing * multiplier);
+      const adjustedSpacing = originalSpacing * multiplier;
+
+      adjustedYs.push((adjustedYs[i - 1] || 0) + adjustedSpacing);
     }
 
-    // 조정된 그리드 포인트 생성
-    const adjustedPoints: Point[] = [];
+    return adjustedYs;
+  };
+
+  // 조정된 좌표 계산 (X, Y 모두)
+  const calculateAdjustedCoordinates = () => {
+    const { xs, ys } = extractUniqueCoordinates();
+    const adjustedXs = calculateAdjustedXs(xs);
+    const adjustedYs = calculateAdjustedYs(ys);
+
+    return { adjustedXs, adjustedYs };
+  };
+
+  // 조정된 좌표로 그리드 포인트 생성
+  const generateGridPoints = (
+    adjustedXs: number[],
+    adjustedYs: number[]
+  ): Point[] => {
+    const gridPoints: Point[] = [];
+
     adjustedYs.forEach((y: number, row: number) => {
       adjustedXs.forEach((x: number, col: number) => {
-        adjustedPoints.push({
+        gridPoints.push({
           id: `${numToAlpha(row)}${col + 1}`,
           x,
           y,
@@ -128,7 +163,7 @@ const SVGPointEditor: React.FC = () => {
       });
     });
 
-    return adjustedPoints;
+    return gridPoints;
   };
 
   // 포인트 찾기 헬퍼 함수
