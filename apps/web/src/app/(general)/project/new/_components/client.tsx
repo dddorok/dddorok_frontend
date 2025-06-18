@@ -1,4 +1,5 @@
 "use client";
+import { isEmpty } from "@dddorok/utils";
 import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import { AlertCircle } from "lucide-react";
 import { useRef, useState } from "react";
@@ -7,7 +8,6 @@ import Step1 from "./Step1";
 import Step2 from "./Step2";
 
 import { cn } from "@/lib/utils";
-import { templateQueries } from "@/queries/template";
 
 export default function NewProjectClient({
   templateId,
@@ -26,6 +26,7 @@ export default function NewProjectClient({
     chest_width: 0,
   });
   const [step, setStep] = useState(1);
+  console.log(isEmpty(formData.current));
 
   return (
     <>

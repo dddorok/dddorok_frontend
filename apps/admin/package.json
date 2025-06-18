@@ -31,6 +31,7 @@
     "@radix-ui/react-toggle-group": "^1.1.3",
     "@radix-ui/react-tooltip": "^1.2.4",
     "@repo/ui": "workspace:*",
+    "@dddorok/utils": "workspace:*",
     "@tanstack/react-query": "^5.74.0",
     "@tanstack/react-query-devtools": "^5.75.0",
     "@toss/react": "^1.8.1",
