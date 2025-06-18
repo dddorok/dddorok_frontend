@@ -2,7 +2,6 @@ import { getPathDefs } from "@dddorok/utils";
 import {
   analyzeSVGPaths,
   getGridPointsFromPaths,
-  numToAlpha,
   SvgPath,
 } from "@dddorok/utils/chart/svg-grid";
 import {
@@ -13,16 +12,15 @@ import {
 import React, { useState, useEffect } from "react";
 
 import { useAdjuestment } from "./useAdjuestment";
-import { adjustControlPoints } from "../_utils/adjustControlPoints";
+import { useAdjustedPaths } from "./useAdjustedPaths";
 
 interface AdjustedPath extends PathDefinition {
   start: Point;
   end: Point;
   adjustedControlPoints?: ControlPoint[];
 }
-const SVGPointEditor: React.FC = () => {
-  // SVG 문자열 (초기 데이터)
-  const initialSvgContent: string = `<svg width="123" height="263" viewBox="0 0 123 263" fill="none" xmlns="http://www.w3.org/2000/svg">
+
+const initialSvgContent: string = `<svg width="123" height="263" viewBox="0 0 123 263" fill="none" xmlns="http://www.w3.org/2000/svg">
 <g id="&#235;&#157;&#188;&#236;&#154;&#180;&#235;&#147;&#156;&#235;&#132;&#165; &#236;&#133;&#139;&#236;&#157;&#184;&#237;&#152;&#149; &#236;&#149;&#158;&#235;&#170;&#184;&#237;&#140;&#144;">
 <path id="BODY_SHOULDER_SLOPE_WIDTH" d="M86 15L46 3" stroke="black"/>
 <path id="BODY_FRONT_NECK_CIRCUMFERENCE" d="M46 3C44.5 33.5 33.5 50 5 50" stroke="black"/>
@@ -31,10 +29,8 @@ const SVGPointEditor: React.FC = () => {
 <path id="BODY_FRONT_ARMHOLE_CIRCUMFERENCE" d="M120 111C120 111 108.698 111.1 98.8756 104.64C86.5 96.5 86 79.5 86 79.5L86 15" stroke="black"/>
 </g>
 </svg>`;
-
-  // State 정의
+const SVGPointEditor: React.FC = () => {
   const [initialPoints, setInitialPoints] = useState<Point[]>([]);
-  const [pathDefinitions, setPathDefinitions] = useState<PathDefinition[]>([]);
   const {
     gridAdjustments,
     handleGridAdjustment,
@@ -43,6 +39,11 @@ const SVGPointEditor: React.FC = () => {
     resetAdjustments,
     adjustedPoints,
   } = useAdjuestment(initialPoints);
+
+  const { adjustedPaths, initialPathDefinitions } = useAdjustedPaths({
+    adjustedPoints,
+    initialPoints,
+  });
 
   useEffect(() => {
     // SVG 파싱
@@ -64,82 +65,17 @@ const SVGPointEditor: React.FC = () => {
       .filter((pathDef): pathDef is PathDefinition => pathDef !== null);
 
     setInitialPoints(gridPoints);
-    setPathDefinitions(pathDefs);
+    initialPathDefinitions(pathDefs);
 
     if (gridPoints.length > 0) {
       initialAdjustments(gridPoints);
     }
   }, []);
 
-  // 포인트 찾기 헬퍼 함수
-  const findPoint = (id: string, pointList?: Point[]): Point | undefined => {
-    const points = pointList || adjustedPoints;
-    return points.find((p: Point) => p.id === id);
-  };
-
-  // 곡선의 제어점을 비율로 조정하는 함수 (개선된 버전)
-  const getAdjustedControlPoints = (
-    pathDef: PathDefinition
-  ): ControlPoint[] | null => {
-    if (!pathDef.controlPoints || pathDef.type !== "curve") return null;
-
-    // 현재 패스의 시작점과 끝점 찾기
-    const currentStart = findPoint(pathDef.points[0]);
-    const currentEnd = findPoint(pathDef.points[1]);
-
-    if (!currentStart || !currentEnd) return null;
-
-    // 원본 패스의 시작점과 끝점 찾기
-    const originalStart = initialPoints.find(
-      (p: Point) => p.id === pathDef.points[0]
-    );
-    const originalEnd = initialPoints.find(
-      (p: Point) => p.id === pathDef.points[1]
-    );
-
-    if (!originalStart || !originalEnd) return null;
-
-    // 유틸 함수를 사용하여 제어점 조정
-    return adjustControlPoints(
-      pathDef.controlPoints,
-      originalStart,
-      originalEnd,
-      currentStart,
-      currentEnd
-    );
-  };
-
-  // 현재 조정값으로 계산된 패스 라인들 가져오기
-  const getAdjustedPaths = (): AdjustedPath[] => {
-    return pathDefinitions
-      .map((pathDef: PathDefinition): AdjustedPath | null => {
-        const startPoint = findPoint(pathDef.points[0], adjustedPoints);
-        const endPoint = findPoint(pathDef.points[1], adjustedPoints);
-
-        if (!startPoint || !endPoint) return null;
-
-        // 곡선인 경우 조정된 제어점 계산
-        let adjustedControlPoints: ControlPoint[] | null = null;
-        if (pathDef.type === "curve" && pathDef.controlPoints) {
-          adjustedControlPoints = getAdjustedControlPoints(pathDef);
-        }
-
-        return {
-          ...pathDef,
-          start: startPoint,
-          end: endPoint,
-          adjustedControlPoints: adjustedControlPoints || undefined,
-        };
-      })
-      .filter((path): path is AdjustedPath => path !== null);
-  };
-
   // 두 점 사이의 거리 계산
   const calculateDistance = (p1: Point, p2: Point): number => {
     return Math.sqrt(Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2));
   };
-
-  const adjustedPaths = getAdjustedPaths();
 
   if (initialPoints.length === 0) {
     return <div className="p-6">SVG 파싱 중...</div>;
@@ -477,12 +413,12 @@ const SVGPointEditor: React.FC = () => {
           </pre>
         </div>
 
-        <div className="bg-gray-50 p-4 rounded-lg">
+        {/* <div className="bg-gray-50 p-4 rounded-lg">
           <h3 className="text-lg font-semibold mb-2">파싱된 패스 정의</h3>
           <pre className="bg-white p-3 rounded border text-sm overflow-x-auto max-h-40">
             {JSON.stringify(pathDefinitions, null, 2)}
           </pre>
-        </div>
+        </div> */}
       </div>
     </div>
   );
