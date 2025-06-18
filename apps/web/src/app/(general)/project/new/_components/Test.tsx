@@ -1,5 +1,4 @@
 import { getPathDefs } from "@dddorok/utils";
-import { extractControlPoints } from "@dddorok/utils/chart/control-point";
 import {
   analyzeSVGPaths,
   getGridPointsFromPaths,
@@ -20,11 +19,6 @@ interface AdjustedPath extends PathDefinition {
   end: Point;
   adjustedControlPoints?: ControlPoint[];
 }
-
-interface GridAdjustments {
-  [key: string]: number;
-}
-
 const SVGPointEditor: React.FC = () => {
   // SVG 문자열 (초기 데이터)
   const initialSvgContent: string = `<svg width="123" height="263" viewBox="0 0 123 263" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -36,17 +30,18 @@ const SVGPointEditor: React.FC = () => {
 <path id="BODY_FRONT_ARMHOLE_CIRCUMFERENCE" d="M120 111C120 111 108.698 111.1 98.8756 104.64C86.5 96.5 86 79.5 86 79.5L86 15" stroke="black"/>
 </g>
 </svg>`;
-  const {
-    gridAdjustments,
-    setGridAdjustments,
-    handleGridAdjustment,
-    originalGridSpacing,
-    initial,
-  } = useAdjuestment();
 
   // State 정의
   const [initialPoints, setInitialPoints] = useState<Point[]>([]);
   const [pathDefinitions, setPathDefinitions] = useState<PathDefinition[]>([]);
+  const {
+    gridAdjustments,
+    handleGridAdjustment,
+    originalGridSpacing,
+    initialAdjustments,
+    resetAdjustments,
+    adjustedPoints,
+  } = useAdjuestment(initialPoints);
 
   useEffect(() => {
     // SVG 파싱
@@ -71,101 +66,13 @@ const SVGPointEditor: React.FC = () => {
     setPathDefinitions(pathDefs);
 
     if (gridPoints.length > 0) {
-      initial(gridPoints);
+      initialAdjustments(gridPoints);
     }
   }, []);
 
-  // 조정된 포인트 계산
-  const getAdjustedPoints = (): Point[] => {
-    if (initialPoints.length === 0) return [];
-
-    const { adjustedXs, adjustedYs } = calculateAdjustedCoordinates();
-    return generateGridPoints(adjustedXs, adjustedYs);
-  };
-
-  // 고유한 X, Y 좌표 추출
-  const extractUniqueCoordinates = () => {
-    const xs = Array.from(new Set(initialPoints.map((p: Point) => p.x))).sort(
-      (a, b) => a - b
-    );
-    const ys = Array.from(new Set(initialPoints.map((p: Point) => p.y))).sort(
-      (a, b) => a - b
-    );
-    return { xs, ys };
-  };
-
-  // 조정된 X 좌표들 계산
-  const calculateAdjustedXs = (xs: number[]): number[] => {
-    const baseX = xs[0];
-    if (!baseX) return [];
-
-    const adjustedXs = [baseX];
-
-    for (let i = 1; i < xs.length; i++) {
-      const colKey = `${i}-${i + 1}`;
-      const multiplier = gridAdjustments[colKey] || 1;
-      const originalSpacing =
-        originalGridSpacing[colKey] || (xs[i] || 0) - (xs[i - 1] || 0);
-      const adjustedSpacing = originalSpacing * multiplier;
-
-      adjustedXs.push((adjustedXs[i - 1] || 0) + adjustedSpacing);
-    }
-
-    return adjustedXs;
-  };
-
-  // 조정된 Y 좌표들 계산
-  const calculateAdjustedYs = (ys: number[]): number[] => {
-    const baseY = ys[0];
-    if (!baseY) return [];
-
-    const adjustedYs = [baseY];
-
-    for (let i = 1; i < ys.length; i++) {
-      const rowKey = `${numToAlpha(i - 1)}-${numToAlpha(i)}`;
-      const multiplier = gridAdjustments[rowKey] || 1;
-      const originalSpacing =
-        originalGridSpacing[rowKey] || (ys[i] || 0) - (ys[i - 1] || 0);
-      const adjustedSpacing = originalSpacing * multiplier;
-
-      adjustedYs.push((adjustedYs[i - 1] || 0) + adjustedSpacing);
-    }
-
-    return adjustedYs;
-  };
-
-  // 조정된 좌표 계산 (X, Y 모두)
-  const calculateAdjustedCoordinates = () => {
-    const { xs, ys } = extractUniqueCoordinates();
-    const adjustedXs = calculateAdjustedXs(xs);
-    const adjustedYs = calculateAdjustedYs(ys);
-
-    return { adjustedXs, adjustedYs };
-  };
-
-  // 조정된 좌표로 그리드 포인트 생성
-  const generateGridPoints = (
-    adjustedXs: number[],
-    adjustedYs: number[]
-  ): Point[] => {
-    const gridPoints: Point[] = [];
-
-    adjustedYs.forEach((y: number, row: number) => {
-      adjustedXs.forEach((x: number, col: number) => {
-        gridPoints.push({
-          id: `${numToAlpha(row)}${col + 1}`,
-          x,
-          y,
-        });
-      });
-    });
-
-    return gridPoints;
-  };
-
   // 포인트 찾기 헬퍼 함수
   const findPoint = (id: string, pointList?: Point[]): Point | undefined => {
-    const points = pointList || getAdjustedPoints();
+    const points = pointList || adjustedPoints;
     return points.find((p: Point) => p.id === id);
   };
 
@@ -229,7 +136,7 @@ const SVGPointEditor: React.FC = () => {
 
   // 현재 조정값으로 계산된 패스 라인들 가져오기
   const getAdjustedPaths = (): AdjustedPath[] => {
-    const adjustedPoints = getAdjustedPoints();
+    // const adjustedPoints = getAdjustedPoints();
 
     return pathDefinitions
       .map((pathDef: PathDefinition): AdjustedPath | null => {
@@ -260,15 +167,15 @@ const SVGPointEditor: React.FC = () => {
   };
 
   // 리셋 함수
-  const resetAdjustments = (): void => {
-    const resetObj: GridAdjustments = {};
-    Object.keys(originalGridSpacing).forEach((key: string) => {
-      resetObj[key] = 1;
-    });
-    setGridAdjustments(resetObj);
-  };
+  // const resetAdjustments = (): void => {
+  //   const resetObj: GridAdjustments = {};
+  //   Object.keys(originalGridSpacing).forEach((key: string) => {
+  //     resetObj[key] = 1;
+  //   });
+  //   setGridAdjustments(resetObj);
+  // };
 
-  const adjustedPoints = getAdjustedPoints();
+  // const adjustedPoints = getAdjustedPoints();
   const adjustedPaths = getAdjustedPaths();
 
   if (initialPoints.length === 0) {
