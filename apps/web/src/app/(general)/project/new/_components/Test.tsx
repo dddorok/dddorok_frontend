@@ -13,6 +13,8 @@ import {
 } from "@dddorok/utils/chart/types";
 import React, { useState, useEffect } from "react";
 
+import { useAdjuestment } from "./useAdjuestment";
+
 interface AdjustedPath extends PathDefinition {
   start: Point;
   end: Point;
@@ -20,10 +22,6 @@ interface AdjustedPath extends PathDefinition {
 }
 
 interface GridAdjustments {
-  [key: string]: number;
-}
-
-interface OriginalGridSpacing {
   [key: string]: number;
 }
 
@@ -38,13 +36,17 @@ const SVGPointEditor: React.FC = () => {
 <path id="BODY_FRONT_ARMHOLE_CIRCUMFERENCE" d="M120 111C120 111 108.698 111.1 98.8756 104.64C86.5 96.5 86 79.5 86 79.5L86 15" stroke="black"/>
 </g>
 </svg>`;
+  const {
+    gridAdjustments,
+    setGridAdjustments,
+    handleGridAdjustment,
+    originalGridSpacing,
+    initial,
+  } = useAdjuestment();
 
   // State 정의
   const [initialPoints, setInitialPoints] = useState<Point[]>([]);
   const [pathDefinitions, setPathDefinitions] = useState<PathDefinition[]>([]);
-  const [gridAdjustments, setGridAdjustments] = useState<GridAdjustments>({});
-  const [originalGridSpacing, setOriginalGridSpacing] =
-    useState<OriginalGridSpacing>({});
 
   useEffect(() => {
     // SVG 파싱
@@ -72,37 +74,7 @@ const SVGPointEditor: React.FC = () => {
 
   useEffect(() => {
     if (initialPoints.length > 0) {
-      // 원본 그리드 간격 계산
-      const xs = Array.from(new Set(initialPoints.map((p: Point) => p.x))).sort(
-        (a, b) => a - b
-      );
-      const ys = Array.from(new Set(initialPoints.map((p: Point) => p.y))).sort(
-        (a, b) => a - b
-      );
-
-      const spacing: OriginalGridSpacing = {};
-      const adjustments: GridAdjustments = {};
-
-      // 행 간격 (세로)
-      for (let i = 0; i < ys.length - 1; i++) {
-        const rowKey = `${numToAlpha(i)}-${numToAlpha(i + 1)}`;
-        spacing[rowKey] = (ys[i + 1] || 0) - (ys[i] || 0);
-        if (!gridAdjustments[rowKey]) {
-          adjustments[rowKey] = 1;
-        }
-      }
-
-      // 열 간격 (가로)
-      for (let i = 0; i < xs.length - 1; i++) {
-        const colKey = `${i + 1}-${i + 2}`;
-        spacing[colKey] = (xs[i + 1] || 0) - (xs[i] || 0);
-        if (!gridAdjustments[colKey]) {
-          adjustments[colKey] = 1;
-        }
-      }
-
-      setOriginalGridSpacing(spacing);
-      setGridAdjustments((prev) => ({ ...prev, ...adjustments }));
+      initial(initialPoints);
     }
   }, [initialPoints]);
 
@@ -256,12 +228,12 @@ const SVGPointEditor: React.FC = () => {
   };
 
   // 그리드 간격 조정값 변경
-  const handleGridAdjustment = (gridKey: string, value: string): void => {
-    setGridAdjustments((prev) => ({
-      ...prev,
-      [gridKey]: parseFloat(value),
-    }));
-  };
+  // const handleGridAdjustment = (gridKey: string, value: string): void => {
+  //   setGridAdjustments((prev) => ({
+  //     ...prev,
+  //     [gridKey]: parseFloat(value),
+  //   }));
+  // };
 
   // 리셋 함수
   const resetAdjustments = (): void => {

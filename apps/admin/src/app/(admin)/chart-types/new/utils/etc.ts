@@ -1,4 +1,4 @@
-import { ChartPoint } from "../types";
+import { ChartPoint } from "@dddorok/utils";
 
 // SVG 원본 크기 fallback 계산 함수 추가
 export function getFallbackSvgSize(svgContent: string) {
