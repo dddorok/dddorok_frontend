@@ -27,6 +27,7 @@ function SvgMappingForm() {
     retry: false,
   });
 
+  console.log("data: ", data);
   if (!data) {
     return <div>Chart type not found</div>;
   }

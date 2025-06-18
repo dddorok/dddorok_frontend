@@ -1,5 +1,6 @@
 "use client";
 
+import { extractControlPoints } from "@dddorok/utils/chart/control-point";
 import { useRouter } from "next/navigation";
 import React, { useState, useEffect } from "react";
 
@@ -8,7 +9,7 @@ import { ManualMappingTable } from "./_components/ManualMappingTable";
 import { SvgPreview } from "./_components/SvgPreview";
 import { useSvgContent } from "./hooks/useSvgContent";
 import { previewH, previewW } from "./utils/etc";
-import { extractControlPoints, findNearestGridPointId } from "./utils/svgGrid";
+import { findNearestGridPointId } from "./utils/svgGrid";
 
 import { DownloadButton } from "@/components/DownloadButton";
 import { Badge } from "@/components/ui/badge";
@@ -264,7 +265,6 @@ const ChartRegistration: React.FC<{
             paths={paths}
             mappingItems={autoMappingItems}
             gridPoints={points}
-            extractControlPoints={extractControlPoints}
             onPathClick={setHoveredPathId}
           />
         </CardContent>
@@ -373,7 +373,7 @@ const useManualMapping = (props: {
 
     if (chartType) {
       const manualMappingItems = props.manual_mapped_path_id?.map((item) => {
-        const currentMapping = chartType.svg_mapping.mappings.find(
+        const currentMapping = chartType.svg_mapping.mappings.manual.find(
           (map: any) => map.measurement_code === item.code
         );
         return {

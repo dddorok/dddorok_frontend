@@ -1,4 +1,8 @@
 import {
+  ControlPoint,
+  extractControlPoints,
+} from "@dddorok/utils/chart/control-point";
+import {
   analyzeSVGPaths,
   getGridPointsFromPaths,
   numToAlpha,
@@ -12,11 +16,6 @@ interface Point {
   x: number;
   y: number;
   type?: "grid";
-}
-
-interface ControlPoint {
-  x: number;
-  y: number;
 }
 
 interface PathDefinition {
@@ -52,32 +51,6 @@ const SVGPointEditor: React.FC = () => {
 <path id="BODY_FRONT_ARMHOLE_CIRCUMFERENCE" d="M120 111C120 111 108.698 111.1 98.8756 104.64C86.5 96.5 86 79.5 86 79.5L86 15" stroke="black"/>
 </g>
 </svg>`;
-
-  // SVG Path에서 제어점 추출
-  const extractControlPoints = (pathData: string): ControlPoint[] => {
-    const controlPoints: ControlPoint[] = [];
-    const commands = pathData.match(/[MLHVCSQTAZ][^MLHVCSQTAZ]*/gi) || [];
-
-    commands.forEach((command: string) => {
-      const type = command[0];
-      const coords = command
-        .slice(1)
-        .trim()
-        .split(/[\s,]+/)
-        .map(Number)
-        .filter((n) => !isNaN(n));
-
-      if (type === "C") {
-        // Cubic Bezier: C x1 y1 x2 y2 x y
-        controlPoints.push(
-          { x: coords[0] || 0, y: coords[1] || 0 }, // 첫 번째 제어점
-          { x: coords[2] || 0, y: coords[3] || 0 } // 두 번째 제어점
-        );
-      }
-    });
-
-    return controlPoints;
-  };
 
   // State 정의
   const [initialPoints, setInitialPoints] = useState<Point[]>([]);
