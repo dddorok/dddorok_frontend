@@ -21,37 +21,23 @@ export const useAdjuestment = () => {
   };
 
   const initial = (initialPoints: Point[]) => {
-    // 원본 그리드 간격 계산
-    const xs = Array.from(new Set(initialPoints.map((p: Point) => p.x))).sort(
-      (a, b) => a - b
-    );
-    const ys = Array.from(new Set(initialPoints.map((p: Point) => p.y))).sort(
-      (a, b) => a - b
-    );
-
-    const spacing: OriginalGridSpacing = {};
-    const adjustments: GridAdjustments = {};
-
-    // 행 간격 (세로)
-    for (let i = 0; i < ys.length - 1; i++) {
-      const rowKey = `${numToAlpha(i)}-${numToAlpha(i + 1)}`;
-      spacing[rowKey] = (ys[i + 1] || 0) - (ys[i] || 0);
-      if (!gridAdjustments[rowKey]) {
-        adjustments[rowKey] = 1;
-      }
-    }
-
-    // 열 간격 (가로)
-    for (let i = 0; i < xs.length - 1; i++) {
-      const colKey = `${i + 1}-${i + 2}`;
-      spacing[colKey] = (xs[i + 1] || 0) - (xs[i] || 0);
-      if (!gridAdjustments[colKey]) {
-        adjustments[colKey] = 1;
-      }
-    }
+    const { xs, ys } = extractUniqueCoordinates(initialPoints);
+    const spacing = calculateOriginalSpacing(xs, ys);
+    const adjustments = createDefaultAdjustments(xs, ys);
 
     setOriginalGridSpacing(spacing);
     setGridAdjustments((prev) => ({ ...prev, ...adjustments }));
+  };
+
+  // 고유한 X, Y 좌표 추출
+  const extractUniqueCoordinates = (points: Point[]) => {
+    const xs = Array.from(new Set(points.map((p: Point) => p.x))).sort(
+      (a, b) => a - b
+    );
+    const ys = Array.from(new Set(points.map((p: Point) => p.y))).sort(
+      (a, b) => a - b
+    );
+    return { xs, ys };
   };
 
   return {
@@ -61,4 +47,48 @@ export const useAdjuestment = () => {
     originalGridSpacing,
     initial,
   };
+};
+
+// 원본 그리드 간격 계산
+const calculateOriginalSpacing = (
+  xs: number[],
+  ys: number[]
+): OriginalGridSpacing => {
+  const spacing: OriginalGridSpacing = {};
+
+  // 행 간격 (세로) 계산
+  for (let i = 0; i < ys.length - 1; i++) {
+    const rowKey = `${numToAlpha(i)}-${numToAlpha(i + 1)}`;
+    spacing[rowKey] = (ys[i + 1] || 0) - (ys[i] || 0);
+  }
+
+  // 열 간격 (가로) 계산
+  for (let i = 0; i < xs.length - 1; i++) {
+    const colKey = `${i + 1}-${i + 2}`;
+    spacing[colKey] = (xs[i + 1] || 0) - (xs[i] || 0);
+  }
+
+  return spacing;
+};
+
+// 기본 조정값 생성
+const createDefaultAdjustments = (
+  xs: number[],
+  ys: number[]
+): GridAdjustments => {
+  const adjustments: GridAdjustments = {};
+
+  // 행 조정값 초기화
+  for (let i = 0; i < ys.length - 1; i++) {
+    const rowKey = `${numToAlpha(i)}-${numToAlpha(i + 1)}`;
+    adjustments[rowKey] = 1;
+  }
+
+  // 열 조정값 초기화
+  for (let i = 0; i < xs.length - 1; i++) {
+    const colKey = `${i + 1}-${i + 2}`;
+    adjustments[colKey] = 1;
+  }
+
+  return adjustments;
 };

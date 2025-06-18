@@ -52,7 +52,6 @@ const SVGPointEditor: React.FC = () => {
     // SVG 파싱
     const parsedPaths = analyzeSVGPaths(initialSvgContent);
     const gridPoints = getGridPointsFromPaths(parsedPaths);
-    console.log("gridPoints: ", gridPoints);
 
     // 색상 배열
     const colors = ["#3b82f6", "#ef4444", "#10b981", "#f59e0b", "#8b5cf6"];
@@ -70,13 +69,11 @@ const SVGPointEditor: React.FC = () => {
 
     setInitialPoints(gridPoints);
     setPathDefinitions(pathDefs);
-  }, []);
 
-  useEffect(() => {
-    if (initialPoints.length > 0) {
-      initial(initialPoints);
+    if (gridPoints.length > 0) {
+      initial(gridPoints);
     }
-  }, [initialPoints]);
+  }, []);
 
   // 조정된 포인트 계산
   const getAdjustedPoints = (): Point[] => {
@@ -261,14 +258,6 @@ const SVGPointEditor: React.FC = () => {
   const calculateDistance = (p1: Point, p2: Point): number => {
     return Math.sqrt(Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2));
   };
-
-  // 그리드 간격 조정값 변경
-  // const handleGridAdjustment = (gridKey: string, value: string): void => {
-  //   setGridAdjustments((prev) => ({
-  //     ...prev,
-  //     [gridKey]: parseFloat(value),
-  //   }));
-  // };
 
   // 리셋 함수
   const resetAdjustments = (): void => {
