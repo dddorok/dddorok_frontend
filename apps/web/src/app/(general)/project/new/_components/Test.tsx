@@ -82,7 +82,6 @@ const SVGPointEditor: React.FC = () => {
   // State 정의
   const [initialPoints, setInitialPoints] = useState<Point[]>([]);
   const [pathDefinitions, setPathDefinitions] = useState<PathDefinition[]>([]);
-  const [points, setPoints] = useState<Point[]>([]);
   const [gridAdjustments, setGridAdjustments] = useState<GridAdjustments>({});
   const [originalGridSpacing, setOriginalGridSpacing] =
     useState<OriginalGridSpacing>({});
@@ -141,8 +140,6 @@ const SVGPointEditor: React.FC = () => {
 
   useEffect(() => {
     if (initialPoints.length > 0) {
-      setPoints(initialPoints);
-
       // 원본 그리드 간격 계산
       const xs = Array.from(new Set(initialPoints.map((p: Point) => p.x))).sort(
         (a, b) => a - b

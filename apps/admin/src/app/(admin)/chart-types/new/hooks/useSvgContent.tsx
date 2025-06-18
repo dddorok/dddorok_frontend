@@ -1,9 +1,11 @@
-import { analyzeSVGPaths } from "@dddorok/utils/chart/svg-grid";
+import {
+  analyzeSVGPaths,
+  getGridPointsFromPaths,
+} from "@dddorok/utils/chart/svg-grid";
 import { useState, useEffect } from "react";
 
 import { fetchSvg } from "../action";
 import { ChartPoint } from "../types";
-import { getGridPointsFromPaths } from "../utils/svgGrid";
 
 import { toast } from "@/hooks/use-toast";
 
