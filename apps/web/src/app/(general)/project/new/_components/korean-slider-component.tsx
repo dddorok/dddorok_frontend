@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
 
 import { cn } from "@/lib/utils";
 
@@ -150,6 +150,9 @@ interface SliderSectionProps {
   rightLabel?: string;
   average: number;
   code: string;
+  onValueChange?: (value: number) => void;
+  onAdjustStart?: () => void;
+  onAdjustEnd?: () => void;
 }
 
 export const SliderSection = ({
@@ -162,6 +165,9 @@ export const SliderSection = ({
   rightLabel,
   average,
   code,
+  onValueChange,
+  onAdjustStart,
+  onAdjustEnd,
 }: SliderSectionProps) => {
   const {
     value,
@@ -177,6 +183,22 @@ export const SliderSection = ({
     max,
     snapValues,
   });
+
+  // 값이 변경될 때 콜백 호출
+  useEffect(() => {
+    if (onValueChange) {
+      onValueChange(value);
+    }
+  }, [value]);
+
+  // 드래그 시작/종료 시 콜백 호출
+  useEffect(() => {
+    if (isDragging && onAdjustStart) {
+      onAdjustStart();
+    } else if (!isDragging && onAdjustEnd) {
+      onAdjustEnd();
+    }
+  }, [isDragging]);
 
   const averagePercentage = ((average - min) / (max - min)) * 100;
 

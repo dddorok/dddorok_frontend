@@ -11,6 +11,8 @@ import {
 } from "@dddorok/utils/chart/types";
 import React, { useState, useEffect } from "react";
 
+import { SliderSection } from "./korean-slider-component";
+import { GridAdjustments, OriginalGridSpacing } from "../types";
 import { useAdjuestment } from "./useAdjuestment";
 import { getAdjustedPath } from "../_utils/getAdjustedPath";
 
@@ -40,11 +42,16 @@ export function AdjustmentEditor() {
     const parsedPaths = analyzeSVGPaths(initialSvgContent);
     const gridPoints = getGridPointsFromPaths(parsedPaths);
 
+    // 색상 배열
+    const colors = ["#3b82f6", "#ef4444", "#10b981", "#f59e0b", "#8b5cf6"];
+
     // Path 정의 생성
     const pathDefs = parsedPaths
       .map((path: SvgPath, index: number): PathDefinition | null => {
         const pathDef = getPathDefs(path, gridPoints);
-
+        if (pathDef) {
+          pathDef.color = colors[index % colors.length] || "#000000";
+        }
         return pathDef;
       })
       .filter((pathDef): pathDef is PathDefinition => pathDef !== null);
@@ -106,6 +113,18 @@ const SVGPointEditor: React.FC<{
       </h1>
 
       <div className="grid grid-cols-2 gap-6">
+        <div>
+          <div className="bg-gray-100 p-4 rounded-lg">
+            <h2 className="text-lg font-semibold mb-4">그리드 좌표 평면</h2>
+            <GridCoordinatePlane
+              adjustedPoints={adjustedPoints}
+              adjustedPaths={adjustedPaths}
+              isAdjusting={isAdjusting}
+              adjustingKey={adjustingKey}
+            />
+          </div>
+        </div>
+
         <div className="bg-gray-50 p-4 rounded-lg">
           <h2 className="text-lg font-semibold mb-4">그리드 간격 조정</h2>
 
@@ -121,16 +140,19 @@ const SVGPointEditor: React.FC<{
                   (key: string) => key.includes("-") && key.match(/[a-z]/)
                 )
                 .map((rowKey: string) => (
-                  <GapAdjustmentItem
+                  <SliderSection
                     key={rowKey}
-                    gridKey={rowKey}
                     label={rowKey.toUpperCase()}
-                    initialValue={originalGridSpacing[rowKey]}
-                    value={gridAdjustments[rowKey]}
-                    handleGridAdjustment={(value) =>
-                      handleGridAdjustment(rowKey, value)
+                    min={0.1}
+                    max={3}
+                    snapValues={[0.1, 0.5, 1, 1.5, 2, 2.5, 3]}
+                    initialValue={gridAdjustments[rowKey] || 1}
+                    average={1}
+                    code={rowKey}
+                    onValueChange={(value) =>
+                      handleGridAdjustment(rowKey, value.toString())
                     }
-                    onAdjustStart={handleAdjustStart}
+                    onAdjustStart={() => handleAdjustStart(rowKey)}
                     onAdjustEnd={handleAdjustEnd}
                   />
                 ))}
@@ -147,16 +169,19 @@ const SVGPointEditor: React.FC<{
                   (key: string) => key.includes("-") && !key.match(/[a-z]/)
                 )
                 .map((colKey: string) => (
-                  <GapAdjustmentItem
+                  <SliderSection
                     key={colKey}
-                    gridKey={colKey}
                     label={colKey.toUpperCase()}
-                    initialValue={originalGridSpacing[colKey]}
-                    value={gridAdjustments[colKey]}
-                    handleGridAdjustment={(value) =>
-                      handleGridAdjustment(colKey, value)
+                    min={0.1}
+                    max={3}
+                    snapValues={[0.1, 0.5, 1, 1.5, 2, 2.5, 3]}
+                    initialValue={gridAdjustments[colKey] || 1}
+                    average={1}
+                    code={colKey}
+                    onValueChange={(value) =>
+                      handleGridAdjustment(colKey, value.toString())
                     }
-                    onAdjustStart={handleAdjustStart}
+                    onAdjustStart={() => handleAdjustStart(colKey)}
                     onAdjustEnd={handleAdjustEnd}
                   />
                 ))}
@@ -170,65 +195,10 @@ const SVGPointEditor: React.FC<{
             </button>
           </div>
         </div>
-
-        <div>
-          <div className="bg-gray-100 p-4 rounded-lg">
-            <h2 className="text-lg font-semibold mb-4">그리드 좌표 평면</h2>
-            <GridCoordinatePlane
-              adjustedPoints={adjustedPoints}
-              adjustedPaths={adjustedPaths}
-              isAdjusting={isAdjusting}
-              adjustingKey={adjustingKey}
-            />
-          </div>
-        </div>
       </div>
     </div>
   );
 };
-
-function GapAdjustmentItem({
-  initialValue,
-  value,
-  handleGridAdjustment,
-  label,
-  gridKey,
-  onAdjustStart,
-  onAdjustEnd,
-}: {
-  initialValue?: number;
-  value?: number;
-  label: string;
-  gridKey: string;
-  handleGridAdjustment: (value: string) => void;
-  onAdjustStart: (key: string) => void;
-  onAdjustEnd: () => void;
-}) {
-  return (
-    <div className="mb-4">
-      <label className="block text-sm font-medium mb-1">{label}</label>
-      <div className="text-xs text-gray-600 mb-1">
-        원본: {initialValue?.toFixed(1)}px
-      </div>
-      <input
-        type="range"
-        min="0.1"
-        max="3"
-        step="0.1"
-        value={value || 1}
-        onChange={(e) => handleGridAdjustment(e.target.value)}
-        onMouseDown={() => onAdjustStart(gridKey)}
-        onTouchStart={() => onAdjustStart(gridKey)}
-        onMouseUp={onAdjustEnd}
-        onTouchEnd={onAdjustEnd}
-        className="w-full"
-      />
-      <span className="text-xs text-gray-600">
-        {value || 1}x ({((initialValue || 0) * (value || 1)).toFixed(1)} px)
-      </span>
-    </div>
-  );
-}
 
 function GridCoordinatePlane({
   adjustedPoints,
@@ -245,6 +215,16 @@ function GridCoordinatePlane({
   const calculateDistance = (p1: Point, p2: Point): number => {
     return Math.sqrt(Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2));
   };
+
+  // viewBox 자동 계산
+  const xs = adjustedPoints.map((p) => p.x);
+  const ys = adjustedPoints.map((p) => p.y);
+  const minX = Math.min(...xs);
+  const maxX = Math.max(...xs);
+  const minY = Math.min(...ys);
+  const maxY = Math.max(...ys);
+  const padding = 20;
+  const viewBox = `${minX - padding} ${minY - padding} ${maxX - minX + padding * 2} ${maxY - minY + padding * 2}`;
 
   // path가 조정 중인지 확인하는 함수
   const isPathBeingAdjusted = (path: AdjustedPath): boolean => {
@@ -297,199 +277,201 @@ function GridCoordinatePlane({
   };
 
   return (
-    <svg
-      width="100%"
-      height="500"
-      viewBox="0 0 400 350"
-      className="border border-gray-300 bg-white"
-    >
-      {/* 격자 */}
-      <defs>
-        <pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse">
-          <path
-            d="M 10 0 L 0 0 0 10"
-            fill="none"
-            stroke="#e5e7eb"
-            strokeWidth="0.5"
-          />
-        </pattern>
-      </defs>
-      <rect width="100%" height="100%" fill="url(#grid)" />
-
-      {/* 조정된 그리드 라인들 */}
-      {adjustedPoints.map((point: Point) => {
-        const row = point.id[0];
-        const col = point.id[1];
-
-        if (!row || !col) return null;
-
-        // 가로 라인 (같은 행의 다음 열로)
-        if (col < "9") {
-          const nextColPoint = adjustedPoints.find(
-            (p: Point) => p.id === `${row}${parseInt(col) + 1}`
-          );
-          if (nextColPoint) {
-            return (
-              <line
-                key={`grid-h-${point.id}`}
-                x1={point.x}
-                y1={point.y}
-                x2={nextColPoint.x}
-                y2={nextColPoint.y}
-                stroke="#9ca3af"
-                strokeWidth="1"
-              />
-            );
-          }
-        }
-        return null;
-      })}
-
-      {adjustedPoints.map((point: Point) => {
-        const row = point.id[0];
-        const col = point.id[1];
-
-        if (!row || !col) return null;
-
-        // 세로 라인 (같은 열의 다음 행으로)
-        if (row < "z") {
-          const nextRowChar = String.fromCharCode(row.charCodeAt(0) + 1);
-          const nextRowPoint = adjustedPoints.find(
-            (p: Point) => p.id === `${nextRowChar}${col}`
-          );
-          if (nextRowPoint) {
-            return (
-              <line
-                key={`grid-v-${point.id}`}
-                x1={point.x}
-                y1={point.y}
-                x2={nextRowPoint.x}
-                y2={nextRowPoint.y}
-                stroke="#9ca3af"
-                strokeWidth="1"
-              />
-            );
-          }
-        }
-        return null;
-      })}
-
-      {/* 패스 라인들 */}
-      {adjustedPaths.map((pathData: AdjustedPath) => {
-        const pathColor = getPathColor(pathData);
-
-        return (
-          <g key={`path-${pathData.id}`}>
-            {pathData.type === "curve" && pathData.adjustedControlPoints ? (
-              // 베지어 곡선
-              <path
-                d={`M ${pathData.start.x} ${pathData.start.y} C ${pathData?.adjustedControlPoints[0]?.x} ${pathData?.adjustedControlPoints[0]?.y} ${pathData?.adjustedControlPoints[1]?.x} ${pathData?.adjustedControlPoints[1]?.y} ${pathData.end.x} ${pathData.end.y}`}
-                fill="none"
-                stroke={pathColor}
-                strokeWidth="4"
-              />
-            ) : (
-              // 직선
-              <line
-                x1={pathData.start.x}
-                y1={pathData.start.y}
-                x2={pathData.end.x}
-                y2={pathData.end.y}
-                stroke={pathColor}
-                strokeWidth="4"
-              />
-            )}
-
-            {/* 제어점 표시 (곡선인 경우) */}
-            {pathData.type === "curve" && pathData.adjustedControlPoints && (
-              <g>
-                {pathData.adjustedControlPoints.map(
-                  (cp: ControlPoint, index: number) => (
-                    <g key={`cp-${index}`}>
-                      <circle
-                        cx={cp.x}
-                        cy={cp.y}
-                        r="2"
-                        fill={pathColor}
-                        fillOpacity="0.5"
-                        stroke={pathColor}
-                        strokeWidth="1"
-                      />
-                      <line
-                        x1={
-                          index === 0
-                            ? pathData.start.x
-                            : pathData?.adjustedControlPoints![0]?.x
-                        }
-                        y1={
-                          index === 0
-                            ? pathData.start.y
-                            : pathData?.adjustedControlPoints![0]?.y
-                        }
-                        x2={cp.x}
-                        y2={cp.y}
-                        stroke={pathColor}
-                        strokeWidth="1"
-                        strokeDasharray="2,2"
-                        strokeOpacity="0.5"
-                      />
-                    </g>
-                  )
-                )}
-              </g>
-            )}
-
-            {/* 거리 표시 */}
-            <text
-              x={(pathData.start.x + pathData.end.x) / 2}
-              y={(pathData.start.y + pathData.end.y) / 2 - 15}
-              fontSize="9"
-              fill={pathColor}
-              textAnchor="middle"
-              className="pointer-events-none select-none font-bold"
-            >
-              {calculateDistance(pathData.start, pathData.end).toFixed(1)}
-              px
-            </text>
-            {/* 패스 이름 */}
-            <text
-              x={(pathData.start.x + pathData.end.x) / 2}
-              y={(pathData.start.y + pathData.end.y) / 2 + 5}
-              fontSize="7"
-              fill="#374151"
-              textAnchor="middle"
-              className="pointer-events-none select-none"
-            >
-              {pathData.id.replace("BODY_", "").replace(/_/g, " ")}
-            </text>
-          </g>
-        );
-      })}
-
-      {/* 그리드 포인트들 */}
-      {adjustedPoints.map((point: Point) => {
-        return (
-          <g key={`point-${point.id}`}>
-            <circle
-              cx={point.x}
-              cy={point.y}
-              r="3"
-              fill="#374151"
-              stroke="#ffffff"
-              strokeWidth="1"
+    <div style={{ width: "100%", height: "100%" }}>
+      <svg width="100%" height="100%" viewBox={viewBox}>
+        {/* 격자 */}
+        <defs>
+          <pattern
+            id="grid"
+            width="10"
+            height="10"
+            patternUnits="userSpaceOnUse"
+          >
+            <path
+              d="M 10 0 L 0 0 0 10"
+              fill="none"
+              stroke="#e5e7eb"
+              strokeWidth="0.5"
             />
-            <text
-              x={point.x + 6}
-              y={point.y - 6}
-              fontSize="8"
-              fill="#374151"
-              className="pointer-events-none select-none font-medium"
-            >
-              {point.id}
-            </text>
-          </g>
-        );
-      })}
-    </svg>
+          </pattern>
+        </defs>
+        <rect width="100%" height="100%" fill="url(#grid)" />
+
+        {/* 조정된 그리드 라인들 */}
+        {adjustedPoints.map((point: Point) => {
+          const row = point.id[0];
+          const col = point.id[1];
+
+          if (!row || !col) return null;
+
+          // 가로 라인 (같은 행의 다음 열로)
+          if (col < "9") {
+            const nextColPoint = adjustedPoints.find(
+              (p: Point) => p.id === `${row}${parseInt(col) + 1}`
+            );
+            if (nextColPoint) {
+              return (
+                <line
+                  key={`grid-h-${point.id}`}
+                  x1={point.x}
+                  y1={point.y}
+                  x2={nextColPoint.x}
+                  y2={nextColPoint.y}
+                  stroke="#9ca3af"
+                  strokeWidth="1"
+                />
+              );
+            }
+          }
+          return null;
+        })}
+
+        {adjustedPoints.map((point: Point) => {
+          const row = point.id[0];
+          const col = point.id[1];
+
+          if (!row || !col) return null;
+
+          // 세로 라인 (같은 열의 다음 행으로)
+          if (row < "z") {
+            const nextRowChar = String.fromCharCode(row.charCodeAt(0) + 1);
+            const nextRowPoint = adjustedPoints.find(
+              (p: Point) => p.id === `${nextRowChar}${col}`
+            );
+            if (nextRowPoint) {
+              return (
+                <line
+                  key={`grid-v-${point.id}`}
+                  x1={point.x}
+                  y1={point.y}
+                  x2={nextRowPoint.x}
+                  y2={nextRowPoint.y}
+                  stroke="#9ca3af"
+                  strokeWidth="1"
+                />
+              );
+            }
+          }
+          return null;
+        })}
+
+        {/* 패스 라인들 */}
+        {adjustedPaths.map((pathData: AdjustedPath) => {
+          const pathColor = getPathColor(pathData);
+
+          return (
+            <g key={`path-${pathData.id}`}>
+              {pathData.type === "curve" && pathData.adjustedControlPoints ? (
+                // 베지어 곡선
+                <path
+                  d={`M ${pathData.start.x} ${pathData.start.y} C ${pathData?.adjustedControlPoints[0]?.x} ${pathData?.adjustedControlPoints[0]?.y} ${pathData?.adjustedControlPoints[1]?.x} ${pathData?.adjustedControlPoints[1]?.y} ${pathData.end.x} ${pathData.end.y}`}
+                  fill="none"
+                  stroke={pathColor}
+                  strokeWidth="4"
+                />
+              ) : (
+                // 직선
+                <line
+                  x1={pathData.start.x}
+                  y1={pathData.start.y}
+                  x2={pathData.end.x}
+                  y2={pathData.end.y}
+                  stroke={pathColor}
+                  strokeWidth="4"
+                />
+              )}
+
+              {/* 제어점 표시 (곡선인 경우) */}
+              {pathData.type === "curve" && pathData.adjustedControlPoints && (
+                <g>
+                  {pathData.adjustedControlPoints.map(
+                    (cp: ControlPoint, index: number) => (
+                      <g key={`cp-${index}`}>
+                        <circle
+                          cx={cp.x}
+                          cy={cp.y}
+                          r="2"
+                          fill={pathColor}
+                          fillOpacity="0.5"
+                          stroke={pathColor}
+                          strokeWidth="1"
+                        />
+                        <line
+                          x1={
+                            index === 0
+                              ? pathData.start.x
+                              : pathData?.adjustedControlPoints![0]?.x
+                          }
+                          y1={
+                            index === 0
+                              ? pathData.start.y
+                              : pathData?.adjustedControlPoints![0]?.y
+                          }
+                          x2={cp.x}
+                          y2={cp.y}
+                          stroke={pathColor}
+                          strokeWidth="1"
+                          strokeDasharray="2,2"
+                          strokeOpacity="0.5"
+                        />
+                      </g>
+                    )
+                  )}
+                </g>
+              )}
+
+              {/* 거리 표시 */}
+              <text
+                x={(pathData.start.x + pathData.end.x) / 2}
+                y={(pathData.start.y + pathData.end.y) / 2 - 15}
+                fontSize="9"
+                fill={pathColor}
+                textAnchor="middle"
+                className="pointer-events-none select-none font-bold"
+              >
+                {calculateDistance(pathData.start, pathData.end).toFixed(1)}
+                px
+              </text>
+              {/* 패스 이름 */}
+              <text
+                x={(pathData.start.x + pathData.end.x) / 2}
+                y={(pathData.start.y + pathData.end.y) / 2 + 5}
+                fontSize="7"
+                fill="#374151"
+                textAnchor="middle"
+                className="pointer-events-none select-none"
+              >
+                {pathData.id.replace("BODY_", "").replace(/_/g, " ")}
+              </text>
+            </g>
+          );
+        })}
+
+        {/* 그리드 포인트들 */}
+        {adjustedPoints.map((point: Point) => {
+          return (
+            <g key={`point-${point.id}`}>
+              <circle
+                cx={point.x}
+                cy={point.y}
+                r="3"
+                fill="#374151"
+                stroke="#ffffff"
+                strokeWidth="1"
+              />
+              <text
+                x={point.x + 6}
+                y={point.y - 6}
+                fontSize="8"
+                fill="#374151"
+                className="pointer-events-none select-none font-medium"
+              >
+                {point.id}
+              </text>
+            </g>
+          );
+        })}
+      </svg>
+    </div>
   );
 }
