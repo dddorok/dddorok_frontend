@@ -17,8 +17,6 @@ import {
   useAdjustmentProgressingContext,
 } from "./AdjustmentProvider";
 import { SliderSection } from "./korean-slider-component";
-import { useAdjuestment } from "./useAdjuestment";
-import { getAdjustedPath } from "../_utils/getAdjustedPath";
 
 import { cn } from "@/lib/utils";
 
@@ -73,13 +71,8 @@ export function AdjustmentEditor() {
 }
 
 const SVGPointEditor = () => {
-  const {
-    gridAdjustments,
-    adjustedPoints,
-    originalGridSpacing,
-    handleGridAdjustment,
-    adjustedPaths,
-  } = useAdjustmentContext();
+  const { gridAdjustments, originalGridSpacing, handleGridAdjustment } =
+    useAdjustmentContext();
 
   const { handleAdjustStart, handleAdjustEnd } =
     useAdjustmentProgressingContext();
@@ -101,10 +94,7 @@ const SVGPointEditor = () => {
         <div>
           <div className="bg-gray-100 p-4 rounded-lg">
             <h2 className="text-lg font-semibold mb-4">그리드 좌표 평면</h2>
-            <GridCoordinatePlane
-              adjustedPoints={adjustedPoints}
-              adjustedPaths={adjustedPaths}
-            />
+            <GridCoordinatePlane />
           </div>
         </div>
 
@@ -126,7 +116,6 @@ const SVGPointEditor = () => {
           </div>
 
           <div className="space-y-6">
-            {/* 행 간격 조정 */}
             <div>
               {controlKeys.map((rowKey: string) => (
                 <SliderSection
@@ -146,13 +135,6 @@ const SVGPointEditor = () => {
                 />
               ))}
             </div>
-
-            {/* <button
-              onClick={resetAdjustments}
-              className="w-full px-3 py-2 bg-blue-500 text-white rounded text-sm hover:bg-blue-600"
-            >
-              모든 조정값 리셋
-            </button> */}
           </div>
         </div>
       </div>
@@ -160,17 +142,8 @@ const SVGPointEditor = () => {
   );
 };
 
-function GridCoordinatePlane({
-  adjustedPoints,
-  adjustedPaths,
-  // isAdjusting,
-  // adjustingKey,
-}: {
-  adjustedPoints: Point[];
-  adjustedPaths: AdjustedPath[];
-  // isAdjusting: boolean;
-  // adjustingKey: string | null;
-}) {
+function GridCoordinatePlane() {
+  const { adjustedPoints, adjustedPaths } = useAdjustmentContext();
   const { adjustingKey } = useAdjustmentProgressingContext();
 
   // 두 점 사이의 거리 계산
