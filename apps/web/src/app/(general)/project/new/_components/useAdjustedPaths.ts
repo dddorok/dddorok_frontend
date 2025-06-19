@@ -11,13 +11,13 @@ interface AdjustedPath extends PathDefinition {
 
 export const useAdjustedPaths = ({
   adjustedPoints,
-  initialPoints,
+  gridPoints,
+  pathDefs: pathDefinitions,
 }: {
   adjustedPoints: Point[];
-  initialPoints: Point[];
+  gridPoints: Point[];
+  pathDefs: PathDefinition[];
 }) => {
-  const [pathDefinitions, setPathDefinitions] = useState<PathDefinition[]>([]);
-
   // 포인트 찾기 헬퍼 함수
   const findPoint = (id: string, pointList?: Point[]): Point | undefined => {
     const points = pointList || adjustedPoints;
@@ -62,10 +62,10 @@ export const useAdjustedPaths = ({
     if (!currentStart || !currentEnd) return null;
 
     // 원본 패스의 시작점과 끝점 찾기
-    const originalStart = initialPoints.find(
+    const originalStart = gridPoints.find(
       (p: Point) => p.id === pathDef.points[0]
     );
-    const originalEnd = initialPoints.find(
+    const originalEnd = gridPoints.find(
       (p: Point) => p.id === pathDef.points[1]
     );
 
@@ -81,14 +81,13 @@ export const useAdjustedPaths = ({
     );
   };
 
-  const initialPathDefinitions = (pathDefinitions: PathDefinition[]) => {
-    setPathDefinitions(pathDefinitions);
-  };
+  // const initialPathDefinitions = (pathDefinitions: PathDefinition[]) => {
+  //   setPathDefinitions(pathDefinitions);
+  // };
 
   const adjustedPaths = getAdjustedPaths();
 
   return {
-    initialPathDefinitions,
     adjustedPaths,
   };
 };

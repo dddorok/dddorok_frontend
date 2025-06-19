@@ -4,7 +4,7 @@ import { useRef, useState } from "react";
 
 import Step1 from "./Step1";
 import Step2 from "./Step2";
-import SVGPointEditor from "./Test";
+import SVGPointEditor, { AdjustmentEditor } from "./Test";
 
 import { cn } from "@/lib/utils";
 
@@ -29,7 +29,7 @@ export default function NewProjectClient({
 
   return (
     <>
-      <SVGPointEditor />
+      <AdjustmentEditor />
       {/* {step === 1 && (
         <div className=" space-y-2 w-[450px]">
           <h3 className="text-h3 text-primary-PR py-[10px] text-center">

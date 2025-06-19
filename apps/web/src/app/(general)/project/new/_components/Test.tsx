@@ -14,6 +14,7 @@ import React, { useState, useEffect } from "react";
 import { GridAdjustments, OriginalGridSpacing } from "../types";
 import { useAdjuestment } from "./useAdjuestment";
 import { useAdjustedPaths } from "./useAdjustedPaths";
+import { getAdjustedPath } from "../_utils/getAdjustedPath";
 
 interface AdjustedPath extends PathDefinition {
   start: Point;
@@ -30,24 +31,14 @@ const initialSvgContent: string = `<svg width="123" height="263" viewBox="0 0 12
 <path id="BODY_FRONT_ARMHOLE_CIRCUMFERENCE" d="M120 111C120 111 108.698 111.1 98.8756 104.64C86.5 96.5 86 79.5 86 79.5L86 15" stroke="black"/>
 </g>
 </svg>`;
-const SVGPointEditor: React.FC = () => {
-  const [initialPoints, setInitialPoints] = useState<Point[]>([]);
-  const {
-    gridAdjustments,
-    handleGridAdjustment,
-    originalGridSpacing,
-    initialAdjustments,
-    resetAdjustments,
-    adjustedPoints,
-  } = useAdjuestment(initialPoints);
 
-  const { adjustedPaths, initialPathDefinitions } = useAdjustedPaths({
-    adjustedPoints,
-    initialPoints,
-  });
+export function AdjustmentEditor() {
+  const [pathDefs, setPathDefs] = useState<PathDefinition[]>([]);
+  const [gridPoints, setGridPoints] = useState<Point[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // SVG 파싱
+    // 클라이언트 사이드에서만 SVG 파싱 실행
     const parsedPaths = analyzeSVGPaths(initialSvgContent);
     const gridPoints = getGridPointsFromPaths(parsedPaths);
 
@@ -65,20 +56,42 @@ const SVGPointEditor: React.FC = () => {
       })
       .filter((pathDef): pathDef is PathDefinition => pathDef !== null);
 
-    setInitialPoints(gridPoints);
-    initialPathDefinitions(pathDefs);
-
-    if (gridPoints.length > 0) {
-      initialAdjustments(gridPoints);
-    }
+    setPathDefs(pathDefs);
+    setGridPoints(gridPoints);
+    setIsLoading(false);
   }, []);
+
+  if (isLoading) {
+    return <div className="p-6">SVG 파싱 중...</div>;
+  }
+
+  return <SVGPointEditor pathDefs={pathDefs} gridPoints={gridPoints} />;
+}
+
+const SVGPointEditor: React.FC<{
+  pathDefs: PathDefinition[];
+  gridPoints: Point[];
+}> = ({ pathDefs, gridPoints }) => {
+  const {
+    gridAdjustments,
+    adjustedPoints,
+    originalGridSpacing,
+    handleGridAdjustment,
+    resetAdjustments,
+  } = useAdjuestment({ gridPoints });
+
+  const adjustedPaths = getAdjustedPath({
+    adjustedPoints,
+    gridPoints,
+    pathDefinitions: pathDefs,
+  });
 
   // 두 점 사이의 거리 계산
   const calculateDistance = (p1: Point, p2: Point): number => {
     return Math.sqrt(Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2));
   };
 
-  if (initialPoints.length === 0) {
+  if (gridPoints.length === 0) {
     return <div className="p-6">SVG 파싱 중...</div>;
   }
 
@@ -89,7 +102,6 @@ const SVGPointEditor: React.FC = () => {
       </h1>
 
       <div className="grid grid-cols-2 gap-6">
-        {/* 그리드 간격 조정 컨트롤 패널 */}
         <div className="bg-gray-50 p-4 rounded-lg">
           <h2 className="text-lg font-semibold mb-4">그리드 간격 조정</h2>
 
@@ -149,8 +161,7 @@ const SVGPointEditor: React.FC = () => {
           </div>
         </div>
 
-        {/* SVG 캔버스 */}
-        <div className="lg:col-span-3">
+        <div>
           <div className="bg-gray-100 p-4 rounded-lg">
             <h2 className="text-lg font-semibold mb-4">그리드 좌표 평면</h2>
 

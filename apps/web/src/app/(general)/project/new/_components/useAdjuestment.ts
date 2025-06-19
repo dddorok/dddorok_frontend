@@ -1,35 +1,37 @@
 import { numToAlpha, Point } from "@dddorok/utils";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 import { getAdjustedPoints } from "../_utils/adjustedPoints";
 import { extractUniqueCoordinates } from "../_utils/extractUniqueCoordinates";
 import { GridAdjustments, OriginalGridSpacing } from "../types";
 
-export const useAdjuestment = (initialPoints: Point[]) => {
-  const [gridAdjustments, setGridAdjustments] = useState<GridAdjustments>({});
-  const [originalGridSpacing, setOriginalGridSpacing] =
-    useState<OriginalGridSpacing>({});
+export const useAdjuestment = ({ gridPoints }: { gridPoints: Point[] }) => {
+  const { xs, ys } = extractUniqueCoordinates(gridPoints);
+  const originalGridSpacing = calculateOriginalSpacing(xs, ys);
 
-  const adjustedPoints = getAdjustedPoints(
-    initialPoints,
-    gridAdjustments,
-    originalGridSpacing
+  const [gridAdjustments, setGridAdjustments] = useState<GridAdjustments>(
+    createDefaultAdjustments(xs, ys)
   );
+  const [adjustedPoints, setAdjustedPoints] = useState<Point[]>([]);
 
-  const handleGridAdjustment = (gridKey: string, value: string): void => {
-    setGridAdjustments((prev) => ({
-      ...prev,
-      [gridKey]: parseFloat(value),
-    }));
+  const calculateAdjustedPoints = (): Point[] => {
+    if (
+      gridPoints.length === 0 ||
+      Object.keys(originalGridSpacing).length === 0
+    )
+      return [];
+
+    const points = getAdjustedPoints(
+      gridPoints,
+      gridAdjustments,
+      originalGridSpacing
+    );
+
+    return points;
   };
 
-  const initialAdjustments = (initialPoints: Point[]) => {
-    const { xs, ys } = extractUniqueCoordinates(initialPoints);
-    const spacing = calculateOriginalSpacing(xs, ys);
-    const adjustments = createDefaultAdjustments(xs, ys);
-
-    setOriginalGridSpacing(spacing);
-    setGridAdjustments((prev) => ({ ...prev, ...adjustments }));
+  const handleGridAdjustment = (gridKey: string, value: string): void => {
+    setGridAdjustments((prev) => ({ ...prev, [gridKey]: parseFloat(value) }));
   };
 
   const resetAdjustments = (): void => {
@@ -40,11 +42,15 @@ export const useAdjuestment = (initialPoints: Point[]) => {
     setGridAdjustments(resetObj);
   };
 
+  useEffect(() => {
+    const points = calculateAdjustedPoints();
+    setAdjustedPoints(points);
+  }, [gridPoints, gridAdjustments]);
+
   return {
     gridAdjustments,
     handleGridAdjustment,
     originalGridSpacing,
-    initialAdjustments,
     resetAdjustments,
     adjustedPoints,
   };

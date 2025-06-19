@@ -11,6 +11,11 @@ export interface SvgPath {
 export const numToAlpha = (n: number) => String.fromCharCode(97 + n);
 
 export const analyzeSVGPaths = (content: string) => {
+  // 서버 사이드에서는 빈 배열 반환
+  if (typeof window === "undefined") {
+    return [];
+  }
+
   const parser = new DOMParser();
   const svgDoc = parser.parseFromString(content, "image/svg+xml");
   const pathElements = svgDoc.querySelectorAll("path");
