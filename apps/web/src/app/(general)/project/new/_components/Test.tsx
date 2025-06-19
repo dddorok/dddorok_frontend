@@ -11,9 +11,7 @@ import {
 } from "@dddorok/utils/chart/types";
 import React, { useState, useEffect } from "react";
 
-import { GridAdjustments, OriginalGridSpacing } from "../types";
 import { useAdjuestment } from "./useAdjuestment";
-import { useAdjustedPaths } from "./useAdjustedPaths";
 import { getAdjustedPath } from "../_utils/getAdjustedPath";
 
 interface AdjustedPath extends PathDefinition {
@@ -42,16 +40,11 @@ export function AdjustmentEditor() {
     const parsedPaths = analyzeSVGPaths(initialSvgContent);
     const gridPoints = getGridPointsFromPaths(parsedPaths);
 
-    // 색상 배열
-    const colors = ["#3b82f6", "#ef4444", "#10b981", "#f59e0b", "#8b5cf6"];
-
     // Path 정의 생성
     const pathDefs = parsedPaths
       .map((path: SvgPath, index: number): PathDefinition | null => {
         const pathDef = getPathDefs(path, gridPoints);
-        if (pathDef) {
-          pathDef.color = colors[index % colors.length] || "#000000";
-        }
+
         return pathDef;
       })
       .filter((pathDef): pathDef is PathDefinition => pathDef !== null);
@@ -86,9 +79,75 @@ const SVGPointEditor: React.FC<{
     pathDefinitions: pathDefs,
   });
 
+  // 조정 중인 상태 추적
+  const [isAdjusting, setIsAdjusting] = useState(false);
+  const [adjustingKey, setAdjustingKey] = useState<string | null>(null);
+
   // 두 점 사이의 거리 계산
   const calculateDistance = (p1: Point, p2: Point): number => {
     return Math.sqrt(Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2));
+  };
+
+  // path가 조정 중인지 확인하는 함수
+  const isPathBeingAdjusted = (path: AdjustedPath): boolean => {
+    if (!isAdjusting || !adjustingKey) return false;
+
+    // path의 시작점과 끝점이 조정 중인 그리드 간격에 포함되는지 확인
+    const startPoint = adjustedPoints.find(
+      (p) => p.x === path.start.x && p.y === path.start.y
+    );
+    const endPoint = adjustedPoints.find(
+      (p) => p.x === path.end.x && p.y === path.end.y
+    );
+
+    if (!startPoint || !endPoint) return false;
+
+    const [start, end] = adjustingKey.split("-");
+
+    // 행 간격 조정 중인 경우 (세로)
+    if (adjustingKey.match(/[a-z]/)) {
+      if (
+        startPoint.id[0] === start ||
+        startPoint.id[0] === end ||
+        endPoint.id[0] === start ||
+        endPoint.id[0] === end
+      ) {
+        return true;
+      }
+    }
+    // 열 간격 조정 중인 경우 (가로)
+    else {
+      if (
+        startPoint.id[1] === start ||
+        startPoint.id[1] === end ||
+        endPoint.id[1] === start ||
+        endPoint.id[1] === end
+      ) {
+        return true;
+      }
+    }
+
+    return false;
+  };
+
+  // path 색상 결정
+  const getPathColor = (path: AdjustedPath): string => {
+    if (isPathBeingAdjusted(path)) {
+      return "#ef4444"; // 빨간색
+    }
+    return path.color || "#000000";
+  };
+
+  // 조정 시작 핸들러
+  const handleAdjustStart = (key: string) => {
+    setIsAdjusting(true);
+    setAdjustingKey(key);
+  };
+
+  // 조정 종료 핸들러
+  const handleAdjustEnd = () => {
+    setIsAdjusting(false);
+    setAdjustingKey(null);
   };
 
   if (gridPoints.length === 0) {
@@ -119,12 +178,15 @@ const SVGPointEditor: React.FC<{
                 .map((rowKey: string) => (
                   <GapAdjustmentItem
                     key={rowKey}
+                    gridKey={rowKey}
                     label={rowKey.toUpperCase()}
                     initialValue={originalGridSpacing[rowKey]}
                     value={gridAdjustments[rowKey]}
                     handleGridAdjustment={(value) =>
                       handleGridAdjustment(rowKey, value)
                     }
+                    onAdjustStart={handleAdjustStart}
+                    onAdjustEnd={handleAdjustEnd}
                   />
                 ))}
             </div>
@@ -142,12 +204,15 @@ const SVGPointEditor: React.FC<{
                 .map((colKey: string) => (
                   <GapAdjustmentItem
                     key={colKey}
+                    gridKey={colKey}
                     label={colKey.toUpperCase()}
                     initialValue={originalGridSpacing[colKey]}
                     value={gridAdjustments[colKey]}
                     handleGridAdjustment={(value) =>
                       handleGridAdjustment(colKey, value)
                     }
+                    onAdjustStart={handleAdjustStart}
+                    onAdjustEnd={handleAdjustEnd}
                   />
                 ))}
             </div>
@@ -251,6 +316,8 @@ const SVGPointEditor: React.FC<{
 
               {/* 패스 라인들 */}
               {adjustedPaths.map((pathData: AdjustedPath) => {
+                const pathColor = getPathColor(pathData);
+
                 return (
                   <g key={`path-${pathData.id}`}>
                     {pathData.type === "curve" &&
@@ -259,7 +326,7 @@ const SVGPointEditor: React.FC<{
                       <path
                         d={`M ${pathData.start.x} ${pathData.start.y} C ${pathData?.adjustedControlPoints[0]?.x} ${pathData?.adjustedControlPoints[0]?.y} ${pathData?.adjustedControlPoints[1]?.x} ${pathData?.adjustedControlPoints[1]?.y} ${pathData.end.x} ${pathData.end.y}`}
                         fill="none"
-                        stroke={pathData.color}
+                        stroke={pathColor}
                         strokeWidth="4"
                       />
                     ) : (
@@ -269,7 +336,7 @@ const SVGPointEditor: React.FC<{
                         y1={pathData.start.y}
                         x2={pathData.end.x}
                         y2={pathData.end.y}
-                        stroke={pathData.color}
+                        stroke={pathColor}
                         strokeWidth="4"
                       />
                     )}
@@ -285,9 +352,9 @@ const SVGPointEditor: React.FC<{
                                   cx={cp.x}
                                   cy={cp.y}
                                   r="2"
-                                  fill={pathData.color}
+                                  fill={pathColor}
                                   fillOpacity="0.5"
-                                  stroke={pathData.color}
+                                  stroke={pathColor}
                                   strokeWidth="1"
                                 />
                                 <line
@@ -303,7 +370,7 @@ const SVGPointEditor: React.FC<{
                                   }
                                   x2={cp.x}
                                   y2={cp.y}
-                                  stroke={pathData.color}
+                                  stroke={pathColor}
                                   strokeWidth="1"
                                   strokeDasharray="2,2"
                                   strokeOpacity="0.5"
@@ -319,7 +386,7 @@ const SVGPointEditor: React.FC<{
                       x={(pathData.start.x + pathData.end.x) / 2}
                       y={(pathData.start.y + pathData.end.y) / 2 - 15}
                       fontSize="9"
-                      fill={pathData.color}
+                      fill={pathColor}
                       textAnchor="middle"
                       className="pointer-events-none select-none font-bold"
                     >
@@ -373,68 +440,36 @@ const SVGPointEditor: React.FC<{
               <p>• 회색 선: 그리드 라인</p>
               <p>• 검은 점: 그리드 포인트 (SVG에서 추출됨)</p>
               <p>• 컬러 굵은 선: SVG 패스 (곡선은 베지어 곡선으로 표시)</p>
+              <p>
+                • <span className="text-red-500 font-medium">빨간색 선</span>:
+                조정 중인 그리드 간격에 영향을 받는 패스
+              </p>
               <p>• 작은 컬러 점: 곡선의 제어점</p>
               <p>• 왼쪽 패널에서 행/열 간격을 조정하세요</p>
             </div>
           </div>
         </div>
       </div>
-
-      {/* 파싱된 데이터 정보 */}
-      {/* <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-gray-50 p-4 rounded-lg">
-          <h3 className="text-lg font-semibold mb-2">추출된 그리드 포인트</h3>
-          <pre className="bg-white p-3 rounded border text-sm overflow-x-auto max-h-40">
-            {JSON.stringify(adjustedPoints, null, 2)}
-          </pre>
-        </div>
-      </div> */}
     </div>
   );
 };
-
-export default SVGPointEditor;
-
-function RowGapAdjustment({
-  originalGridSpacing,
-  gridAdjustments,
-  handleGridAdjustment,
-}: {
-  originalGridSpacing: OriginalGridSpacing;
-  gridAdjustments: GridAdjustments;
-  handleGridAdjustment: (key: string, value: string) => void;
-}) {
-  return (
-    <div>
-      <h3 className="text-md font-medium mb-3 text-blue-600">행 간격 (세로)</h3>
-
-      {Object.keys(originalGridSpacing)
-        .filter((key: string) => key.includes("-") && key.match(/[a-z]/))
-        .map((rowKey: string) => (
-          <GapAdjustmentItem
-            key={rowKey}
-            label={rowKey.toUpperCase()}
-            initialValue={originalGridSpacing[rowKey]}
-            value={gridAdjustments[rowKey]}
-            handleGridAdjustment={(value) =>
-              handleGridAdjustment(rowKey, value)
-            }
-          />
-        ))}
-    </div>
-  );
-}
 
 function GapAdjustmentItem({
   initialValue,
   value,
   handleGridAdjustment,
   label,
+  gridKey,
+  onAdjustStart,
+  onAdjustEnd,
 }: {
   initialValue?: number;
   value?: number;
   label: string;
+  gridKey: string;
   handleGridAdjustment: (value: string) => void;
+  onAdjustStart: (key: string) => void;
+  onAdjustEnd: () => void;
 }) {
   return (
     <div className="mb-4">
@@ -449,6 +484,10 @@ function GapAdjustmentItem({
         step="0.1"
         value={value || 1}
         onChange={(e) => handleGridAdjustment(e.target.value)}
+        onMouseDown={() => onAdjustStart(gridKey)}
+        onTouchStart={() => onAdjustStart(gridKey)}
+        onMouseUp={onAdjustEnd}
+        onTouchEnd={onAdjustEnd}
         className="w-full"
       />
       <span className="text-xs text-gray-600">
@@ -457,3 +496,5 @@ function GapAdjustmentItem({
     </div>
   );
 }
+
+export default SVGPointEditor;
