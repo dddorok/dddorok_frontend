@@ -2,9 +2,9 @@
 import { isEmpty } from "@dddorok/utils";
 import { useRef, useState } from "react";
 
+import { AdjustmentEditor } from "./AdjustmentEditor";
 import Step1 from "./Step1";
 import Step2 from "./Step2";
-import SVGPointEditor, { AdjustmentEditor } from "./Test";
 
 import { cn } from "@/lib/utils";
 
