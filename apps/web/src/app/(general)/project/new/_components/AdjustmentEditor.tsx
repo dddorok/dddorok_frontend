@@ -11,7 +11,11 @@ import {
 } from "@dddorok/utils/chart/types";
 import React, { useState, useEffect } from "react";
 
-import { AdjustmentProvider, useAdjustmentContext } from "./AdjustmentProvider";
+import {
+  AdjustmentProvider,
+  useAdjustmentContext,
+  useAdjustmentProgressingContext,
+} from "./AdjustmentProvider";
 import { SliderSection } from "./korean-slider-component";
 import { useAdjuestment } from "./useAdjuestment";
 import { getAdjustedPath } from "../_utils/getAdjustedPath";
@@ -77,21 +81,8 @@ const SVGPointEditor = () => {
     adjustedPaths,
   } = useAdjustmentContext();
 
-  // 조정 중인 상태 추적
-  const [isAdjusting, setIsAdjusting] = useState(false);
-  const [adjustingKey, setAdjustingKey] = useState<string | null>(null);
-
-  // 조정 시작 핸들러
-  const handleAdjustStart = (key: string) => {
-    setIsAdjusting(true);
-    setAdjustingKey(key);
-  };
-
-  // 조정 종료 핸들러
-  const handleAdjustEnd = () => {
-    setIsAdjusting(false);
-    setAdjustingKey(null);
-  };
+  const { handleAdjustStart, handleAdjustEnd } =
+    useAdjustmentProgressingContext();
 
   const [selectedValueType, setSelectedValueType] = useState<string>("row");
 
@@ -113,8 +104,6 @@ const SVGPointEditor = () => {
             <GridCoordinatePlane
               adjustedPoints={adjustedPoints}
               adjustedPaths={adjustedPaths}
-              isAdjusting={isAdjusting}
-              adjustingKey={adjustingKey}
             />
           </div>
         </div>
@@ -174,14 +163,16 @@ const SVGPointEditor = () => {
 function GridCoordinatePlane({
   adjustedPoints,
   adjustedPaths,
-  isAdjusting,
-  adjustingKey,
+  // isAdjusting,
+  // adjustingKey,
 }: {
   adjustedPoints: Point[];
   adjustedPaths: AdjustedPath[];
-  isAdjusting: boolean;
-  adjustingKey: string | null;
+  // isAdjusting: boolean;
+  // adjustingKey: string | null;
 }) {
+  const { adjustingKey } = useAdjustmentProgressingContext();
+
   // 두 점 사이의 거리 계산
   const calculateDistance = (p1: Point, p2: Point): number => {
     return Math.sqrt(Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2));
@@ -199,7 +190,7 @@ function GridCoordinatePlane({
 
   // path가 조정 중인지 확인하는 함수
   const isPathBeingAdjusted = (path: AdjustedPath): boolean => {
-    if (!isAdjusting || !adjustingKey) return false;
+    if (!adjustingKey) return false;
 
     // path의 시작점과 끝점이 조정 중인 그리드 간격에 포함되는지 확인
     const startPoint = adjustedPoints.find(
