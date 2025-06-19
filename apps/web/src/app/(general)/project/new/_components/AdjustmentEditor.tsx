@@ -11,10 +11,12 @@ import {
 } from "@dddorok/utils/chart/types";
 import React, { useState, useEffect } from "react";
 
+import { AdjustmentProvider, useAdjustmentContext } from "./AdjustmentProvider";
 import { SliderSection } from "./korean-slider-component";
-import { GridAdjustments, OriginalGridSpacing } from "../types";
 import { useAdjuestment } from "./useAdjuestment";
 import { getAdjustedPath } from "../_utils/getAdjustedPath";
+
+import { cn } from "@/lib/utils";
 
 interface AdjustedPath extends PathDefinition {
   start: Point;
@@ -42,16 +44,10 @@ export function AdjustmentEditor() {
     const parsedPaths = analyzeSVGPaths(initialSvgContent);
     const gridPoints = getGridPointsFromPaths(parsedPaths);
 
-    // 색상 배열
-    const colors = ["#3b82f6", "#ef4444", "#10b981", "#f59e0b", "#8b5cf6"];
-
     // Path 정의 생성
     const pathDefs = parsedPaths
-      .map((path: SvgPath, index: number): PathDefinition | null => {
+      .map((path: SvgPath): PathDefinition | null => {
         const pathDef = getPathDefs(path, gridPoints);
-        if (pathDef) {
-          pathDef.color = colors[index % colors.length] || "#000000";
-        }
         return pathDef;
       })
       .filter((pathDef): pathDef is PathDefinition => pathDef !== null);
@@ -65,26 +61,21 @@ export function AdjustmentEditor() {
     return <div className="p-6">SVG 파싱 중...</div>;
   }
 
-  return <SVGPointEditor pathDefs={pathDefs} gridPoints={gridPoints} />;
+  return (
+    <AdjustmentProvider gridPoints={gridPoints} pathDefs={pathDefs}>
+      <SVGPointEditor />
+    </AdjustmentProvider>
+  );
 }
 
-const SVGPointEditor: React.FC<{
-  pathDefs: PathDefinition[];
-  gridPoints: Point[];
-}> = ({ pathDefs, gridPoints }) => {
+const SVGPointEditor = () => {
   const {
     gridAdjustments,
     adjustedPoints,
     originalGridSpacing,
     handleGridAdjustment,
-    resetAdjustments,
-  } = useAdjuestment({ gridPoints });
-
-  const adjustedPaths = getAdjustedPath({
-    adjustedPoints,
-    gridPoints,
-    pathDefinitions: pathDefs,
-  });
+    adjustedPaths,
+  } = useAdjustmentContext();
 
   // 조정 중인 상태 추적
   const [isAdjusting, setIsAdjusting] = useState(false);
@@ -102,16 +93,19 @@ const SVGPointEditor: React.FC<{
     setAdjustingKey(null);
   };
 
-  if (gridPoints.length === 0) {
-    return <div className="p-6">SVG 파싱 중...</div>;
-  }
+  const [selectedValueType, setSelectedValueType] = useState<string>("row");
+
+  const rowKeys = Object.keys(originalGridSpacing).filter(
+    (key: string) => key.includes("-") && key.match(/[a-z]/)
+  );
+  const colKeys = Object.keys(originalGridSpacing).filter(
+    (key: string) => key.includes("-") && !key.match(/[a-z]/)
+  );
+
+  const controlKeys = selectedValueType === "row" ? rowKeys : colKeys;
 
   return (
     <div className="w-full max-w-7xl mx-auto p-6 bg-white">
-      <h1 className="text-2xl font-bold mb-6 text-center">
-        SVG 그리드 간격 조정 편집기
-      </h1>
-
       <div className="grid grid-cols-2 gap-6">
         <div>
           <div className="bg-gray-100 p-4 rounded-lg">
@@ -126,73 +120,50 @@ const SVGPointEditor: React.FC<{
         </div>
 
         <div className="bg-gray-50 p-4 rounded-lg">
-          <h2 className="text-lg font-semibold mb-4">그리드 간격 조정</h2>
+          <div className="flex gap-4 mb-4 pt-4 pb-2 justify-center">
+            {["row", "col"].map((valueType) => (
+              <button
+                key={valueType}
+                onClick={() => setSelectedValueType(valueType)}
+                className={cn(
+                  "h-9 px-4 text-medium-r border-neutral-N400 border text-neutral-N500 rounded-md ",
+                  selectedValueType === valueType &&
+                    "bg-primary-PR text-[#FFFFFF] text-medium-b border-primary-PR"
+                )}
+              >
+                {valueType}
+              </button>
+            ))}
+          </div>
 
           <div className="space-y-6">
             {/* 행 간격 조정 */}
             <div>
-              <h3 className="text-md font-medium mb-3 text-blue-600">
-                행 간격 (세로)
-              </h3>
-
-              {Object.keys(originalGridSpacing)
-                .filter(
-                  (key: string) => key.includes("-") && key.match(/[a-z]/)
-                )
-                .map((rowKey: string) => (
-                  <SliderSection
-                    key={rowKey}
-                    label={rowKey.toUpperCase()}
-                    min={0.1}
-                    max={3}
-                    snapValues={[0.1, 0.5, 1, 1.5, 2, 2.5, 3]}
-                    initialValue={gridAdjustments[rowKey] || 1}
-                    average={1}
-                    code={rowKey}
-                    onValueChange={(value) =>
-                      handleGridAdjustment(rowKey, value.toString())
-                    }
-                    onAdjustStart={() => handleAdjustStart(rowKey)}
-                    onAdjustEnd={handleAdjustEnd}
-                  />
-                ))}
+              {controlKeys.map((rowKey: string) => (
+                <SliderSection
+                  key={rowKey}
+                  label={rowKey.toUpperCase()}
+                  min={0.1}
+                  max={3}
+                  snapValues={[0.1, 0.5, 1, 1.5, 2, 2.5, 3]}
+                  initialValue={gridAdjustments[rowKey] || 1}
+                  average={1}
+                  code={rowKey}
+                  onValueChange={(value) =>
+                    handleGridAdjustment(rowKey, value.toString())
+                  }
+                  onAdjustStart={() => handleAdjustStart(rowKey)}
+                  onAdjustEnd={handleAdjustEnd}
+                />
+              ))}
             </div>
 
-            {/* 열 간격 조정 */}
-            <div className="border-t pt-4">
-              <h3 className="text-md font-medium mb-3 text-green-600">
-                열 간격 (가로)
-              </h3>
-
-              {Object.keys(originalGridSpacing)
-                .filter(
-                  (key: string) => key.includes("-") && !key.match(/[a-z]/)
-                )
-                .map((colKey: string) => (
-                  <SliderSection
-                    key={colKey}
-                    label={colKey.toUpperCase()}
-                    min={0.1}
-                    max={3}
-                    snapValues={[0.1, 0.5, 1, 1.5, 2, 2.5, 3]}
-                    initialValue={gridAdjustments[colKey] || 1}
-                    average={1}
-                    code={colKey}
-                    onValueChange={(value) =>
-                      handleGridAdjustment(colKey, value.toString())
-                    }
-                    onAdjustStart={() => handleAdjustStart(colKey)}
-                    onAdjustEnd={handleAdjustEnd}
-                  />
-                ))}
-            </div>
-
-            <button
+            {/* <button
               onClick={resetAdjustments}
               className="w-full px-3 py-2 bg-blue-500 text-white rounded text-sm hover:bg-blue-600"
             >
               모든 조정값 리셋
-            </button>
+            </button> */}
           </div>
         </div>
       </div>
@@ -367,7 +338,7 @@ function GridCoordinatePlane({
                   d={`M ${pathData.start.x} ${pathData.start.y} C ${pathData?.adjustedControlPoints[0]?.x} ${pathData?.adjustedControlPoints[0]?.y} ${pathData?.adjustedControlPoints[1]?.x} ${pathData?.adjustedControlPoints[1]?.y} ${pathData.end.x} ${pathData.end.y}`}
                   fill="none"
                   stroke={pathColor}
-                  strokeWidth="4"
+                  strokeWidth="1"
                 />
               ) : (
                 // 직선
@@ -377,7 +348,7 @@ function GridCoordinatePlane({
                   x2={pathData.end.x}
                   y2={pathData.end.y}
                   stroke={pathColor}
-                  strokeWidth="4"
+                  strokeWidth="1"
                 />
               )}
 

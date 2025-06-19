@@ -24,13 +24,12 @@ export default function NewProjectClient({
     gauge_dan: 0,
     chest_width: 0,
   });
-  const [step, setStep] = useState(1);
-  console.log(isEmpty());
+  const [step, setStep] = useState(2);
 
   return (
     <>
-      <AdjustmentEditor />
-      {/* {step === 1 && (
+      {/* <AdjustmentEditor /> */}
+      {step === 1 && (
         <div className=" space-y-2 w-[450px]">
           <h3 className="text-h3 text-primary-PR py-[10px] text-center">
             Step 1. 가슴둘레/게이지 입력
@@ -59,7 +58,7 @@ export default function NewProjectClient({
             />
           </div>
         </div>
-      )} */}
+      )}
     </>
   );
 }
