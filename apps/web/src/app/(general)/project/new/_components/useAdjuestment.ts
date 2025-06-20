@@ -5,12 +5,21 @@ import { getAdjustedPoints } from "../_utils/adjustedPoints";
 import { extractUniqueCoordinates } from "../_utils/extractUniqueCoordinates";
 import { GridAdjustments, OriginalGridSpacing } from "../types";
 
-export const useAdjuestment = ({ gridPoints }: { gridPoints: Point[] }) => {
+export const useAdjuestment = ({
+  gridPoints,
+  sliderData,
+}: {
+  gridPoints: Point[];
+  sliderData: any[];
+}) => {
   const { xs, ys } = extractUniqueCoordinates(gridPoints);
   const originalGridSpacing = calculateOriginalSpacing(xs, ys);
 
   const [gridAdjustments, setGridAdjustments] = useState<GridAdjustments>(
-    createDefaultAdjustments(xs, ys)
+    sliderData.reduce((acc, slider) => {
+      acc[slider.control] = slider.initialValue;
+      return acc;
+    }, {} as GridAdjustments)
   );
   const [adjustedPoints, setAdjustedPoints] = useState<Point[]>([]);
 

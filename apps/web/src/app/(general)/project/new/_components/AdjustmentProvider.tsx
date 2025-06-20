@@ -46,10 +46,12 @@ export function AdjustmentProvider({
   children,
   gridPoints,
   pathDefs,
+  sliderData,
 }: {
   children: React.ReactNode;
   gridPoints: Point[];
   pathDefs: PathDefinition[];
+  sliderData: any[];
 }) {
   const {
     gridAdjustments,
@@ -57,7 +59,7 @@ export function AdjustmentProvider({
     originalGridSpacing,
     handleGridAdjustment,
     resetAdjustments,
-  } = useAdjuestment({ gridPoints });
+  } = useAdjuestment({ gridPoints, sliderData });
 
   const adjustedPaths = getAdjustedPath({
     adjustedPoints,

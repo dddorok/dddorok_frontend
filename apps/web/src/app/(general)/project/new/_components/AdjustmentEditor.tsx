@@ -20,6 +20,74 @@ import { SliderSection } from "./korean-slider-component";
 
 import { cn } from "@/lib/utils";
 
+const sliderData = [
+  // COLS (WIDTH)
+  {
+    control: "1-2",
+    min: 0.1,
+    max: 3,
+    snapValues: [0.1, 0.5, 1, 1.5, 2, 2.5, 3],
+    initialValue: 1,
+    average: 1,
+    value_type: "col",
+  },
+  {
+    control: "2-3",
+    min: 0.1,
+    max: 3,
+    snapValues: [0.1, 0.5, 1, 1.5, 2, 2.5, 3],
+    initialValue: 1,
+    average: 1,
+    value_type: "col",
+  },
+  {
+    control: "3-4",
+    min: 0.1,
+    max: 3,
+    snapValues: [0.1, 0.5, 1, 1.5, 2, 2.5, 3],
+    initialValue: 1,
+    average: 1,
+    value_type: "col",
+  },
+  // ROWS (LENGTH)
+  {
+    control: "a-b",
+    min: 0.1,
+    max: 3,
+    snapValues: [0.1, 0.5, 1, 1.5, 2, 2.5, 3],
+    initialValue: 0.1,
+    average: 1,
+    value_type: "row",
+  },
+  {
+    control: "b-c",
+    min: 0.1,
+    max: 3,
+    snapValues: [0.1, 0.5, 1, 1.5, 2, 2.5, 3],
+    initialValue: 0.5,
+    average: 1,
+    value_type: "row",
+  },
+  {
+    control: "c-d",
+    min: 0.1,
+    max: 3,
+    snapValues: [0.1, 0.5, 1, 1.5, 2, 2.5, 3],
+    initialValue: 1.0,
+    average: 1,
+    value_type: "row",
+  },
+  {
+    control: "d-e",
+    min: 0.1,
+    max: 3,
+    snapValues: [0.1, 0.5, 1, 1.5, 2, 2.5, 3],
+    initialValue: 1.0,
+    average: 1,
+    value_type: "row",
+  },
+];
+
 interface AdjustedPath extends PathDefinition {
   start: Point;
   end: Point;
@@ -64,29 +132,25 @@ export function AdjustmentEditor() {
   }
 
   return (
-    <AdjustmentProvider gridPoints={gridPoints} pathDefs={pathDefs}>
+    <AdjustmentProvider
+      gridPoints={gridPoints}
+      pathDefs={pathDefs}
+      sliderData={sliderData}
+    >
       <SVGPointEditor />
     </AdjustmentProvider>
   );
 }
 
 const SVGPointEditor = () => {
-  const { gridAdjustments, originalGridSpacing, handleGridAdjustment } =
-    useAdjustmentContext();
+  const { gridAdjustments, handleGridAdjustment } = useAdjustmentContext();
 
   const { handleAdjustStart, handleAdjustEnd } =
     useAdjustmentProgressingContext();
 
   const [selectedValueType, setSelectedValueType] = useState<string>("row");
 
-  const rowKeys = Object.keys(originalGridSpacing).filter(
-    (key: string) => key.includes("-") && key.match(/[a-z]/)
-  );
-  const colKeys = Object.keys(originalGridSpacing).filter(
-    (key: string) => key.includes("-") && !key.match(/[a-z]/)
-  );
-
-  const controlKeys = selectedValueType === "row" ? rowKeys : colKeys;
+  const sliders = sliderData.filter((s) => s.value_type === selectedValueType);
 
   return (
     <div className="w-full max-w-7xl mx-auto p-6 bg-white">
@@ -117,20 +181,22 @@ const SVGPointEditor = () => {
 
           <div className="space-y-6">
             <div>
-              {controlKeys.map((rowKey: string) => (
+              {sliders.map((slider) => (
                 <SliderSection
-                  key={rowKey}
-                  label={rowKey.toUpperCase()}
-                  min={0.1}
-                  max={3}
-                  snapValues={[0.1, 0.5, 1, 1.5, 2, 2.5, 3]}
-                  initialValue={gridAdjustments[rowKey] || 1}
-                  average={1}
-                  code={rowKey}
-                  onValueChange={(value) =>
-                    handleGridAdjustment(rowKey, value.toString())
+                  key={slider.control}
+                  label={slider.control.toUpperCase()}
+                  min={slider.min}
+                  max={slider.max}
+                  snapValues={slider.snapValues}
+                  initialValue={
+                    gridAdjustments[slider.control] ?? slider.initialValue
                   }
-                  onAdjustStart={() => handleAdjustStart(rowKey)}
+                  average={slider.average}
+                  code={slider.control}
+                  onValueChange={(value) =>
+                    handleGridAdjustment(slider.control, value.toString())
+                  }
+                  onAdjustStart={() => handleAdjustStart(slider.control)}
                   onAdjustEnd={handleAdjustEnd}
                 />
               ))}
@@ -362,7 +428,7 @@ function GridCoordinatePlane() {
               )}
 
               {/* 거리 표시 */}
-              {/* <text
+              <text
                 x={(pathData.start.x + pathData.end.x) / 2}
                 y={(pathData.start.y + pathData.end.y) / 2 - 15}
                 fontSize="9"
@@ -371,7 +437,7 @@ function GridCoordinatePlane() {
                 className="pointer-events-none select-none font-bold"
               >
                 {calculateDistance(pathData.start, pathData.end).toFixed(1)}
-              </text> */}
+              </text>
               {/* 패스 이름 */}
               <text
                 x={(pathData.start.x + pathData.end.x) / 2}
