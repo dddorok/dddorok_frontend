@@ -9,7 +9,7 @@ import {
   Point,
   ControlPoint,
 } from "@dddorok/utils/chart/types";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 
 import {
   AdjustmentProvider,
@@ -19,12 +19,71 @@ import {
 import { SliderSection } from "./korean-slider-component";
 
 import { cn } from "@/lib/utils";
+import { MeasurementType } from "@/services/template";
 
 interface AdjustedPath extends PathDefinition {
   start: Point;
   end: Point;
   adjustedControlPoints?: ControlPoint[];
 }
+
+// 더미 측정 데이터
+const DUMMY_MEASUREMENTS = [
+  {
+    code: "BODY_BACK_NECK_WIDTH",
+    label: "뒷목 너비",
+    value: 15,
+    min: 0,
+    max: 22,
+    range_toggle: true,
+    value_type: "WIDTH",
+  },
+  {
+    code: "BODY_SHOULDER_WIDTH",
+    label: "어깨 너비",
+    value: 21,
+    min: 20,
+    max: 48,
+    range_toggle: true,
+    value_type: "WIDTH",
+  },
+  {
+    code: "BODY_HEM_WIDTH",
+    label: "밑단 너비",
+    value: 32,
+    min: 5,
+    max: 10,
+    range_toggle: true,
+    value_type: "WIDTH",
+  },
+  {
+    code: "BODY_FRONT_NECK_LENGTH",
+    label: "앞목 길이",
+    value: 5.5,
+    min: 3,
+    max: 10,
+    range_toggle: true,
+    value_type: "LENGTH",
+  },
+  {
+    code: "BODY_ARMHOLE_LENGTH",
+    label: "진동 길이",
+    value: 13,
+    min: 0,
+    max: 30,
+    range_toggle: true,
+    value_type: "LENGTH",
+  },
+  {
+    code: "BODY_WAIST_LENGTH",
+    label: "허리 길이",
+    value: 24,
+    min: 0,
+    max: 40,
+    range_toggle: true,
+    value_type: "LENGTH",
+  },
+];
 
 const initialSvgContent: string = `<svg width="123" height="263" viewBox="0 0 123 263" fill="none" xmlns="http://www.w3.org/2000/svg">
 <g id="&#235;&#157;&#188;&#236;&#154;&#180;&#235;&#147;&#156;&#235;&#132;&#165; &#236;&#133;&#139;&#236;&#157;&#184;&#237;&#152;&#149; &#236;&#149;&#158;&#235;&#170;&#184;&#237;&#140;&#144;">
@@ -36,7 +95,12 @@ const initialSvgContent: string = `<svg width="123" height="263" viewBox="0 0 12
 </g>
 </svg>`;
 
-export function AdjustmentEditor() {
+export function AdjustmentEditor({
+  measurements,
+}: {
+  measurements: MeasurementType[];
+}) {
+  console.log("measurements: ", measurements);
   const [pathDefs, setPathDefs] = useState<PathDefinition[]>([]);
   const [gridPoints, setGridPoints] = useState<Point[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -86,6 +150,171 @@ const SVGPointEditor = () => {
     (key: string) => key.includes("-") && !key.match(/[a-z]/)
   );
 
+  // 측정 항목과 그리드 간격 매핑 정의 (더미 데이터 기반)
+  const measurementMap = useMemo(
+    () => ({
+      BODY_BACK_NECK_WIDTH: {
+        gridKeys: ["1-2"], // 1번과 2번 사이
+        displayKeys: ["1-2"], // 표시할 그리드 간격
+        label: "뒷목 너비",
+        value_type: "WIDTH",
+        baseValue: 15,
+        min: 0,
+        max: 22,
+      },
+      BODY_SHOULDER_WIDTH: {
+        gridKeys: ["1-2", "2-3"], // 실제 조절할 그리드 간격 (1~3번)
+        displayKeys: ["1-2", "2-3"], // 표시할 그리드 간격 (1~3번)
+        label: "어깨 너비",
+        value_type: "WIDTH",
+        baseValue: 21,
+        min: 20,
+        max: 48,
+      },
+      BODY_HEM_WIDTH: {
+        gridKeys: ["1-2", "2-3", "3-4"], // 1번과 4번 사이
+        displayKeys: ["1-2", "2-3", "3-4"], // 표시할 그리드 간격
+        label: "밑단 너비",
+        value_type: "WIDTH",
+        baseValue: 32,
+        min: 5,
+        max: 10,
+      },
+      BODY_FRONT_NECK_LENGTH: {
+        gridKeys: ["a-b"], // a번과 b번 사이
+        displayKeys: ["a-b"],
+        label: "앞목 길이",
+        value_type: "LENGTH",
+        baseValue: 5.5,
+        min: 3,
+        max: 10,
+      },
+      BODY_ARMHOLE_LENGTH: {
+        gridKeys: ["b-c"], // b번과 c번 사이
+        displayKeys: ["b-c"],
+        label: "진동 길이",
+        value_type: "LENGTH",
+        baseValue: 13,
+        min: 0,
+        max: 30,
+      },
+      BODY_WAIST_LENGTH: {
+        gridKeys: ["c-d"], // c번과 d번 사이
+        displayKeys: ["c-d"],
+        label: "허리 길이",
+        value_type: "LENGTH",
+        baseValue: 24,
+        min: 0,
+        max: 40,
+      },
+    }),
+    []
+  );
+
+  // measurementMap을 기반으로 동적으로 MeasurementData 생성 (useMemo로 성능 최적화)
+  const measurements = useMemo(() => {
+    return Object.entries(measurementMap).map(([code, config]) => {
+      // 실제 조절할 그리드 간격들의 합계 계산
+      const actualValue = config.gridKeys.reduce((sum, key) => {
+        return (
+          sum + (gridAdjustments[key] || 1) * (originalGridSpacing[key] || 0)
+        );
+      }, 0);
+
+      // 표시할 그리드 간격들의 합계 계산
+      const displayValue = config.displayKeys.reduce((sum, key) => {
+        return (
+          sum + (gridAdjustments[key] || 1) * (originalGridSpacing[key] || 0)
+        );
+      }, 0);
+
+      // 현재 조정값 계산 (실제 조절할 그리드 간격들의 평균)
+      const currentAdjustment =
+        config.gridKeys.reduce((sum, key) => {
+          return sum + (gridAdjustments[key] || 1);
+        }, 0) / config.gridKeys.length;
+
+      return {
+        code,
+        label: config.label,
+        value: Math.round(displayValue * 10) / 10, // 소수점 첫째자리까지
+        min: config.baseValue - config.min, // 슬라이더 최소값
+        max: config.baseValue + config.max, // 슬라이더 최대값
+        range_toggle: true,
+        value_type: config.value_type,
+        gridKeys: config.gridKeys,
+        displayKeys: config.displayKeys,
+        currentAdjustment: Math.round(currentAdjustment * 100) / 100, // 소수점 둘째자리까지
+        baseValue: config.baseValue, // 기본값 (평균값)
+      };
+    });
+  }, [measurementMap, gridAdjustments, originalGridSpacing]);
+
+  // 측정 항목별 슬라이더 렌더링 (useCallback으로 성능 최적화)
+  const renderMeasurementSliders = useCallback(() => {
+    return measurements.map((measurement) => {
+      // 해당 측정 항목이 현재 선택된 타입과 일치하는지 확인
+      const isRowType = measurement.value_type === "LENGTH";
+      const isColType = measurement.value_type === "WIDTH";
+
+      if (
+        (selectedValueType === "row" && !isRowType) ||
+        (selectedValueType === "col" && !isColType)
+      ) {
+        return null;
+      }
+
+      // measurementMap에서 해당 측정 항목의 설정 가져오기
+      const config =
+        measurementMap[measurement.code as keyof typeof measurementMap];
+
+      // min, max 값을 기반으로 0.5 간격의 snapValues 생성
+      const generateSnapValues = (min: number, max: number): number[] => {
+        const values: number[] = [];
+        for (let i = min; i <= max; i += 0.5) {
+          values.push(Math.round(i * 10) / 10); // 소수점 첫째자리까지 반올림
+        }
+        return values;
+      };
+
+      const snapValues = generateSnapValues(config.min, config.max);
+
+      return (
+        <SliderSection
+          key={measurement.code}
+          label={measurement.label}
+          min={config.min}
+          max={config.max}
+          snapValues={snapValues}
+          initialValue={config.baseValue}
+          average={config.baseValue}
+          code={measurement.code}
+          currentDisplayValue={measurement.value}
+          onValueChange={(value) => {
+            // 실제 조절할 그리드 간격들에 대해 동일한 값 적용
+            measurement.gridKeys.forEach((gridKey) => {
+              handleGridAdjustment(gridKey, value.toString());
+            });
+          }}
+          onAdjustStart={() => {
+            // 조정 시작 시 모든 관련 그리드 키를 표시
+            measurement.gridKeys.forEach((gridKey) => {
+              handleAdjustStart(gridKey);
+            });
+          }}
+          onAdjustEnd={handleAdjustEnd}
+        />
+      );
+    });
+  }, [
+    measurements,
+    selectedValueType,
+    measurementMap,
+    handleGridAdjustment,
+    handleAdjustStart,
+    handleAdjustEnd,
+  ]);
+
   const controlKeys = selectedValueType === "row" ? rowKeys : colKeys;
 
   return (
@@ -116,25 +345,7 @@ const SVGPointEditor = () => {
           </div>
 
           <div className="space-y-6">
-            <div>
-              {controlKeys.map((rowKey: string) => (
-                <SliderSection
-                  key={rowKey}
-                  label={rowKey.toUpperCase()}
-                  min={0.1}
-                  max={3}
-                  snapValues={[0.1, 0.5, 1, 1.5, 2, 2.5, 3]}
-                  initialValue={gridAdjustments[rowKey] || 1}
-                  average={1}
-                  code={rowKey}
-                  onValueChange={(value) =>
-                    handleGridAdjustment(rowKey, value.toString())
-                  }
-                  onAdjustStart={() => handleAdjustStart(rowKey)}
-                  onAdjustEnd={handleAdjustEnd}
-                />
-              ))}
-            </div>
+            <div>{renderMeasurementSliders()}</div>
           </div>
         </div>
       </div>

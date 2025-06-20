@@ -26,7 +26,6 @@ interface HeaderProps {
 
 export default function Header({ className }: HeaderProps) {
   const { data: myInfo } = useQuery(userQueries.myInfo());
-  console.log("myInfo: ", myInfo);
 
   return (
     <>

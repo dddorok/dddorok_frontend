@@ -17,6 +17,11 @@ const useSlider = ({
   const [isDragging, setIsDragging] = useState(false);
   const sliderRef = React.useRef<HTMLDivElement>(null);
 
+  // initialValue가 변경될 때마다 내부 상태 업데이트
+  useEffect(() => {
+    setValue(initialValue);
+  }, [initialValue]);
+
   const percentage = ((value - min) / (max - min)) * 100;
 
   const findClosestValue = React.useCallback(
@@ -150,6 +155,7 @@ interface SliderSectionProps {
   rightLabel?: string;
   average: number;
   code: string;
+  currentDisplayValue?: number;
   onValueChange?: (value: number) => void;
   onAdjustStart?: () => void;
   onAdjustEnd?: () => void;
@@ -165,6 +171,7 @@ export const SliderSection = ({
   rightLabel,
   average,
   code,
+  currentDisplayValue,
   onValueChange,
   onAdjustStart,
   onAdjustEnd,
@@ -223,7 +230,9 @@ export const SliderSection = ({
             )}
             style={{ left: `${percentage}%` }}
           >
-            {Math.round(value)}
+            {currentDisplayValue !== undefined
+              ? `${currentDisplayValue}px`
+              : `${Math.round(value)}`}
           </div>
           <div
             className="absolute transform -translate-x-1/2 top-[-28px]"
@@ -263,7 +272,7 @@ export const SliderSection = ({
             )}
             style={{ left: `${averagePercentage}%` }}
           >
-            평균 {average}
+            기본값
           </div>
         </div>
 

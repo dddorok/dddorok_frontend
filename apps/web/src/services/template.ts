@@ -40,17 +40,16 @@ export const getTemplates = async (request: GetTemplateListRequest) => {
     .json();
   return response.data;
 };
-export type MeasurementType = [
-  string,
-  {
-    code: string;
-    label: string;
-    value: number;
-    min: number;
-    max: number;
-    value_type: string;
-  },
-];
+export type MeasurementType = {
+  code: string;
+  label: string;
+  value: number;
+  min: number;
+  max: number;
+  value_type: "WIDTH" | "LENGTH";
+  value_type_label: string;
+  range_toggle: boolean;
+};
 
 export interface GetTemplateChartListResponse {
   template_id: string;
@@ -80,7 +79,7 @@ export interface GetTemplateChartListResponse {
       updated_date: string;
     };
   }[];
-  measurements: MeasurementType[];
+  measurements: [string, MeasurementType][];
 }
 
 export const getTemplateChartList = async (
