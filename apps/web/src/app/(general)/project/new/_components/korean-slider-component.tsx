@@ -223,7 +223,7 @@ export const SliderSection = ({
             )}
             style={{ left: `${percentage}%` }}
           >
-            {Math.round(value)}
+            {value.toFixed(1)}
           </div>
           <div
             className="absolute transform -translate-x-1/2 top-[-28px]"

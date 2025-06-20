@@ -15,12 +15,10 @@ export const getAdjustedPoints = (
   const adjustedXs = calculateAdjustedXs({
     xs,
     gridAdjustments,
-    originalGridSpacing,
   });
   const adjustedYs = calculateAdjustedYs({
     ys,
     gridAdjustments,
-    originalGridSpacing,
   });
 
   return generateGridPoints(adjustedXs, adjustedYs);
@@ -50,54 +48,60 @@ const generateGridPoints = (
 const calculateAdjustedXs = ({
   xs,
   gridAdjustments,
-  originalGridSpacing,
 }: {
   xs: number[];
   gridAdjustments: GridAdjustments;
-  originalGridSpacing: OriginalGridSpacing;
 }): number[] => {
+  if (xs.length < 2) return xs;
   const baseX = xs[0];
-  if (!baseX) return [];
+  if (baseX === undefined) return xs;
 
   const adjustedXs = [baseX];
+  const lastX = xs[xs.length - 1];
+  if (lastX === undefined) return xs;
+
+  const totalWidth = lastX - baseX;
+  const uniformSpacingX = totalWidth / (xs.length - 1);
 
   for (let i = 1; i < xs.length; i++) {
     const colKey = `${i}-${i + 1}`;
     const multiplier = gridAdjustments[colKey] || 1;
-    const originalSpacing =
-      originalGridSpacing[colKey] || (xs[i] || 0) - (xs[i - 1] || 0);
-    const adjustedSpacing = originalSpacing * multiplier;
-
-    adjustedXs.push((adjustedXs[i - 1] || 0) + adjustedSpacing);
+    const adjustedSpacing = uniformSpacingX * multiplier;
+    const prevX = adjustedXs[i - 1];
+    if (prevX === undefined) continue;
+    adjustedXs.push(prevX + adjustedSpacing);
   }
 
-  return adjustedXs;
+  return adjustedXs as number[];
 };
 
 // 조정된 Y 좌표들 계산
 const calculateAdjustedYs = ({
   ys,
   gridAdjustments,
-  originalGridSpacing,
 }: {
   ys: number[];
   gridAdjustments: GridAdjustments;
-  originalGridSpacing: OriginalGridSpacing;
 }): number[] => {
+  if (ys.length < 2) return ys;
   const baseY = ys[0];
-  if (!baseY) return [];
+  if (baseY === undefined) return ys;
 
   const adjustedYs = [baseY];
+  const lastY = ys[ys.length - 1];
+  if (lastY === undefined) return ys;
+
+  const totalHeight = lastY - baseY;
+  const uniformSpacingY = totalHeight / (ys.length - 1);
 
   for (let i = 1; i < ys.length; i++) {
     const rowKey = `${numToAlpha(i - 1)}-${numToAlpha(i)}`;
     const multiplier = gridAdjustments[rowKey] || 1;
-    const originalSpacing =
-      originalGridSpacing[rowKey] || (ys[i] || 0) - (ys[i - 1] || 0);
-    const adjustedSpacing = originalSpacing * multiplier;
-
-    adjustedYs.push((adjustedYs[i - 1] || 0) + adjustedSpacing);
+    const adjustedSpacing = uniformSpacingY * multiplier;
+    const prevY = adjustedYs[i - 1];
+    if (prevY === undefined) continue;
+    adjustedYs.push(prevY + adjustedSpacing);
   }
 
-  return adjustedYs;
+  return adjustedYs as number[];
 };

@@ -146,9 +146,15 @@ function GridCoordinatePlane() {
   const { adjustedPoints, adjustedPaths } = useAdjustmentContext();
   const { adjustingKey } = useAdjustmentProgressingContext();
 
-  // 두 점 사이의 거리 계산
+  // scale 설정 (기본값 10)
+  const scale = 10;
+
+  // 두 점 사이의 거리 계산 (scale 적용)
   const calculateDistance = (p1: Point, p2: Point): number => {
-    return Math.sqrt(Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2));
+    const distance = Math.sqrt(
+      Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2)
+    );
+    return distance * scale;
   };
 
   // viewBox 자동 계산
@@ -356,7 +362,7 @@ function GridCoordinatePlane() {
               )}
 
               {/* 거리 표시 */}
-              <text
+              {/* <text
                 x={(pathData.start.x + pathData.end.x) / 2}
                 y={(pathData.start.y + pathData.end.y) / 2 - 15}
                 fontSize="9"
@@ -365,8 +371,7 @@ function GridCoordinatePlane() {
                 className="pointer-events-none select-none font-bold"
               >
                 {calculateDistance(pathData.start, pathData.end).toFixed(1)}
-                px
-              </text>
+              </text> */}
               {/* 패스 이름 */}
               <text
                 x={(pathData.start.x + pathData.end.x) / 2}
