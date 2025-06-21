@@ -9,6 +9,15 @@ interface Pixel {
   disabled?: boolean; // 비활성화 셀 여부
 }
 
+// 복사된 영역 데이터 타입
+interface CopiedArea {
+  pixels: (Pixel | null)[][];
+  width: number;
+  height: number;
+  startRow: number;
+  startCol: number;
+}
+
 export interface DottingRef {
   clear: () => void;
   getPixels: () => (Pixel | null)[][];
@@ -18,11 +27,34 @@ export interface DottingRef {
   redo: () => void;
   canUndo: () => boolean;
   canRedo: () => boolean;
+  copySelectedArea: (
+    startRow: number,
+    startCol: number,
+    endRow: number,
+    endCol: number
+  ) => CopiedArea | null;
+  pasteArea: (
+    targetRow: number,
+    targetCol: number,
+    copiedArea: CopiedArea
+  ) => void;
+  getSelectedArea: () => {
+    startRow: number;
+    startCol: number;
+    endRow: number;
+    endCol: number;
+  } | null;
+  getPanZoomInfo: () => { panOffset: { x: number; y: number }; scale: number };
+  getGridPosition: (
+    canvasX: number,
+    canvasY: number
+  ) => { row: number; col: number };
 }
 
 export const useDotting = (ref: React.RefObject<DottingRef | null>) => {
   const [canUndoState, setCanUndoState] = useState(false);
   const [canRedoState, setCanRedoState] = useState(false);
+  const [copiedArea, setCopiedArea] = useState<CopiedArea | null>(null);
 
   // 상태 업데이트를 위한 함수
   const updateUndoRedoState = useCallback(() => {
@@ -91,6 +123,43 @@ export const useDotting = (ref: React.RefObject<DottingRef | null>) => {
     }
   }, [ref, updateUndoRedoState]);
 
+  // 복사 기능
+  const copy = useCallback(() => {
+    if (ref.current) {
+      const selectedArea = ref.current.getSelectedArea();
+      console.log("복사 시도, selectedArea:", selectedArea);
+
+      if (selectedArea) {
+        const copied = ref.current.copySelectedArea(
+          selectedArea.startRow,
+          selectedArea.startCol,
+          selectedArea.endRow,
+          selectedArea.endCol
+        );
+        console.log("복사 결과:", copied);
+
+        if (copied) {
+          setCopiedArea(copied);
+          console.log("복사된 영역 설정됨:", copied);
+        }
+      }
+    }
+  }, [ref]);
+
+  // 붙여넣기 기능
+  const paste = useCallback(
+    (targetRow: number, targetCol: number) => {
+      console.log("붙여넣기 시도:", { targetRow, targetCol, copiedArea });
+
+      if (ref.current && copiedArea) {
+        ref.current.pasteArea(targetRow, targetCol, copiedArea);
+        setTimeout(updateUndoRedoState, 10);
+        console.log("붙여넣기 완료");
+      }
+    },
+    [ref, copiedArea, updateUndoRedoState]
+  );
+
   return {
     clear,
     getPixels,
@@ -99,5 +168,8 @@ export const useDotting = (ref: React.RefObject<DottingRef | null>) => {
     redo,
     canUndo: canUndoState,
     canRedo: canRedoState,
+    copy,
+    paste,
+    copiedArea,
   };
 };

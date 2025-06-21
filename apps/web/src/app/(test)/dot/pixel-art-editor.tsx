@@ -56,6 +56,15 @@ interface SelectedArea {
   endCol: number;
 }
 
+// 복사된 영역 데이터 타입
+interface CopiedArea {
+  pixels: (Pixel | null)[][];
+  width: number;
+  height: number;
+  startRow: number;
+  startCol: number;
+}
+
 interface DottingProps {
   rows?: number;
   cols?: number;
@@ -78,6 +87,7 @@ interface DottingProps {
   initialCells?: InitialCellData[]; // 초기 선택된 셀 데이터
   disabledCells?: { row: number; col: number }[]; // 초기 비활성화 셀 데이터
   disabledCellColor?: string; // 비활성화 셀 색상
+  onClick?: (e: React.MouseEvent<HTMLCanvasElement>) => void; // 클릭 이벤트 핸들러
 }
 
 interface DottingRef {
@@ -89,6 +99,28 @@ interface DottingRef {
   redo: () => void;
   canUndo: () => boolean;
   canRedo: () => boolean;
+  copySelectedArea: (
+    startRow: number,
+    startCol: number,
+    endRow: number,
+    endCol: number
+  ) => CopiedArea | null;
+  pasteArea: (
+    targetRow: number,
+    targetCol: number,
+    copiedArea: CopiedArea
+  ) => void;
+  getSelectedArea: () => {
+    startRow: number;
+    startCol: number;
+    endRow: number;
+    endCol: number;
+  } | null;
+  getPanZoomInfo: () => { panOffset: PanOffset; scale: number };
+  getGridPosition: (
+    canvasX: number,
+    canvasY: number
+  ) => { row: number; col: number };
 }
 
 const createPixel = (
@@ -178,9 +210,17 @@ const canDrawOnCell = (
   cols: number,
   pixels: (Pixel | null)[][]
 ): boolean => {
-  return (
-    isValidPosition(row, col, rows, cols) && !isCellDisabled(row, col, pixels)
-  );
+  const isValid = isValidPosition(row, col, rows, cols);
+  const isDisabled = isCellDisabled(row, col, pixels);
+  const canDraw = isValid && !isDisabled;
+
+  console.log(`canDrawOnCell [${row}][${col}]:`, {
+    isValid,
+    isDisabled,
+    canDraw,
+  });
+
+  return canDraw;
 };
 
 const filterDrawablePixels = (
@@ -202,17 +242,29 @@ const applyPixelWithDisabledCheck = (
   rows: number,
   cols: number
 ): void => {
-  if (!canDrawOnCell(row, col, rows, cols, newPixels)) return;
+  console.log(`applyPixelWithDisabledCheck 호출: [${row}][${col}]`, {
+    shape,
+    rows,
+    cols,
+  });
+
+  if (!canDrawOnCell(row, col, rows, cols, newPixels)) {
+    console.log(`셀 [${row}][${col}]에 그릴 수 없음`);
+    return;
+  }
 
   if (!newPixels[row]) newPixels[row] = [];
   const targetRow = newPixels[row];
   if (targetRow) {
     const existingDisabled = targetRow[col]?.disabled || false;
-    targetRow[col] = shape
+    const newPixel = shape
       ? createPixel(row, col, shape, existingDisabled)
       : existingDisabled
         ? createPixel(row, col, null, true)
         : null;
+
+    console.log(`픽셀 설정: [${row}][${col}]`, newPixel);
+    targetRow[col] = newPixel;
   }
 };
 
@@ -399,6 +451,7 @@ export const Dotting = forwardRef<DottingRef, DottingProps>(
       initialCells = [],
       disabledCells = [],
       disabledCellColor = "#f0f0f0",
+      onClick,
     },
     ref
   ) => {
@@ -537,6 +590,102 @@ export const Dotting = forwardRef<DottingRef, DottingProps>(
         redo,
         canUndo,
         canRedo,
+        copySelectedArea: (
+          startRow: number,
+          startCol: number,
+          endRow: number,
+          endCol: number
+        ) => {
+          if (startRow < 0 || startCol < 0 || endRow >= rows || endCol >= cols)
+            return null;
+          const selectedArea: SelectedArea = {
+            startRow,
+            startCol,
+            endRow,
+            endCol,
+          };
+          const copiedPixels = pixels
+            .slice(startRow, endRow + 1)
+            .map((row) => row.slice(startCol, endCol + 1));
+          const copiedArea: CopiedArea = {
+            pixels: copiedPixels,
+            width: endCol - startCol + 1,
+            height: endRow - startRow + 1,
+            startRow,
+            startCol,
+          };
+          return copiedArea;
+        },
+        pasteArea: (
+          targetRow: number,
+          targetCol: number,
+          copiedArea: CopiedArea
+        ) => {
+          console.log("pasteArea 호출됨:", {
+            targetRow,
+            targetCol,
+            copiedArea,
+          });
+
+          if (
+            targetRow < 0 ||
+            targetCol < 0 ||
+            targetRow + copiedArea.height > rows ||
+            targetCol + copiedArea.width > cols
+          ) {
+            console.log("붙여넣기 범위 초과");
+            return;
+          }
+
+          setPixels((prev) => {
+            console.log("이전 픽셀 상태:", prev);
+            const newPixels = [...prev];
+
+            for (let row = 0; row < copiedArea.height; row++) {
+              for (let col = 0; col < copiedArea.width; col++) {
+                const pixel = copiedArea.pixels[row]?.[col];
+                console.log(`복사된 픽셀 [${row}][${col}]:`, pixel);
+
+                if (pixel) {
+                  const targetRowIndex = targetRow + row;
+                  const targetColIndex = targetCol + col;
+                  console.log(
+                    `붙여넣기 위치 [${targetRowIndex}][${targetColIndex}]:`,
+                    pixel.shape
+                  );
+
+                  applyPixelWithDisabledCheck(
+                    newPixels,
+                    targetRowIndex,
+                    targetColIndex,
+                    pixel.shape,
+                    rows,
+                    cols
+                  );
+                }
+              }
+            }
+
+            console.log("새로운 픽셀 상태:", newPixels);
+            return newPixels;
+          });
+
+          // 붙여넣기 완료 후 히스토리 저장
+          setTimeout(() => {
+            console.log("히스토리 저장 시도");
+            saveToHistory(pixels);
+          }, 100);
+        },
+        getSelectedArea: () => selectedArea || null,
+        getPanZoomInfo: () => ({ panOffset, scale }),
+        getGridPosition: (canvasX: number, canvasY: number) => {
+          // 패닝과 줌을 고려한 그리드 위치 계산
+          const adjustedX = (canvasX - panOffset.x) / scale;
+          const adjustedY = (canvasY - panOffset.y) / scale;
+          const col = Math.floor(adjustedX / gridSquareLength);
+          const row = Math.floor(adjustedY / gridSquareLength);
+          return { row, col };
+        },
       }),
       [
         pixels,
@@ -549,6 +698,9 @@ export const Dotting = forwardRef<DottingRef, DottingProps>(
         canUndo,
         canRedo,
         saveToHistory,
+        selectedArea,
+        panOffset,
+        scale,
       ]
     );
 
@@ -1024,6 +1176,7 @@ export const Dotting = forwardRef<DottingRef, DottingProps>(
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseUp}
+        onClick={onClick}
       />
     );
   }

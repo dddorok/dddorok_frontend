@@ -28,6 +28,8 @@ interface Pixel {
   shape: Shape | null;
 }
 
+interface CellType {}
+
 // 도형 선택 컴포넌트
 const ShapeSelector: React.FC<{
   shapes: Shape[];
@@ -164,9 +166,27 @@ const PixelArtEditor: React.FC = () => {
   );
   const [shapes, setShapes] = useState<Shape[]>(KNITTING_SYMBOLS);
   const dottingRef = useRef<DottingRef | null>(null);
-  const { clear, exportImage, undo, redo, canUndo, canRedo } =
-    useDotting(dottingRef);
+  const {
+    clear,
+    exportImage,
+    undo,
+    redo,
+    canUndo,
+    canRedo,
+    copy,
+    paste,
+    copiedArea,
+  } = useDotting(dottingRef);
+  const [isPasteMode, setIsPasteMode] = useState(false);
+  const [activeCells, setActiveCells] = useState<{
+    clicked: { row: number; col: number; shape: Shape | null } | null;
+    selected: Array<{ row: number; col: number; shape: Shape | null }>;
+  }>({
+    clicked: null,
+    selected: [],
+  });
 
+  console.log("activeCells: ", activeCells);
   // 초기 셀 데이터 예시
   const initialCells = [
     { row: 1, col: 1, shape: KNITTING_SYMBOLS[0] }, // 뜨기
@@ -195,6 +215,162 @@ const PixelArtEditor: React.FC = () => {
     setShapes((prev) => [...prev, newShape]);
   };
 
+  // 선택된 셀 정보 업데이트 함수
+  const updateSelectedCells = useCallback(() => {
+    // 선택 모드일 때만 선택된 셀 정보 업데이트
+    if (brushTool === BrushTool.SELECT && dottingRef.current) {
+      const pixels = dottingRef.current.getPixels();
+      const selectedArea = dottingRef.current.getSelectedArea();
+
+      if (selectedArea) {
+        const cells: Array<{ row: number; col: number; shape: Shape | null }> =
+          [];
+
+        for (
+          let row = selectedArea.startRow;
+          row <= selectedArea.endRow;
+          row++
+        ) {
+          for (
+            let col = selectedArea.startCol;
+            col <= selectedArea.endCol;
+            col++
+          ) {
+            const pixel = pixels[row]?.[col];
+            if (pixel) {
+              cells.push({
+                row: pixel.rowIndex,
+                col: pixel.columnIndex,
+                shape: pixel.shape,
+              });
+            }
+          }
+        }
+
+        // 이전 상태와 비교하여 변경사항이 있을 때만 업데이트
+        setActiveCells((prev) => {
+          if (JSON.stringify(prev.selected) !== JSON.stringify(cells)) {
+            console.log("선택된 셀 업데이트:", cells);
+            return {
+              ...prev,
+              selected: cells,
+            };
+          }
+          return prev;
+        });
+      } else {
+        setActiveCells((prev) => {
+          if (prev.selected.length > 0) {
+            return {
+              ...prev,
+              selected: [],
+            };
+          }
+          return prev;
+        });
+      }
+    } else {
+      // 선택 모드가 아닐 때는 선택된 셀 초기화
+      setActiveCells((prev) => {
+        if (prev.selected.length > 0) {
+          return {
+            ...prev,
+            selected: [],
+          };
+        }
+        return prev;
+      });
+    }
+  }, [brushTool]);
+
+  // 클릭된 셀 정보 업데이트 함수
+  const updateClickedCell = useCallback((row: number, col: number) => {
+    if (dottingRef.current) {
+      const pixels = dottingRef.current.getPixels();
+      const pixel = pixels[row]?.[col];
+
+      const clickedCellInfo = pixel
+        ? {
+            row: pixel.rowIndex,
+            col: pixel.columnIndex,
+            shape: pixel.shape,
+          }
+        : {
+            row,
+            col,
+            shape: null,
+          };
+
+      // 이전 상태와 비교하여 변경사항이 있을 때만 업데이트
+      setActiveCells((prev) => {
+        if (
+          !prev.clicked ||
+          prev.clicked.row !== clickedCellInfo.row ||
+          prev.clicked.col !== clickedCellInfo.col ||
+          prev.clicked.shape?.id !== clickedCellInfo.shape?.id
+        ) {
+          console.log("클릭된 셀 업데이트:", clickedCellInfo);
+          return {
+            ...prev,
+            clicked: clickedCellInfo,
+          };
+        }
+        return prev;
+      });
+    }
+  }, []);
+
+  // 붙여넣기 모드 토글
+  const handlePasteToggle = useCallback(() => {
+    if (copiedArea) {
+      const newPasteMode = !isPasteMode;
+      setIsPasteMode(newPasteMode);
+      console.log("붙여넣기 모드:", newPasteMode);
+    }
+  }, [copiedArea, isPasteMode]);
+
+  // 캔버스 클릭 핸들러 (붙여넣기용)
+  const handleCanvasClick = useCallback(
+    (e: React.MouseEvent) => {
+      console.log(
+        "캔버스 클릭됨, copiedArea:",
+        copiedArea,
+        "isPasteMode:",
+        isPasteMode
+      );
+
+      const canvas = e.currentTarget as HTMLCanvasElement;
+      const rect = canvas.getBoundingClientRect();
+
+      // 캔버스 좌표 계산
+      const canvasX = e.clientX - rect.left;
+      const canvasY = e.clientY - rect.top;
+
+      console.log("캔버스 좌표:", { canvasX, canvasY });
+
+      // Dotting 컴포넌트의 getGridPosition 메서드를 사용하여 올바른 그리드 위치 계산
+      const { row, col } = dottingRef.current?.getGridPosition(
+        canvasX,
+        canvasY
+      ) || { row: 0, col: 0 };
+
+      // 클릭된 셀 정보 업데이트
+      updateClickedCell(row, col);
+
+      if (isPasteMode && copiedArea && dottingRef.current) {
+        console.log("붙여넣기 시도:", {
+          row,
+          col,
+          copiedArea: copiedArea.width + "x" + copiedArea.height,
+        });
+
+        paste(row, col);
+        setIsPasteMode(false); // 붙여넣기 완료 후 모드 해제
+      }
+    },
+    [copiedArea, isPasteMode, updateClickedCell, paste]
+  );
+
   // 키보드 단축키 추가
   React.useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -207,12 +383,30 @@ const PixelArtEditor: React.FC = () => {
       ) {
         e.preventDefault();
         redo();
+      } else if ((e.metaKey || e.ctrlKey) && e.key === "c") {
+        e.preventDefault();
+        copy();
+      } else if ((e.metaKey || e.ctrlKey) && e.key === "v") {
+        e.preventDefault();
+        if (copiedArea) {
+          handlePasteToggle();
+        }
       }
     };
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [undo, redo]);
+  }, [undo, redo, copy, copiedArea, handlePasteToggle]);
+
+  // 브러시 도구 변경 시 선택된 셀 초기화
+  React.useEffect(() => {
+    if (brushTool !== BrushTool.SELECT) {
+      setActiveCells((prev) => ({
+        ...prev,
+        selected: [],
+      }));
+    }
+  }, [brushTool]);
 
   return (
     <div className="p-4">
@@ -267,6 +461,71 @@ const PixelArtEditor: React.FC = () => {
           </div>
         </div>
 
+        <div className="flex gap-2">
+          <button
+            onClick={() => {
+              console.log("복사 버튼 클릭됨, brushTool:", brushTool);
+              copy();
+            }}
+            disabled={brushTool !== BrushTool.SELECT}
+            className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed"
+            title="선택 영역 복사 (선택 도구 필요, Ctrl+C)"
+          >
+            📋 복사
+          </button>
+
+          <button
+            onClick={handlePasteToggle}
+            disabled={!copiedArea}
+            className={`px-3 py-1 rounded text-sm font-medium transition-all ${
+              isPasteMode
+                ? "bg-green-600 text-white"
+                : copiedArea
+                  ? "bg-green-500 text-white hover:bg-green-600"
+                  : "bg-gray-300 text-gray-500 cursor-not-allowed"
+            }`}
+            title={
+              isPasteMode
+                ? "붙여넣기 모드 활성화됨. 캔버스를 클릭하여 붙여넣기"
+                : copiedArea
+                  ? "붙여넣기 모드 활성화 (클릭 후 캔버스 클릭)"
+                  : "복사된 영역이 없음"
+            }
+          >
+            {isPasteMode ? "📍 붙여넣기 모드" : "📌 붙여넣기"}
+          </button>
+
+          {copiedArea && (
+            <div className="text-xs text-gray-600 bg-gray-100 px-2 py-1 rounded">
+              복사됨: {copiedArea.width}×{copiedArea.height}
+            </div>
+          )}
+        </div>
+
+        <div className="flex gap-2">
+          <button
+            onClick={updateSelectedCells}
+            className="bg-gray-500 text-white px-3 py-1 rounded hover:bg-gray-600 text-sm"
+            title="선택된 셀 정보 업데이트"
+          >
+            🔄 선택 정보 업데이트
+          </button>
+
+          {activeCells.clicked && (
+            <div className="text-xs text-gray-600 bg-green-100 px-2 py-1 rounded">
+              클릭됨: [{activeCells.clicked.row}, {activeCells.clicked.col}]{" "}
+              {activeCells.clicked.shape?.name || "빈 셀"}
+            </div>
+          )}
+
+          {brushTool === BrushTool.SELECT &&
+            activeCells.selected.length > 0 && (
+              <div className="text-xs text-gray-600 bg-blue-100 px-2 py-1 rounded">
+                선택됨: {activeCells.selected.length}개 셀
+              </div>
+            )}
+        </div>
+
         <button
           onClick={clear}
           className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
@@ -285,19 +544,20 @@ const PixelArtEditor: React.FC = () => {
       <div className="border-2 border-gray-300 inline-block">
         <Dotting
           ref={dottingRef}
-          rows={5}
-          cols={4}
+          rows={50}
+          cols={40}
           gridSquareLength={30}
           brushTool={brushTool}
           selectedShape={selectedShape}
           shapes={shapes}
           backgroundColor="#f8f9fa"
           gridStrokeColor="#e9ecef"
-          isPanZoomable={true}
-          zoomSensitivity={0.1}
+          isPanZoomable={false}
+          // zoomSensitivity={0.1}
           initialCells={initialCells}
           disabledCells={disabledCells}
           disabledCellColor="#f0f0f0"
+          onClick={handleCanvasClick}
         />
       </div>
 
@@ -323,12 +583,15 @@ const PixelArtEditor: React.FC = () => {
             <strong>비활성화 셀:</strong> X 표시된 회색 셀은 편집할 수 없는
             비활성화된 영역입니다
           </li>
+          <li>
+            <strong>복사/붙여넣기:</strong> 선택 도구로 영역을 선택한 후 "복사"
+            버튼을 클릭하면 해당 영역이 복사됩니다. "붙여넣기" 버튼을 클릭한 후
+            캔버스의 원하는 위치를 클릭하면 복사된 영역이 붙여넣어집니다.
+          </li>
         </ul>
 
         <div className="mt-2">
-          <p>
-            <strong>기본 뜨개질 기호:</strong>
-          </p>
+          <p></p>
           <div className="flex gap-2 mt-1 flex-wrap">
             {KNITTING_SYMBOLS.map((shape) => (
               <span
@@ -341,6 +604,55 @@ const PixelArtEditor: React.FC = () => {
             ))}
           </div>
         </div>
+
+        {/* 활성 셀 정보 표시 */}
+        {(activeCells.clicked ||
+          (brushTool === BrushTool.SELECT &&
+            activeCells.selected.length > 0)) && (
+          <div className="mt-4 p-3 bg-blue-50 rounded border">
+            <h3 className="text-sm font-bold mb-2">활성 셀 정보</h3>
+
+            {/* 클릭된 셀 정보 */}
+            {activeCells.clicked && (
+              <div className="mb-3 p-2 bg-green-100 rounded">
+                <h4 className="text-xs font-bold mb-1">클릭된 셀:</h4>
+                <div className="text-xs">
+                  <span>
+                    위치: [{activeCells.clicked.row}, {activeCells.clicked.col}]
+                  </span>
+                  <span className="ml-2">
+                    도형:{" "}
+                    {activeCells.clicked.shape
+                      ? activeCells.clicked.shape.name
+                      : "없음"}
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {/* 선택된 셀 정보 (선택 모드일 때만) */}
+            {brushTool === BrushTool.SELECT &&
+              activeCells.selected.length > 0 && (
+                <div>
+                  <h4 className="text-xs font-bold mb-1">
+                    선택된 셀들 ({activeCells.selected.length}개):
+                  </h4>
+                  <div className="text-xs space-y-1 max-h-32 overflow-y-auto">
+                    {activeCells.selected.map((cell, index) => (
+                      <div key={index} className="flex gap-2">
+                        <span>
+                          위치: [{cell.row}, {cell.col}]
+                        </span>
+                        <span>
+                          도형: {cell.shape ? cell.shape.name : "없음"}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+          </div>
+        )}
       </div>
     </div>
   );
