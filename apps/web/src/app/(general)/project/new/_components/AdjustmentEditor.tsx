@@ -9,7 +9,7 @@ import {
   Point,
   ControlPoint,
 } from "@dddorok/utils/chart/types";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 
 import {
   AdjustmentProvider,
@@ -20,73 +20,73 @@ import { SliderSection } from "./korean-slider-component";
 
 import { cn } from "@/lib/utils";
 
-const sliderData = [
-  // COLS (WIDTH)
-  {
-    control: "1-2",
-    min: 0.1,
-    max: 3,
-    snapValues: [0.1, 0.5, 1, 1.5, 2, 2.5, 3],
-    initialValue: 1,
-    average: 1,
-    value_type: "col",
-  },
-  {
-    control: "2-3",
-    min: 0.1,
-    max: 3,
-    snapValues: [0.1, 0.5, 1, 1.5, 2, 2.5, 3],
-    initialValue: 1,
-    average: 1,
-    value_type: "col",
-  },
-  {
-    control: "3-4",
-    min: 0.1,
-    max: 3,
-    snapValues: [0.1, 0.5, 1, 1.5, 2, 2.5, 3],
-    initialValue: 1,
-    average: 1,
-    value_type: "col",
-  },
-  // ROWS (LENGTH)
-  {
-    control: "a-b",
-    min: 0.1,
-    max: 3,
-    snapValues: [0.1, 0.5, 1, 1.5, 2, 2.5, 3],
-    initialValue: 0.1,
-    average: 1,
-    value_type: "row",
-  },
-  {
-    control: "b-c",
-    min: 0.1,
-    max: 3,
-    snapValues: [0.1, 0.5, 1, 1.5, 2, 2.5, 3],
-    initialValue: 0.5,
-    average: 1,
-    value_type: "row",
-  },
-  {
-    control: "c-d",
-    min: 0.1,
-    max: 3,
-    snapValues: [0.1, 0.5, 1, 1.5, 2, 2.5, 3],
-    initialValue: 1.0,
-    average: 1,
-    value_type: "row",
-  },
-  {
-    control: "d-e",
-    min: 0.1,
-    max: 3,
-    snapValues: [0.1, 0.5, 1, 1.5, 2, 2.5, 3],
-    initialValue: 1.0,
-    average: 1,
-    value_type: "row",
-  },
-];
+// sliderData 타입 정의
+interface SliderDataItem {
+  control: string;
+  min: number;
+  max: number;
+  snapValues: number[];
+  initialValue: number;
+  average: number;
+  value_type: "row" | "col";
+}
+
+// gridPoints를 기반으로 sliderData를 생성하는 함수
+const generateSliderDataFromGridPoints = (
+  gridPoints: Point[]
+): SliderDataItem[] => {
+  const sliderData: SliderDataItem[] = [];
+
+  // 그리드 포인트를 행과 열로 분류
+  const rows = new Set<string>();
+  const cols = new Set<string>();
+
+  gridPoints.forEach((point) => {
+    const row = point.id[0]; // 첫 번째 문자 (a, b, c, ...)
+    const col = point.id[1]; // 두 번째 문자 (1, 2, 3, ...)
+
+    if (row) rows.add(row);
+    if (col) cols.add(col);
+  });
+
+  // 행과 열을 정렬
+  const sortedRows = Array.from(rows).sort();
+  const sortedCols = Array.from(cols).sort((a, b) => parseInt(a) - parseInt(b));
+
+  // 열 간격 생성 (가로 간격)
+  for (let i = 0; i < sortedCols.length - 1; i++) {
+    const currentCol = sortedCols[i];
+    const nextCol = sortedCols[i + 1];
+
+    sliderData.push({
+      control: `${currentCol}-${nextCol}`,
+      min: 0.1,
+      max: 3,
+      snapValues: [0.1, 0.5, 1, 1.5, 2, 2.5, 3],
+      initialValue: 1,
+      average: 1,
+      value_type: "col",
+    });
+  }
+
+  // 행 간격 생성 (세로 간격)
+  for (let i = 0; i < sortedRows.length - 1; i++) {
+    const currentRow = sortedRows[i];
+    const nextRow = sortedRows[i + 1];
+
+    sliderData.push({
+      control: `${currentRow}-${nextRow}`,
+      min: 0.1,
+      max: 3,
+      snapValues: [0.1, 0.5, 1, 1.5, 2, 2.5, 3],
+      initialValue: 1,
+      average: 1,
+      value_type: "row",
+    });
+  }
+
+  return sliderData;
+};
 
 interface AdjustedPath extends PathDefinition {
   start: Point;
@@ -96,6 +96,7 @@ interface AdjustedPath extends PathDefinition {
 
 export function AdjustmentEditor({ svgContent }: { svgContent: string }) {
   const [pathDefs, setPathDefs] = useState<PathDefinition[]>([]);
+  console.log("pathDefs: ", pathDefs);
   const [gridPoints, setGridPoints] = useState<Point[]>([]);
   console.log("gridPoints: ", gridPoints);
   const [isLoading, setIsLoading] = useState(true);
@@ -126,20 +127,25 @@ export function AdjustmentEditor({ svgContent }: { svgContent: string }) {
     <AdjustmentProvider
       gridPoints={gridPoints}
       pathDefs={pathDefs}
-      sliderData={sliderData}
+      sliderData={generateSliderDataFromGridPoints(gridPoints)}
     >
-      <SVGPointEditor />
+      <SVGPointEditor gridPoints={gridPoints} />
     </AdjustmentProvider>
   );
 }
 
-const SVGPointEditor = () => {
+const SVGPointEditor = ({ gridPoints }: { gridPoints: Point[] }) => {
   const { gridAdjustments, handleGridAdjustment } = useAdjustmentContext();
 
   const { handleAdjustStart, handleAdjustEnd } =
     useAdjustmentProgressingContext();
 
   const [selectedValueType, setSelectedValueType] = useState<string>("row");
+
+  // gridPoints를 기반으로 sliderData를 동적으로 생성
+  const sliderData = useMemo(() => {
+    return generateSliderDataFromGridPoints(gridPoints);
+  }, [gridPoints]);
 
   const sliders = sliderData.filter((s) => s.value_type === selectedValueType);
 
