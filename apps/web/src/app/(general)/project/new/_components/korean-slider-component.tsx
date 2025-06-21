@@ -271,7 +271,7 @@ export const SliderSection = ({
             )}
             style={{ left: `${averagePercentage}%` }}
           >
-            평균 {average}
+            평균 {getDisplayValue ? getDisplayValue(average) : average}
           </div>
         </div>
 

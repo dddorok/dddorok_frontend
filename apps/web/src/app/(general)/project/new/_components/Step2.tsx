@@ -114,9 +114,7 @@ function ChartSection({
         <strong className="text-neutral-N900 font-semibold">{label}</strong>를
         조정해주세요
       </h4>
-      <div className="bg-neutral-N100 border border-neutral-N200 ">
-        <AdjustmentEditor svgContent={svgContent} />
-      </div>
+      <AdjustmentEditor svgContent={svgContent} />
     </section>
   );
 }

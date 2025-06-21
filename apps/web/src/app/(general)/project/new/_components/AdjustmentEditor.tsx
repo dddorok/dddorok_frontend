@@ -151,16 +151,13 @@ const SVGPointEditor = ({ gridPoints }: { gridPoints: Point[] }) => {
 
   return (
     <div className="w-full max-w-7xl mx-auto p-6 bg-white">
-      <div className="grid grid-cols-2 gap-6">
-        <div>
-          <div className="bg-gray-100 p-4 rounded-lg">
-            <h2 className="text-lg font-semibold mb-4">그리드 좌표 평면</h2>
-            <GridCoordinatePlane />
-          </div>
+      <div className="grid grid-cols-[280px_1fr] gap-16 items-start">
+        <div className="border border-neutral-N300 rounded-lg py-5 px-10">
+          <GridCoordinatePlane />
         </div>
 
-        <div className="bg-gray-50 p-4 rounded-lg">
-          <div className="flex gap-4 mb-4 pt-4 pb-2 justify-center">
+        <div className="bg-neutral-N100 border border-neutral-N200 p-4 px-[18px] rounded-lg">
+          <div className="flex gap-4 mb-[14px] justify-center">
             {["row", "col"].map((valueType) => (
               <button
                 key={valueType}
@@ -171,7 +168,7 @@ const SVGPointEditor = ({ gridPoints }: { gridPoints: Point[] }) => {
                     "bg-primary-PR text-[#FFFFFF] text-medium-b border-primary-PR"
                 )}
               >
-                {valueType}
+                {valueType === "row" ? "길이" : "너비"}
               </button>
             ))}
           </div>
