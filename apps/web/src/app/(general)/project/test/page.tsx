@@ -1,5 +1,9 @@
 "use client";
+import { useQuery } from "@tanstack/react-query";
+import Link from "next/link";
+
 import { Button } from "@/components/ui/button";
+import { projectQueries } from "@/queries/project";
 import { createProject } from "@/services/project";
 
 const DUMMY = {
@@ -64,9 +68,30 @@ export default function TestPage() {
     console.log(response);
     alert("프로젝트 생성 완료");
   };
+
+  const { data: myProjectList } = useQuery({
+    ...projectQueries.myProjectList(),
+  });
+  console.log("myProjectList: ", myProjectList);
   return (
     <div className="flex flex-col p-4 gap-4">
       <Button onClick={action}>create</Button>
+
+      <h2>내 프로젝트 리스트</h2>
+      {myProjectList?.data.map((project) => (
+        <Link href={`/project/test/${project.id}`} key={project.id}>
+          <div className="flex flex-col gap-2 border p-1">
+            <div>{project.name}</div>
+            <div>{project.created_date}</div>
+            <div>{project.updated_date}</div>
+            <div className="flex flex-col gap-2">
+              {project.chart_list.map((chart) => (
+                <div key={chart.chart_id}>{chart.name}</div>
+              ))}
+            </div>
+          </div>
+        </Link>
+      ))}
     </div>
   );
 }
