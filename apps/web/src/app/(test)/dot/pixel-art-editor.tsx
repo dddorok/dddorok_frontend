@@ -88,6 +88,8 @@ interface DottingProps {
   disabledCells?: { row: number; col: number }[]; // 초기 비활성화 셀 데이터
   disabledCellColor?: string; // 비활성화 셀 색상
   onClick?: (e: React.MouseEvent<HTMLCanvasElement>) => void; // 클릭 이벤트 핸들러
+  onCopy?: () => void; // 복사 완료 시 호출
+  onPaste?: () => void; // 붙여넣기 완료 시 호출
 }
 
 interface DottingRef {
@@ -453,6 +455,8 @@ export const Dotting = forwardRef<DottingRef, DottingProps>(
       disabledCells = [],
       disabledCellColor = "#f0f0f0",
       onClick,
+      onCopy,
+      onPaste,
     },
     ref
   ) => {
@@ -490,6 +494,7 @@ export const Dotting = forwardRef<DottingRef, DottingProps>(
     const [previewLine, setPreviewLine] = useState<Pixel[]>([]);
     const [selectedArea, setSelectedArea] = useState<SelectedArea | null>(null);
     const [lastDrawnPos, setLastDrawnPos] = useState<GridPosition | null>(null);
+    const [copiedArea, setCopiedArea] = useState<CopiedArea | null>(null);
 
     // shape ID로 실제 shape 객체를 찾는 함수
     const getShapeById = useCallback(
@@ -558,6 +563,116 @@ export const Dotting = forwardRef<DottingRef, DottingProps>(
       () => canRedoHistory(historyIndex, history.length),
       [historyIndex, history.length]
     );
+
+    // 복사 함수
+    const copySelectedArea = useCallback(() => {
+      if (selectedArea) {
+        const copied = copySelectedAreaInternal(
+          selectedArea.startRow,
+          selectedArea.startCol,
+          selectedArea.endRow,
+          selectedArea.endCol
+        );
+        if (copied) {
+          setCopiedArea(copied);
+          onCopy?.();
+          console.log("복사 완료:", copied);
+        }
+      }
+    }, [selectedArea, onCopy]);
+
+    // 붙여넣기 함수
+    const pasteAtPosition = useCallback(
+      (row: number, col: number) => {
+        if (copiedArea) {
+          pasteAreaInternal(row, col, copiedArea);
+          onPaste?.();
+          console.log("붙여넣기 완료:", { row, col });
+        }
+      },
+      [copiedArea, onPaste]
+    );
+
+    // 내부 복사 함수
+    const copySelectedAreaInternal = useCallback(
+      (
+        startRow: number,
+        startCol: number,
+        endRow: number,
+        endCol: number
+      ): CopiedArea | null => {
+        if (startRow < 0 || startCol < 0 || endRow >= rows || endCol >= cols)
+          return null;
+
+        const copiedPixels = pixels
+          .slice(startRow, endRow + 1)
+          .map((row) => row.slice(startCol, endCol + 1));
+
+        return {
+          pixels: copiedPixels,
+          width: endCol - startCol + 1,
+          height: endRow - startRow + 1,
+          startRow,
+          startCol,
+        };
+      },
+      [pixels, rows, cols]
+    );
+
+    // 내부 붙여넣기 함수
+    const pasteAreaInternal = useCallback(
+      (targetRow: number, targetCol: number, areaToPaste: CopiedArea) => {
+        if (
+          targetRow < 0 ||
+          targetCol < 0 ||
+          targetRow + areaToPaste.height > rows ||
+          targetCol + areaToPaste.width > cols
+        ) {
+          console.log("붙여넣기 범위 초과");
+          return;
+        }
+
+        setPixels((prev) => {
+          const newPixels = [...prev];
+
+          for (let row = 0; row < areaToPaste.height; row++) {
+            for (let col = 0; col < areaToPaste.width; col++) {
+              const pixel = areaToPaste.pixels[row]?.[col];
+
+              if (pixel) {
+                const targetRowIndex = targetRow + row;
+                const targetColIndex = targetCol + col;
+
+                applyPixelWithDisabledCheck(
+                  newPixels,
+                  targetRowIndex,
+                  targetColIndex,
+                  pixel.shape,
+                  rows,
+                  cols
+                );
+              }
+            }
+          }
+
+          return newPixels;
+        });
+
+        // 붙여넣기 완료 후 히스토리 저장
+        setTimeout(() => {
+          saveToHistory(pixels);
+        }, 100);
+      },
+      [rows, cols, saveToHistory, pixels]
+    );
+
+    const handlePaste = useCallback(() => {
+      if (!selectedArea) return;
+
+      if (copiedArea) {
+        pasteAtPosition(selectedArea.startRow, selectedArea.startCol);
+      }
+    }, [selectedArea, copiedArea, pasteAtPosition]);
 
     // ref를 통해 외부에서 사용할 수 있는 메서드들
     useImperativeHandle(
@@ -692,21 +807,29 @@ export const Dotting = forwardRef<DottingRef, DottingProps>(
           // 현재는 null을 반환하고, 실제 사용 시에는 마우스 이벤트에서 위치를 전달받아야 함
           return null;
         },
+        copy: copySelectedArea,
+        paste: pasteAtPosition,
+        getCopiedArea: () => copiedArea,
+        handlePaste: handlePaste,
       }),
       [
-        pixels,
-        backgroundColor,
-        cols,
-        rows,
-        gridSquareLength,
         undo,
         redo,
         canUndo,
         canRedo,
+        copySelectedArea,
+        pasteAtPosition,
+        handlePaste,
         saveToHistory,
+        pixels,
+        cols,
+        gridSquareLength,
+        rows,
+        backgroundColor,
         selectedArea,
         panOffset,
         scale,
+        copiedArea,
       ]
     );
 

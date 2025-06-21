@@ -174,6 +174,7 @@ const PixelArtEditor: React.FC = () => {
     copy,
     paste,
     copiedArea,
+    handlePaste,
   } = useDotting(dottingRef);
   const selectedArea = dottingRef.current?.getSelectedArea();
   // 초기 셀 데이터 예시
@@ -204,29 +205,6 @@ const PixelArtEditor: React.FC = () => {
     setShapes((prev) => [...prev, newShape]);
   };
 
-  const onPaste = useCallback(() => {
-    // const { row, col } = dottingRef.current?.getGridPosition(
-    //   canvasX,
-    //   canvasY
-    // ) || { row: 0, col: 0 };
-    const selectedArea = dottingRef.current?.getSelectedArea();
-
-    console.log("selectedArea: ", selectedArea);
-    if (!selectedArea) return;
-
-    console.log("붙여넣기 시도:", {
-      row: selectedArea.startRow,
-      col: selectedArea.startCol,
-      copiedArea: copiedArea?.width + "x" + copiedArea?.height,
-    });
-
-    // 클릭된 셀 정보 업데이트
-
-    if (copiedArea && dottingRef.current) {
-      paste(selectedArea.startRow, selectedArea.startCol);
-    }
-  }, [copiedArea, paste]);
-
   // 키보드 단축키 추가
   React.useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -245,14 +223,15 @@ const PixelArtEditor: React.FC = () => {
       } else if ((e.metaKey || e.ctrlKey) && e.key === "v") {
         e.preventDefault();
         if (copiedArea) {
-          onPaste();
+          console.log("붙여넣기 버튼 클릭됨");
+          handlePaste();
         }
       }
     };
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [undo, redo, copy, copiedArea]);
+  }, [undo, redo, copy, copiedArea, handlePaste]);
 
   return (
     <div className="p-4">
