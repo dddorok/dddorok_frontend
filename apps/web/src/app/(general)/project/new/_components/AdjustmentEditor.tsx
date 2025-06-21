@@ -188,6 +188,7 @@ const SVGPointEditor = () => {
                   min={slider.min}
                   max={slider.max}
                   snapValues={slider.snapValues}
+                  getDisplayValue={(value: number) => value * 10}
                   initialValue={
                     gridAdjustments[slider.control] ?? slider.initialValue
                   }

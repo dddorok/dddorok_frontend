@@ -7,11 +7,13 @@ const useSlider = ({
   min,
   max,
   snapValues,
+  getDisplayValue,
 }: {
   initialValue: number;
   min: number;
   max: number;
   snapValues: number[];
+  getDisplayValue?: (value: number) => number;
 }) => {
   const [value, setValue] = useState(initialValue);
   const [isDragging, setIsDragging] = useState(false);
@@ -114,6 +116,9 @@ const useSlider = ({
   const generateTicks = React.useCallback(() => {
     return snapValues.map((tickValue, index) => {
       const percentage = ((tickValue - min) / (max - min)) * 100;
+      const displayTickValue = getDisplayValue
+        ? getDisplayValue(tickValue)
+        : tickValue;
       return (
         <div
           key={index}
@@ -122,12 +127,12 @@ const useSlider = ({
         >
           <div className="w-px h-3 bg-neutral-N500 mx-auto"></div>
           <span className="text-xs text-neutral-N500 mt-1 block text-center">
-            {tickValue}
+            {displayTickValue.toFixed(1)}
           </span>
         </div>
       );
     });
-  }, [snapValues, min, max]);
+  }, [snapValues, min, max, getDisplayValue]);
 
   return {
     value,
@@ -153,6 +158,7 @@ interface SliderSectionProps {
   onValueChange?: (value: number) => void;
   onAdjustStart?: () => void;
   onAdjustEnd?: () => void;
+  getDisplayValue?: (value: number) => number;
 }
 
 export const SliderSection = ({
@@ -168,6 +174,7 @@ export const SliderSection = ({
   onValueChange,
   onAdjustStart,
   onAdjustEnd,
+  getDisplayValue,
 }: SliderSectionProps) => {
   const {
     value,
@@ -182,6 +189,7 @@ export const SliderSection = ({
     min,
     max,
     snapValues,
+    getDisplayValue,
   });
 
   // 값이 변경될 때 콜백 호출
@@ -223,7 +231,7 @@ export const SliderSection = ({
             )}
             style={{ left: `${percentage}%` }}
           >
-            {value.toFixed(1)}
+            {(getDisplayValue ? getDisplayValue(value) : value).toFixed(1)}
           </div>
           <div
             className="absolute transform -translate-x-1/2 top-[-28px]"
