@@ -122,7 +122,6 @@ function TableItem({ rule }: { rule: GetMeasurementRuleListItemType }) {
           onOpenChange={close}
           ruleToDelete={rule}
           onConfirm={() => {
-            console.log("delete");
             close();
           }}
         />

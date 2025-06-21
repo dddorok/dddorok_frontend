@@ -80,7 +80,7 @@ export default function SvgMappingForm({
     });
   };
   return (
-    <div className="w-full mx-auto p-6 space-y-6">
+    <div className="w-full mx-auto  space-y-6">
       {paths.length === 0 && (
         <div className="text-center text-gray-500">Error</div>
       )}

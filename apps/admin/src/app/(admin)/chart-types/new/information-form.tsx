@@ -1,22 +1,24 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
+import { useSuspenseQuery } from "@tanstack/react-query";
 import React, { Suspense, useCallback, useEffect } from "react";
 import { useForm, useFormContext, useWatch } from "react-hook-form";
 import { z } from "zod";
 
 import {
-  BODY_DETAIL_TYPE,
   SectionType,
-  RETAIL_DETAIL_TYPE,
   ChartSectionSchema,
+  RETAIL_DETAIL,
+  BODY_DETAIL,
+  BodyDetailType,
+  RetailDetailType,
 } from "./constants";
 
 import {
-  CommonCheckboxListField,
   CommonInputField,
   CommonSelectField,
 } from "@/components/CommonFormField";
 import { CommonRadioGroup } from "@/components/CommonUI";
+import { MeasurementRuleSelectSection } from "@/components/SelectSection/MeasurementRuleSelectSection";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -25,8 +27,11 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { measurementRuleQueries } from "@/queries/measurement-rule";
+import { createChartType, uploadSvg } from "@/services/chart-type";
 
 const baseFormSchema = z.object({
   section: ChartSectionSchema,
@@ -34,6 +39,7 @@ const baseFormSchema = z.object({
   selectedMeasurements: z.array(z.string()).optional(),
   chartName: z.string().min(1, "차트 이름을 입력해주세요"),
   detailType: z.string(),
+  svgFile: z.instanceof(File),
 });
 
 const bodyFormSchema = baseFormSchema.extend({
@@ -59,7 +65,7 @@ type FormValues = z.infer<typeof formSchema>;
 export default function InformationForm({
   onSubmit,
 }: {
-  onSubmit: (data: FormValues) => void;
+  onSubmit: (id: string, data: FormValues) => void;
 }) {
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -89,12 +95,31 @@ export default function InformationForm({
     [form]
   );
 
-  console.log(form.formState.errors);
+  const handleSubmit = async (values: FormValues) => {
+    console.log(values);
+
+    // TODO: 파일 업로드 기능 추가
+    const { resource_id } = await uploadSvg(values.svgFile);
+
+    // "https://dddorok-s3.s3.amazonaws.com/public/chart-svg/766d0a72-c662-4fbd-b859-4ca26d12a811.svg"
+
+    // const resourceId = "766d0a72-c662-4fbd-b859-4ca26d12a811";
+
+    const data = await createChartType({
+      section: values.section,
+      detail_type: values.detailType,
+      name: values.chartName,
+      resource_id: resource_id,
+    });
+
+    console.log("data: ", data);
+    onSubmit(data.id, values);
+  };
 
   return (
     <Form {...form}>
       <form
-        onSubmit={form.handleSubmit(onSubmit)}
+        onSubmit={form.handleSubmit(handleSubmit)}
         className="w-full  mx-auto p-6 space-y-6"
       >
         <h2 className="text-2xl font-bold">Step 1. 기본 정보 입력</h2>
@@ -131,6 +156,51 @@ export default function InformationForm({
 
         <ChartNameForm />
 
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="space-y-1">
+              <Label className="text-muted-foreground">
+                SVG 파일을 업로드 해주세요.
+              </Label>
+              <p className="text-sm text-muted-foreground">
+                SVG에서 path 정보를 자동으로 추출할 수 있습니다.
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <Input
+                type="file"
+                accept=".svg"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (!file) return;
+
+                  if (file.type !== "image/svg+xml") {
+                    form.setError("svgFile", {
+                      message: "SVG 파일만 업로드 가능합니다.",
+                    });
+                    return;
+                  }
+
+                  if (file.size > 10 * 1024 * 1024) {
+                    form.setError("svgFile", {
+                      message: "10MB 이하의 SVG 파일만 업로드할 수 있습니다.",
+                    });
+                    return;
+                  }
+
+                  form.setValue("svgFile", file);
+                  form.clearErrors("svgFile");
+                }}
+              />
+            </div>
+          </div>
+          {form.formState.errors.svgFile && (
+            <p className="text-sm text-destructive">
+              {form.formState.errors.svgFile.message}
+            </p>
+          )}
+        </div>
+
         <div className="flex justify-end mt-8">
           <Button type="submit" variant="outline" className="px-8">
             다음
@@ -153,13 +223,16 @@ function ChartNameForm() {
       // ex) 래글런형 브이넥 스웨터 상단 전개도
       form.setValue(
         "chartName",
-        `${measurementRuleName} ${detailType} 상단 전개도`
+        `${measurementRuleName} ${BODY_DETAIL[detailType as BodyDetailType].label} 상단 전개도`
       );
     }
     if (section === "SLEEVE" && detailType) {
       // {세부유형} 소매 형식으로 자동 생성
       // ex)셋인형 소매
-      form.setValue("chartName", `${detailType} 소매`);
+      form.setValue(
+        "chartName",
+        `${RETAIL_DETAIL[detailType as RetailDetailType].label} 소매`
+      );
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [detailType, section, measurementRuleName]);
@@ -181,9 +254,9 @@ function BodyChart() {
         name="detailType"
         label="몸판 세부유형 선택"
         placeholder="선택하세요"
-        options={BODY_DETAIL_TYPE.map((type) => ({
-          label: type,
-          value: type,
+        options={Object.values(BODY_DETAIL).map((type) => ({
+          label: type.label,
+          value: type.value,
         }))}
       />
       <div className="space-y-2">
@@ -213,34 +286,48 @@ function BodyChart() {
         />
       </div>
       {form.watch("ruleType") === "RULE" && (
-        <MeasurementRuleSelectSection key={form.watch("ruleType")} />
+        <MeasurementRuleIdSelectSection key={form.watch("ruleType")} />
       )}
+
       {form.watch("ruleType") === "CODE" && (
-        <MeasurementCodeSelectSection section="몸통" />
+        <MeasurementRuleSelectSection
+          selectedItems={form.watch("selectedMeasurements") ?? []}
+          onChange={(items) => {
+            form.setValue("selectedMeasurements", items);
+          }}
+          filter={(item) => item.section === "몸통"}
+        />
       )}
     </div>
   );
 }
 
 function RetailChart() {
+  const form = useFormContext<FormValues>();
   return (
     <div className="space-y-4">
       <CommonSelectField
         name="detailType"
         label="소매 세브유형 선택"
-        options={RETAIL_DETAIL_TYPE.map((type) => ({
-          label: type,
-          value: type,
+        options={Object.values(RETAIL_DETAIL).map((type) => ({
+          label: type.label,
+          value: type.value,
         }))}
         placeholder="선택하세요"
       />
 
-      <MeasurementCodeSelectSection section="소매" />
+      <MeasurementRuleSelectSection
+        selectedItems={form.watch("selectedMeasurements") ?? []}
+        onChange={(items) => {
+          form.setValue("selectedMeasurements", items);
+        }}
+        filter={(item) => item.section === "소매"}
+      />
     </div>
   );
 }
 
-function MeasurementRuleSelectSection() {
+function MeasurementRuleIdSelectSection() {
   const form = useFormContext<FormValues>();
   const { data: measurementRuleList } = useSuspenseQuery({
     ...measurementRuleQueries.list(),
@@ -261,35 +348,6 @@ function MeasurementRuleSelectSection() {
         form.setValue("measurementRuleName", selectedRule?.rule_name);
       }}
       placeholder="선택하세요"
-    />
-  );
-}
-
-function MeasurementCodeSelectSection({
-  section,
-}: {
-  section: "몸통" | "소매";
-}) {
-  const { data: measurementRuleItemCodeList } = useQuery({
-    ...measurementRuleQueries.itemCode(),
-  });
-
-  const options =
-    measurementRuleItemCodeList
-      ?.filter((item) => item.section === section)
-      .map((item) => ({
-        label: item.label,
-        value: item.code,
-      })) ?? [];
-
-  return (
-    <CommonCheckboxListField
-      name={
-        section === "몸통" ? "selectedMeasurements" : "selectedMeasurements"
-      }
-      label="측정항목 선택"
-      options={options}
-      className="grid grid-cols-2 gap-2"
     />
   );
 }

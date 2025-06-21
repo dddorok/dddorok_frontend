@@ -26,9 +26,6 @@ export default function LoginPage() {
         </CardHeader>
         <CardContent className="space-y-4">
           <NaverLogin />
-          {/* <RefreshToken />
-          <TestSession />
-          <TestLogin /> */}
         </CardContent>
       </Card>
     </div>

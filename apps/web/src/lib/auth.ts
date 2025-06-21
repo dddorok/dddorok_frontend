@@ -50,7 +50,6 @@ export async function updateSession() {
   }
 
   const data = await refreshToken(payload.refreshToken);
-  console.log("data: ", data);
 
   const expires = new Date(Date.now() + sessionExpiresAt);
   const newSession = await encrypt({
@@ -75,6 +74,7 @@ export async function getSession() {
 }
 
 export async function deleteSession() {
+  console.log("deleteSession: ");
   const cookieStore = await cookies();
   cookieStore.delete(sessionCookieName);
 }

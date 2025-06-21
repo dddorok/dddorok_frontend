@@ -2,16 +2,16 @@
 
 import { DevTool } from "@hookform/devtools";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useForm, useFormContext, useWatch } from "react-hook-form";
 import * as z from "zod";
-
-import { ChartTypeSelect } from "./ChartTypeSelect";
 
 import {
   CommonRadioListField,
   CommonSelectField,
 } from "@/components/CommonFormField";
+import { FileUploadForm } from "@/components/FileUploadForm";
+import { ChartTypeSelect } from "@/components/SelectSection/ChartSelectSection";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -54,7 +54,7 @@ const templateFormSchema = z.object({
 export type TemplateFormData = z.infer<typeof templateFormSchema>;
 
 interface TemplateFormProps {
-  onSubmit: (data: TemplateFormData) => Promise<void>;
+  onSubmit: (data: TemplateFormData, file: File | null) => Promise<void>;
   measurementRuleId: string;
   category: {
     level1: string;
@@ -71,6 +71,7 @@ export function TemplateForm({
   onSubmit,
   initialTemplate,
 }: TemplateFormProps) {
+  const [file, setFile] = useState<File | null>(null); // form으로 옮기기
   const form = useForm<z.infer<typeof templateFormSchema>>({
     resolver: zodResolver(templateFormSchema),
     defaultValues: {
@@ -91,17 +92,8 @@ export function TemplateForm({
         });
         return;
       }
-      if (request.needleType === "KNITTING") {
-        // TODO
-        // if (request.constructionMethods.length === 0) {
-        //   // throw new Error("상의 제작 방식을 1개 이상 입력해주세요.");
-        //   form.setError("constructionMethods", {
-        //     message: "상의 제작 방식을 1개 이상 입력해주세요.",
-        //   });
-        //   return;
-        // }
-      }
-      await onSubmit(request);
+
+      await onSubmit(request, file);
     } catch (error) {
       console.error("error: ", error);
       toast({
@@ -143,11 +135,30 @@ export function TemplateForm({
             </div>
           </CardContent>
         </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>템플릿 이미지 업로드</CardTitle>
+            <CardDescription>템플릿 이미지를 업로드해주세요.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <FileUploadForm
+              file={file}
+              setFile={setFile}
+              onRemove={() => setFile(null)}
+              type="image"
+            />
+          </CardContent>
+        </Card>
 
         {/* Section 2: 조건부 속성 입력 */}
         <ConstructionMethodSelect category={category} />
 
-        <ChartTypeSelect chartTypeMapsName="chartTypeMaps" />
+        <ChartTypeSelect
+          chartTypeMaps={form.watch("chartTypeMaps")}
+          onChange={(chartTypeMaps) =>
+            form.setValue("chartTypeMaps", chartTypeMaps)
+          }
+        />
 
         <div className="flex justify-end gap-4">
           <Button variant="outline" type="button">
@@ -170,6 +181,23 @@ export function TemplateForm({
  ** 관리자가 수정 가능하도록 함
  */
 const generateTemplateName = (formData: Partial<TemplateFormData>) => {
+  //탑다운 + 원통형 조합시 원통형 생략
+  // 바텀업 조각잇기 조합시 조각잇기 생략
+
+  if (
+    formData.constructionPrimary === "TOP_DOWN" &&
+    formData.constructionSecondary === "ROUND"
+  ) {
+    return CONSTRUCTION_METHOD["ROUND"].label;
+  }
+
+  if (
+    formData.constructionPrimary === "BOTTOM_UP" &&
+    formData.constructionSecondary === "PIECED"
+  ) {
+    return CONSTRUCTION_METHOD["BOTTOM_UP"].label;
+  }
+
   const list = [formData.constructionPrimary, formData.constructionSecondary]
     ?.filter(Boolean)
     .map(
@@ -193,9 +221,6 @@ function TemplateNameField({
     generateTemplateName(formValues as TemplateFormData) +
     " " +
     initialTemplateName;
-  console.log("initialTemplateName: ", initialTemplateName);
-
-  console.log("templateName: ", templateName);
 
   useEffect(() => {
     form.setValue("name", templateName, { shouldValidate: true });

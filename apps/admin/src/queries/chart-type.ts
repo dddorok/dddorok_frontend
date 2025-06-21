@@ -5,12 +5,14 @@ import {
   getChartTypeList,
   type GetChartTypeResponse,
 } from "@/services/chart-type";
+import { getChartTypeSvgMapping } from "@/services/chart-type/new";
 
 // 쿼리 키 정의
 export const chartTypeQueryKeys = {
   all: () => ["chart-type"],
   list: () => [...chartTypeQueryKeys.all(), "list"],
   detail: (id: string) => [...chartTypeQueryKeys.all(), id],
+  svgMapping: (id: string) => [...chartTypeQueryKeys.all(), id, "svg-mapping"],
 };
 
 // 쿼리 옵션 함수 정의
@@ -28,8 +30,16 @@ const chartTypeQueryOptions = (id: string) => {
   });
 };
 
+const chartTypeSvgMappingQueryOptions = (id: string) => {
+  return queryOptions({
+    queryKey: chartTypeQueryKeys.svgMapping(id),
+    queryFn: () => getChartTypeSvgMapping(id),
+  });
+};
+
 // 쿼리 옵션 객체 내보내기
 export const chartTypeQueries = {
   list: chartTypeListQueryOptions,
   detail: chartTypeQueryOptions,
+  svgMapping: chartTypeSvgMappingQueryOptions,
 };

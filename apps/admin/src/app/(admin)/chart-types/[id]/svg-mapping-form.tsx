@@ -1,6 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 import React, { useState } from "react";
 
+import { ChartDeleteDialog } from "../_components/chart.dialog";
 import {
   SelectMeasurementList,
   SelectPathList,
@@ -25,6 +26,10 @@ interface SvgMappingFormProps {
     measurement_code: string;
     path_id: string;
   }[];
+
+  // 차트 유형 삭제 함수
+  chartId: string;
+  chartName: string;
 }
 
 export default function SvgMappingForm(props: SvgMappingFormProps) {
@@ -54,7 +59,7 @@ export default function SvgMappingForm(props: SvgMappingFormProps) {
   };
 
   return (
-    <div className="w-full mx-auto p-6 space-y-6">
+    <div className="w-full mx-auto space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="space-y-4">
           <Card className="p-4 border flex items-center justify-center h-fit">
@@ -83,6 +88,10 @@ export default function SvgMappingForm(props: SvgMappingFormProps) {
           />
 
           <div className="flex justify-end space-x-3 mt-10">
+            <ChartDeleteDialog
+              chartId={props.chartId}
+              chartName={props.chartName}
+            />
             <Button variant="outline">취소</Button>
             <Button onClick={handleSubmit}>저장</Button>
           </div>

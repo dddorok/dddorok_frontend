@@ -1,17 +1,33 @@
-import { ChevronDownIcon } from "lucide-react";
+"use client";
+
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { ChevronDownIcon, LogOut, Settings, User, User2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 import { Button } from "../ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from "../ui/dropdown-menu";
 
 import { ROUTE } from "@/constants/route";
+import { deleteSession } from "@/lib/auth";
 import { cn } from "@/lib/utils";
+import { userQueries } from "@/queries/users";
+import { UserType } from "@/services/user";
 
 interface HeaderProps {
   className?: string;
 }
 
 export default function Header({ className }: HeaderProps) {
+  const { data: myInfo } = useQuery(userQueries.myInfo());
+  console.log("myInfo: ", myInfo);
+
   return (
     <>
       <div
@@ -22,7 +38,7 @@ export default function Header({ className }: HeaderProps) {
           className
         )}
       >
-        <div className="flex flex-col items-start flex-1 max-w-[1204px] mx-auto w-full">
+        <div className="flex flex-col items-start flex-1 container">
           <div className="flex justify-end pt-4 w-full">
             <ul className="flex gap-5 items-center text-small text-neutral-N600">
               <li>About Us</li>
@@ -33,7 +49,7 @@ export default function Header({ className }: HeaderProps) {
           </div>
           <div className="flex justify-between items-center py-5 w-full">
             <div className="flex gap-10">
-              <div>
+              <Link href={ROUTE.HOME}>
                 <Image
                   src="/logo/logo-01.svg"
                   alt="logo"
@@ -41,22 +57,71 @@ export default function Header({ className }: HeaderProps) {
                   height={42}
                   priority
                 />
-              </div>
+              </Link>
               <ul className="flex gap-16 items-center text-neutral-N800 text-medium-r">
-                <li>템플릿</li>
-                <li>요금제</li>
+                <li>
+                  <Link href={ROUTE.TEMPLATE}>템플릿</Link>
+                </li>
+                <li>
+                  <Link href={ROUTE.PRICING}>요금제</Link>
+                </li>
               </ul>
             </div>
-            <div className="flex gap-2">
-              <Button asChild>
-                <Link href={ROUTE.LOGIN}>로그인</Link>
-              </Button>
-              <Button color="fill">회원가입</Button>
-            </div>
+            {!myInfo ? (
+              <div className="flex gap-2">
+                <Button asChild>
+                  <Link href={ROUTE.LOGIN}>로그인</Link>
+                </Button>
+                <Button asChild color="fill">
+                  <Link href={ROUTE.JOIN}>회원가입</Link>
+                </Button>
+              </div>
+            ) : (
+              <UserMenuDropdown user={myInfo.user} />
+            )}
           </div>
         </div>
       </div>
-      <div className={cn("header-blank", "h-[var(--header-height)]")}></div>
+      <div
+        className={cn("header-blank", "w-full min-h-[var(--header-height)]")}
+      ></div>
     </>
+  );
+}
+
+function UserMenuDropdown(props: { user: UserType }) {
+  const queryClient = useQueryClient();
+  const router = useRouter();
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <div className="flex gap-1 items-center text-primary-PR600 h-[52px]">
+          <User2 className="w-6 h-6" />
+          <div className="text-medium-b">{props.user.username}</div>
+          <ChevronDownIcon className="w-4 h-4" />
+        </div>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent className="min-w-[180px]" align="end">
+        <DropdownMenuItem asChild>
+          <Link href={ROUTE.MYPAGE.PROJECT()}>
+            <User />내 프로젝트
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem>
+          <Settings /> 설정
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          className="text-neutral-N700"
+          onClick={async () => {
+            await deleteSession();
+            queryClient.removeQueries();
+            router.replace(ROUTE.HOME);
+          }}
+        >
+          <LogOut />
+          로그아웃
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }

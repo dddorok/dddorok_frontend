@@ -1,5 +1,6 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -21,30 +22,27 @@ export function ChartDeleteDialog(props: {
   chartName: string;
 }) {
   const queryClient = useQueryClient();
+  const router = useRouter();
   // 차트 유형 삭제 함수
   const handleDeleteChartType = () => {
     deleteChartType(props.chartId).then(() => {
       queryClient.invalidateQueries({
         queryKey: chartTypeQueries.list().queryKey,
       });
-    });
 
-    toast({
-      title: "삭제 완료",
-      description: `"${props.chartName}" 차트 유형이 삭제되었습니다.`,
+      toast({
+        title: "삭제 완료",
+        description: `"${props.chartName}" 차트 유형이 삭제되었습니다.`,
+      });
+
+      router.replace("/chart-types");
     });
   };
 
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button
-          variant="outline"
-          size="sm"
-          className="text-red-500 hover:text-red-700 hover:bg-red-50"
-        >
-          삭제
-        </Button>
+        <Button variant="destructive">삭제</Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>

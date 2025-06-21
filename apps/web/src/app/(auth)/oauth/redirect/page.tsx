@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { Suspense } from "react";
 
 import { LoginButton } from "./LoginButton";
 
@@ -16,19 +17,10 @@ export default async function OAuthRedirect(props: {
       case "naver":
       case "kakao":
       case "google": {
-        const data = await login({
-          provider: searchParams.provider,
-          code: searchParams.code,
-          state: searchParams.state,
-        });
-
-        console.log("000000000000000");
-        console.log("data: ", data);
         return (
-          <LoginButton
-            accessToken={data.access_token}
-            refreshToken={data.refresh_token}
-          />
+          <Suspense>
+            <LoginButton />
+          </Suspense>
         );
       }
 
@@ -39,5 +31,5 @@ export default async function OAuthRedirect(props: {
     console.error(error);
   }
 
-  // redirect("/");
+  redirect("/");
 }

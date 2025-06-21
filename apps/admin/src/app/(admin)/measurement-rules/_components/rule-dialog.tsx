@@ -24,7 +24,6 @@ export function RuleDialog({
   const { data } = useQuery({
     ...measurementRuleQueries.ruleById(ruleId),
   });
-  console.log("data: ", data);
 
   return (
     <Dialog open={isOpen} onOpenChange={close}>
@@ -77,12 +76,7 @@ export function RuleDialog({
         </div>
 
         <DialogFooter>
-          <Button
-            variant="outline"
-            //   onClick={() => setViewItemsRule(null)}
-          >
-            닫기
-          </Button>
+          <Button variant="outline">닫기</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

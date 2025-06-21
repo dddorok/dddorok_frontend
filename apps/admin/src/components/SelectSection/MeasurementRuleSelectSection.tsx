@@ -7,7 +7,11 @@ import { FormItem, FormMessage } from "@/components/ui/form";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { measurementRuleQueries } from "@/queries/measurement-rule";
-import { GetMeasurementRuleItemCodeResponse } from "@/services/measurement-rule";
+import {
+  GetMeasurementRuleItemCodeResponse,
+  VALUE_TYPE_LABEL,
+  ValueType,
+} from "@/services/measurement-rule";
 
 const 제외_측정_코드 = [
   "BODY_TOTAL_LENGTH",
@@ -15,11 +19,22 @@ const 제외_측정_코드 = [
   "SLEEVE_SLEEVE_CAP_LENGTH",
 ];
 
-export function MeasurementRuleSelectSection() {
+interface MeasurementRuleSelectSectionProps {
+  selectedItems: string[];
+  onChange: (items: string[]) => void;
+
+  filter?: (item: GetMeasurementRuleItemCodeResponse) => boolean;
+}
+
+export function MeasurementRuleSelectSection(
+  props: MeasurementRuleSelectSectionProps
+) {
   const { data: itemCodes } = useQuery({
     ...measurementRuleQueries.itemCode(),
     select: (data) =>
-      data.filter((item) => !제외_측정_코드.includes(item.code)),
+      data
+        .filter((item) => !제외_측정_코드.includes(item.code))
+        .filter(props.filter ?? (() => true)),
   });
 
   const groupedItems = transformMeasurementItems(itemCodes ?? []);
@@ -56,6 +71,8 @@ export function MeasurementRuleSelectSection() {
                     key={section}
                     sectionName={section}
                     sectionItems={groupedItems[category]?.[section] as any}
+                    selectedItems={props.selectedItems}
+                    onChange={props.onChange}
                   />
                 );
               })}
@@ -71,62 +88,58 @@ export function MeasurementRuleSelectSection() {
 function RuleCheckList({
   sectionItems,
   sectionName,
+  onChange,
+  selectedItems,
 }: {
   sectionItems: GetMeasurementRuleItemCodeResponse[];
   sectionName: string;
+  onChange: (items: string[]) => void;
+  selectedItems: string[];
 }) {
-  const form = useFormContext();
-  const selectedItems = useWatch({ name: "items" });
+  // value_type으로 groupping
+  const groupedItems = sectionItems.reduce<
+    Record<string, GetMeasurementRuleItemCodeResponse[]>
+  >((acc, item) => {
+    if (!acc[item.value_type]) {
+      acc[item.value_type] = [];
+    }
+    acc[item.value_type]?.push(item);
+    return acc;
+  }, {});
 
   // 아이템 선택 처리
   const handleItemChange = (itemCode: string, checked: boolean) => {
-    const currentItems = form.getValues().items || [];
     if (checked) {
-      form.setValue("items", [...currentItems, itemCode], {
-        shouldValidate: true,
-      });
+      onChange([...selectedItems, itemCode]);
     } else {
-      form.setValue(
-        "items",
-        currentItems.filter((code: string) => code !== itemCode),
-        { shouldValidate: true }
-      );
+      onChange(selectedItems.filter((code: string) => code !== itemCode));
     }
   };
 
   // 섹션 항목들이 모두 선택되었는지 확인
   const isSectionFullySelected = () => {
-    const currentItems = form.getValues().items || [];
-    return sectionItems.every((item) => currentItems.includes(item.code));
+    return sectionItems.every((item) => selectedItems.includes(item.code));
   };
 
   // 섹션 항목들이 일부 선택되었는지 확인
   const isSectionPartiallySelected = () => {
-    const currentItems = form.getValues().items || [];
     const selectedCount = sectionItems.filter((item) =>
-      currentItems.includes(item.code)
+      selectedItems.includes(item.code)
     ).length;
     return selectedCount > 0 && selectedCount < sectionItems.length;
   };
 
   // 섹션의 모든 항목 선택/해제
   const handleSectionSelectAll = (selected: boolean) => {
-    const currentItems = form.getValues().items || [];
     if (selected) {
       // 섹션 항목 모두 추가 (중복 제거)
       const sectionItemIds = sectionItems.map((item) => item.code);
-      form.setValue(
-        "items",
-        [...new Set([...currentItems, ...sectionItemIds])],
-        { shouldValidate: true }
-      );
+      onChange([...new Set([...selectedItems, ...sectionItemIds])]);
     } else {
       // 섹션 항목 모두 제거
       const sectionItemIds = sectionItems.map((item) => item.code);
-      form.setValue(
-        "items",
-        currentItems.filter((code: string) => !sectionItemIds.includes(code)),
-        { shouldValidate: true }
+      onChange(
+        selectedItems.filter((code: string) => !sectionItemIds.includes(code))
       );
     }
   };
@@ -151,14 +164,23 @@ function RuleCheckList({
         </label>
       </div>
       <Separator className="my-2" />
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-3 pl-4">
-        {sectionItems?.map((item) => (
-          <RuleCheckItem
-            key={item.code}
-            checked={selectedItems.includes(item.code)}
-            item={item}
-            onClick={(checked) => handleItemChange(item.code, checked)}
-          />
+      <div className="flex flex-col gap-2 pl-4">
+        {Object.keys(groupedItems).map((valueType) => (
+          <div key={valueType}>
+            <h3 className="text-sm font-medium text-gray-700 mb-2">
+              {VALUE_TYPE_LABEL[valueType as ValueType] ?? valueType}
+            </h3>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-3 pl-4">
+              {groupedItems[valueType]?.map((item) => (
+                <RuleCheckItem
+                  key={item.code}
+                  checked={selectedItems.includes(item.code)}
+                  item={item}
+                  onClick={(checked) => handleItemChange(item.code, checked)}
+                />
+              ))}
+            </div>
+          </div>
         ))}
       </div>
     </div>

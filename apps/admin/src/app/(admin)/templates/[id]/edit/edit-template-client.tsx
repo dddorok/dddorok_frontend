@@ -1,12 +1,16 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 
-import { ChartTypeSelect } from "../../_components/ChartTypeSelect";
+import { DeleteTemplateButton } from "../../_components/template-list";
 
 import { CommonInputField } from "@/components/CommonFormField";
+import { FileUploadForm } from "@/components/FileUploadForm";
+import { ChartTypeSelect } from "@/components/SelectSection/ChartSelectSection";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -21,6 +25,7 @@ import { templateQueries, templateQueryKeys } from "@/queries/template";
 import {
   GetTemplateByIdResponse,
   updateTemplate,
+  uploadThumbnail,
 } from "@/services/template/template";
 
 interface EditTemplateClientProps {
@@ -37,13 +42,37 @@ export default function EditTemplateClient({
     enabled: !!templateId,
   });
 
-  const onSubmit = async (data: TemplateFormData) => {
+  const onSubmit = async (
+    data: TemplateFormData,
+    newImageFile: File | null
+  ) => {
     if (!template) return;
 
+    let resourceId: string | null = null;
+
+    if (newImageFile) {
+      resourceId = await uploadThumbnail(newImageFile);
+    }
+
+    const {
+      id,
+      isPublished,
+      measurementRule,
+      chartTypes,
+      thumbnailUrl,
+      is_published,
+      chart_types,
+      measurement_rule,
+      thumbnail_url,
+      ...requestData
+    } = template as any;
+
+    console.log("requestData: ", requestData);
     await updateTemplate(templateId, {
-      ...template,
+      ...requestData,
       name: data.name,
       chart_type_maps: data.chartTypeMaps,
+      resourceId: resourceId,
     });
 
     toast({
@@ -87,8 +116,9 @@ function TemplateEditForm({
   onSubmit,
 }: {
   template: GetTemplateByIdResponse;
-  onSubmit: (data: TemplateFormData) => Promise<void>;
+  onSubmit: (data: TemplateFormData, file: File | null) => Promise<void>;
 }) {
+  const [file, setFile] = useState<File | null>(null);
   const form = useForm<TemplateFormData>({
     defaultValues: {
       name: template.name,
@@ -98,6 +128,11 @@ function TemplateEditForm({
       })),
     },
   });
+
+  const handleSubmit = (data: TemplateFormData) => {
+    onSubmit(data, file);
+  };
+
   return (
     <Form {...form}>
       <div className="space-y-6">
@@ -112,17 +147,55 @@ function TemplateEditForm({
             <CommonInputField name="name" label="템플릿명" />
           </CardContent>
         </Card>
-
-        <ChartTypeSelect chartTypeMapsName="chartTypeMaps" />
+        <TemplateImage
+          thumbnailUrl={template.thumbnail_url}
+          file={file}
+          setFile={setFile}
+        />
+        <ChartTypeSelect
+          chartTypeMaps={form.watch("chartTypeMaps")}
+          onChange={(chartTypeMaps) =>
+            form.setValue("chartTypeMaps", chartTypeMaps)
+          }
+        />
         <div className="flex justify-end gap-4">
+          <DeleteTemplateButton templateId={template.id} buttonSize="default" />
           <Button variant="outline" type="button">
             취소
           </Button>
-          <Button type="submit" onClick={form.handleSubmit(onSubmit)}>
+          <Button type="submit" onClick={form.handleSubmit(handleSubmit)}>
             저장
           </Button>
         </div>
       </div>
     </Form>
+  );
+}
+
+function TemplateImage({
+  thumbnailUrl,
+  file,
+  setFile,
+}: {
+  thumbnailUrl: GetTemplateByIdResponse["thumbnail_url"];
+  file: File | null;
+  setFile: (file: File | null) => void;
+}) {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>템플릿 이미지 업로드</CardTitle>
+        <CardDescription>템플릿 이미지를 업로드해주세요.</CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <FileUploadForm
+          file={file}
+          setFile={(file) => setFile(file)}
+          onRemove={() => setFile(null)}
+          type="image"
+          initFileImageUrl={thumbnailUrl}
+        />
+      </CardContent>
+    </Card>
   );
 }

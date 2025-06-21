@@ -1,3 +1,5 @@
+import { useState } from "react";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,34 +12,106 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-export default function Step1({ onNext }: { onNext: () => void }) {
+const DEV_DUMMY_DATA = {
+  name: "test",
+  gauge_ko: 20,
+  gauge_dan: 28,
+  chest_width: 85,
+};
+
+interface FormData {
+  name: string;
+  gauge_ko: number;
+  gauge_dan: number;
+  chest_width: number;
+}
+
+export default function Step1({
+  onNext,
+}: {
+  onNext: (data: FormData) => void;
+}) {
+  const [data, setData] = useState<Partial<FormData>>(
+    process.env.NODE_ENV === "development"
+      ? DEV_DUMMY_DATA
+      : {
+          name: "",
+          gauge_ko: undefined,
+          gauge_dan: undefined,
+          chest_width: undefined,
+        }
+  );
+
+  const handleChange = (key: keyof typeof data, value: string) => {
+    setData({ ...data, [key]: value });
+  };
+
   return (
     <div className="">
       <div className="flex flex-col gap-8 mt-6">
         <div className="flex flex-col gap-[6px]">
-          <Label className="text-small">프로젝트명 *</Label>
-          <Input type="text" />
+          <Label required>프로젝트명</Label>
+          <Input
+            type="text"
+            value={data.name}
+            onChange={(e) => handleChange("name", e.target.value)}
+          />
         </div>
         <div className="flex flex-col gap-[6px]">
-          <Label className="text-small">프로젝트명 *</Label>
-          <Select>
+          <Label required>가슴둘레</Label>
+          <Select
+            value={data.chest_width?.toString()}
+            onValueChange={(value) => handleChange("chest_width", value)}
+          >
             <SelectTrigger>
               <SelectValue placeholder="가슴둘레를 선택해주세요." />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="apple">가슴둘레</SelectItem>
-              <SelectItem value="banana">게이지</SelectItem>
+              <SelectItem value="85">80-85 cm</SelectItem>
+              <SelectItem value="90">85-90 cm</SelectItem>
+              <SelectItem value="95">90-95 cm</SelectItem>
+              <SelectItem value="100">95-100 cm</SelectItem>
+              <SelectItem value="105">100-105 cm</SelectItem>
+              <SelectItem value="110">105-110 cm</SelectItem>
+              <SelectItem value="115">110-115 cm</SelectItem>
+              <SelectItem value="120">115-120 cm</SelectItem>
             </SelectContent>
           </Select>
         </div>
         <div className="flex flex-col gap-[6px]">
-          <Label className="text-small">게이지(10cm x 10cm 기준) *</Label>
+          <Label required>게이지(10cm x 10cm 기준)</Label>
           <div className="grid grid-cols-2 gap-6">
-            <Input type="text" placeholder="예) 20" />
-            <Input type="text" placeholder="예) 28" />
+            <div className="flex gap-2 items-center">
+              <Input
+                type="text"
+                placeholder="예) 20"
+                value={data.gauge_ko}
+                onChange={(e) => handleChange("gauge_ko", e.target.value)}
+              />
+              <Label className="mb-0">코</Label>
+            </div>
+            <div className="flex gap-2 items-center">
+              <Input
+                type="text"
+                placeholder="예) 28"
+                value={data.gauge_dan}
+                onChange={(e) => handleChange("gauge_dan", e.target.value)}
+              />
+              <Label className="mb-0">단</Label>
+            </div>
           </div>
         </div>
-        <Button className="w-full" color="fill" onClick={onNext}>
+        <Button
+          className="w-full"
+          color="default"
+          disabled={
+            data.name === "" ||
+            data.chest_width === undefined ||
+            data.gauge_ko === undefined ||
+            data.gauge_dan === undefined
+          }
+          onClick={() => onNext(data as any)}
+        >
           입력 완료
         </Button>
       </div>

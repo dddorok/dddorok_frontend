@@ -30,19 +30,21 @@ export default function EditMeasurementRuleClient({
   const { data: rule } = useQuery(measurementRuleQueries.ruleById(id));
 
   const handleSubmit = async (data: MeasurementRuleFormData) => {
+    if (!rule) return;
+
     try {
       await updateMeasurementRule(id, {
-        category_large: data.level1,
-        category_medium: data.level2,
-        category_small: data.level3,
-        rule_name: data.name,
+        category_large: rule.category_large,
+        category_medium: rule.category_medium,
+        category_small: rule.category_small,
+        rule_name: rule.rule_name,
         measurement_codes: data.items,
-        sleeve_type: data.sleeveType,
-        neck_line_type: data.necklineType,
+        sleeve_type: rule.sleeve_type as SleeveType,
+        neck_line_type: rule.neck_line_type as NecklineType,
       });
       toast({
         title: "치수 규칙 수정 완료",
-        description: `"${data.name}" 치수 규칙이 성공적으로 업데이트되었습니다.`,
+        description: `"${rule.rule_name}" 치수 규칙이 성공적으로 업데이트되었습니다.`,
       });
       queryClient.invalidateQueries();
       router.push(`/measurement-rules`);
@@ -60,7 +62,6 @@ export default function EditMeasurementRuleClient({
           description: error.message,
         });
       }
-      console.error("Error updating measurement rule:", error);
     }
   };
 
@@ -87,18 +88,7 @@ export default function EditMeasurementRuleClient({
       </Alert>
 
       {rule && (
-        <MeasurementRuleForm
-          initialValues={{
-            name: rule.rule_name,
-            level1: rule.category_large,
-            level2: rule.category_medium,
-            level3: rule.category_small,
-            items: rule.items.map((item) => item.code),
-            sleeveType: rule.sleeve_type as SleeveType,
-            necklineType: rule.neck_line_type as NecklineType,
-          }}
-          onSubmit={handleSubmit}
-        />
+        <MeasurementRuleForm initialValues={rule} onSubmit={handleSubmit} />
       )}
     </div>
   );

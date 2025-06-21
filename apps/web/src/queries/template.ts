@@ -14,10 +14,13 @@ const templateListQueryOptions = (request: GetTemplateListRequest) =>
     queryFn: () => getTemplates(request),
   });
 
-const templateChartListQueryOptions = (templateId: string) =>
+const templateChartListQueryOptions = (
+  templateId: string,
+  chest_circumference: number
+) =>
   queryOptions({
-    queryKey: [templateQueryKey, "chartList", templateId],
-    queryFn: () => getTemplateChartList(templateId),
+    queryKey: [templateQueryKey, "chartList", templateId, chest_circumference],
+    queryFn: () => getTemplateChartList(templateId, chest_circumference),
   });
 
 export const templateQueries = {

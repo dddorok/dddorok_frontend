@@ -37,6 +37,7 @@ interface CreateTemplateRequest {
     chart_type_id: string;
     order: number;
   }[];
+  resourceId: string | null;
 }
 
 export const createTemplate = async (template: CreateTemplateRequest) => {
@@ -84,6 +85,7 @@ export interface GetTemplateByIdResponse {
     name: string;
     order: number;
   }[];
+  thumbnail_url: string | null;
 }
 // 단일 템플릿 조회
 export const getTemplateById = async (templateId: string) => {
@@ -103,12 +105,14 @@ interface UpdateTemplateRequest {
     chart_type_id: string;
     order: number;
   }[];
+  resourceId: string | null;
 }
 
 export const updateTemplate = async (
   templateId: string,
   template: UpdateTemplateRequest
 ) => {
+  console.log("template: ", template);
   const response = await privateInstance.patch(`template/${templateId}`, {
     json: template,
   });
@@ -127,4 +131,26 @@ export const updateTemplatePublishStatus = async (request: {
     `template/${request.template_id}/publish?is_published=${request.is_published}`
   );
   return response.json();
+};
+
+//  /api/template/upload-thumbnail
+export const uploadThumbnail = async (file: File) => {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  console.log("FormData entries:");
+  for (const pair of formData.entries()) {
+    console.log(pair[0], pair[1]);
+  }
+
+  const response = await privateInstance
+    .post<{
+      data: {
+        resource_id: string;
+      };
+    }>(`template/upload-thumbnail`, {
+      body: formData,
+    })
+    .json();
+  return response.data.resource_id;
 };

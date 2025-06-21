@@ -1,4 +1,3 @@
-import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 
 const sessionCookieName = "@dddorok/session" as const;
@@ -10,6 +9,7 @@ export async function middleware(request: NextRequest) {
   if (
     pathname === "/" ||
     pathname === "/auth/login" ||
+    pathname === "/auth/join" ||
     pathname.startsWith("/oauth") ||
     pathname.startsWith("/api") ||
     pathname.includes("_next") ||
@@ -31,13 +31,6 @@ export async function middleware(request: NextRequest) {
   return NextResponse.next();
 }
 
-// 미들웨어가 실행될 경로 지정
-// export const config = {
-//   matcher: [
-//     "/((?!api|_next/static|_next/image|favicon.ico|png|jpg|jpeg|svg|css|js).*)",
-//   ],
-// };
-
 export const config = {
-  matcher: ["/((?!api|_next|.*\\..*).*)"],
+  matcher: ["/((?!api|_next|.*\\..*|assets).*)"],
 };
