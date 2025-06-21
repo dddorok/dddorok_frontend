@@ -156,12 +156,6 @@ const CustomShapeAdder: React.FC<{
   );
 };
 
-interface CellType {
-  row: number;
-  col: number;
-  shape: Shape | null;
-}
-
 // 데모 컴포넌트
 const PixelArtEditor: React.FC = () => {
   const [brushTool, setBrushTool] = useState<BrushToolType>(BrushTool.DOT);
@@ -181,8 +175,6 @@ const PixelArtEditor: React.FC = () => {
     paste,
     copiedArea,
   } = useDotting(dottingRef);
-  const [isPasteMode, setIsPasteMode] = useState(false);
-  // const [activeCells, setActiveCells] = useState<Array<CellType>>([]);
   const selectedArea = dottingRef.current?.getSelectedArea();
   // 초기 셀 데이터 예시
   const initialCells = [
@@ -212,15 +204,6 @@ const PixelArtEditor: React.FC = () => {
     setShapes((prev) => [...prev, newShape]);
   };
 
-  // 붙여넣기 모드 토글
-  const handlePasteToggle = useCallback(() => {
-    if (copiedArea) {
-      const newPasteMode = !isPasteMode;
-      setIsPasteMode(newPasteMode);
-      console.log("붙여넣기 모드:", newPasteMode);
-    }
-  }, [copiedArea, isPasteMode]);
-
   const onPaste = useCallback(() => {
     // const { row, col } = dottingRef.current?.getGridPosition(
     //   canvasX,
@@ -232,46 +215,17 @@ const PixelArtEditor: React.FC = () => {
     if (!selectedArea) return;
 
     console.log("붙여넣기 시도:", {
-      // row,
-      // col,
+      row: selectedArea.startRow,
+      col: selectedArea.startCol,
       copiedArea: copiedArea?.width + "x" + copiedArea?.height,
     });
 
     // 클릭된 셀 정보 업데이트
 
-    if (isPasteMode && copiedArea && dottingRef.current) {
+    if (copiedArea && dottingRef.current) {
       paste(selectedArea.startRow, selectedArea.startCol);
-      setIsPasteMode(false); // 붙여넣기 완료 후 모드 해제
     }
-  }, [copiedArea, paste, isPasteMode]);
-
-  // 캔버스 클릭 핸들러 (붙여넣기용)
-  const handleCanvasClick = useCallback(
-    (e: React.MouseEvent) => {
-      console.log(
-        "캔버스 클릭됨, copiedArea:",
-        copiedArea,
-        "isPasteMode:",
-        isPasteMode
-      );
-
-      const canvas = e.currentTarget as HTMLCanvasElement;
-      const rect = canvas.getBoundingClientRect();
-
-      // 캔버스 좌표 계산
-      const canvasX = e.clientX - rect.left;
-      const canvasY = e.clientY - rect.top;
-
-      console.log("캔버스 좌표:", { canvasX, canvasY });
-
-      // 클릭된 셀 정보 업데이트
-
-      if (isPasteMode && copiedArea && dottingRef.current) {
-        onPaste();
-      }
-    },
-    [copiedArea, isPasteMode, onPaste]
-  );
+  }, [copiedArea, paste]);
 
   // 키보드 단축키 추가
   React.useEffect(() => {
@@ -291,14 +245,14 @@ const PixelArtEditor: React.FC = () => {
       } else if ((e.metaKey || e.ctrlKey) && e.key === "v") {
         e.preventDefault();
         if (copiedArea) {
-          handlePasteToggle();
+          onPaste();
         }
       }
     };
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [undo, redo, copy, copiedArea, handlePasteToggle]);
+  }, [undo, redo, copy, copiedArea]);
 
   return (
     <div className="p-4">
@@ -366,27 +320,6 @@ const PixelArtEditor: React.FC = () => {
             📋 복사
           </button>
 
-          <button
-            onClick={handlePasteToggle}
-            disabled={!copiedArea}
-            className={`px-3 py-1 rounded text-sm font-medium transition-all ${
-              isPasteMode
-                ? "bg-green-600 text-white"
-                : copiedArea
-                  ? "bg-green-500 text-white hover:bg-green-600"
-                  : "bg-gray-300 text-gray-500 cursor-not-allowed"
-            }`}
-            title={
-              isPasteMode
-                ? "붙여넣기 모드 활성화됨. 캔버스를 클릭하여 붙여넣기"
-                : copiedArea
-                  ? "붙여넣기 모드 활성화 (클릭 후 캔버스 클릭)"
-                  : "복사된 영역이 없음"
-            }
-          >
-            {isPasteMode ? "📍 붙여넣기 모드" : "📌 붙여넣기"}
-          </button>
-
           {copiedArea && (
             <div className="text-xs text-gray-600 bg-gray-100 px-2 py-1 rounded">
               복사됨: {copiedArea.width}×{copiedArea.height}
@@ -434,7 +367,6 @@ const PixelArtEditor: React.FC = () => {
           initialCells={initialCells}
           disabledCells={disabledCells}
           disabledCellColor="#f0f0f0"
-          onClick={handleCanvasClick}
         />
       </div>
 
