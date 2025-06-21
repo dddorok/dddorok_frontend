@@ -198,8 +198,37 @@ const renderBobble = (
   ctx.fill();
 };
 
+const renderDot = (
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  size: number,
+  color: string
+) => {
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.arc(x + size / 2, y + size / 2, size / 2, 0, 2 * Math.PI);
+  ctx.fill();
+
+  // ctx.strokeStyle = color;
+  // ctx.lineWidth = size * 0.08;
+  // const centerX = x + size / 2;
+  // const centerY = y + size / 2;
+  // const radius = size * 0.35;
+
+  // ctx.beginPath();
+  // ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
+  // ctx.stroke();
+};
+
 // 뜨개질 기호 정의
 export const KNITTING_SYMBOLS: Shape[] = [
+  // {
+  //   id: "dot",
+  //   name: "점",
+  //   color: "#ffffff",
+  //   render: renderDot,
+  // },
   {
     id: "knit",
     name: "뜨기",

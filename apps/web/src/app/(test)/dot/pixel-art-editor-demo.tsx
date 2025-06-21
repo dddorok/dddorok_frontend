@@ -157,7 +157,14 @@ const CustomShapeAdder: React.FC<{
 };
 
 // 데모 컴포넌트
-const PixelArtEditor: React.FC = () => {
+interface Cell {
+  row: number;
+  col: number;
+  shape: Shape | undefined;
+}
+
+const PixelArtEditor = ({ initialCells }: { initialCells: Cell[] }) => {
+  console.log("initialCells: ", initialCells);
   const [brushTool, setBrushTool] = useState<BrushToolType>(BrushTool.DOT);
   const [selectedShape, setSelectedShape] = useState<Shape>(
     KNITTING_SYMBOLS[0] as Shape
@@ -178,10 +185,10 @@ const PixelArtEditor: React.FC = () => {
   } = useDotting(dottingRef);
   const selectedArea = dottingRef.current?.getSelectedArea();
   // 초기 셀 데이터 예시
-  const initialCells = [
-    { row: 1, col: 1, shape: KNITTING_SYMBOLS[0] }, // 뜨기
-    { row: 2, col: 2, shape: KNITTING_SYMBOLS[1] }, // 날리기
-  ];
+  // const initialCells = [
+  //   { row: 1, col: 1, shape: KNITTING_SYMBOLS[0] }, // 뜨기
+  //   { row: 2, col: 2, shape: KNITTING_SYMBOLS[1] }, // 날리기
+  // ];
 
   // 비활성화 셀 예시
   const disabledCells = [
@@ -333,8 +340,8 @@ const PixelArtEditor: React.FC = () => {
       <div className="border-2 border-gray-300 inline-block">
         <Dotting
           ref={dottingRef}
-          rows={50}
-          cols={40}
+          rows={136}
+          cols={88}
           gridSquareLength={30}
           brushTool={brushTool}
           selectedShape={selectedShape}

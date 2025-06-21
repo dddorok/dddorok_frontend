@@ -55,7 +55,7 @@ export const getProject = async (id: string) => {
   return response.data;
 };
 
-interface GetChartResponse {
+export interface GetChartResponse {
   id: string;
   chartTypeId: string;
   name: string;
@@ -73,7 +73,7 @@ interface GetChartResponse {
 
 export const getChart = async (id: string) => {
   const response = await privateInstance
-    .get<{ data: any }>(`project/chart/${id}`)
-    .json();
-  return response.data;
+    .get(`project/chart/${id}`)
+    .json<GetChartResponse>();
+  return response;
 };
