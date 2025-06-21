@@ -49,6 +49,7 @@ export interface DottingRef {
     canvasX: number,
     canvasY: number
   ) => { row: number; col: number };
+  getCanvasPosition: () => { x: number; y: number } | null;
 }
 
 export const useDotting = (ref: React.RefObject<DottingRef | null>) => {

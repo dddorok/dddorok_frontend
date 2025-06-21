@@ -121,6 +121,7 @@ interface DottingRef {
     canvasX: number,
     canvasY: number
   ) => { row: number; col: number };
+  getCanvasPosition: () => { x: number; y: number } | null;
 }
 
 const createPixel = (
@@ -685,6 +686,11 @@ export const Dotting = forwardRef<DottingRef, DottingProps>(
           const col = Math.floor(adjustedX / gridSquareLength);
           const row = Math.floor(adjustedY / gridSquareLength);
           return { row, col };
+        },
+        getCanvasPosition: () => {
+          // 마우스 이벤트에서 캔버스 위치를 가져오는 방식으로 변경
+          // 현재는 null을 반환하고, 실제 사용 시에는 마우스 이벤트에서 위치를 전달받아야 함
+          return null;
         },
       }),
       [
