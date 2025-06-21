@@ -94,24 +94,15 @@ interface AdjustedPath extends PathDefinition {
   adjustedControlPoints?: ControlPoint[];
 }
 
-const initialSvgContent: string = `<svg width="123" height="263" viewBox="0 0 123 263" fill="none" xmlns="http://www.w3.org/2000/svg">
-<g id="&#235;&#157;&#188;&#236;&#154;&#180;&#235;&#147;&#156;&#235;&#132;&#165; &#236;&#133;&#139;&#236;&#157;&#184;&#237;&#152;&#149; &#236;&#149;&#158;&#235;&#170;&#184;&#237;&#140;&#144;">
-<path id="BODY_SHOULDER_SLOPE_WIDTH" d="M86 15L46 3" stroke="black"/>
-<path id="BODY_FRONT_NECK_CIRCUMFERENCE" d="M46 3C44.5 33.5 33.5 50 5 50" stroke="black"/>
-<path id="BODY_HEM_WIDTH" d="M5 259H120" stroke="black"/>
-<path id="BODY_WAIST_SLOPE_LENGTH" d="M120 259L120 111" stroke="black"/>
-<path id="BODY_FRONT_ARMHOLE_CIRCUMFERENCE" d="M120 111C120 111 108.698 111.1 98.8756 104.64C86.5 96.5 86 79.5 86 79.5L86 15" stroke="black"/>
-</g>
-</svg>`;
-
-export function AdjustmentEditor() {
+export function AdjustmentEditor({ svgContent }: { svgContent: string }) {
   const [pathDefs, setPathDefs] = useState<PathDefinition[]>([]);
   const [gridPoints, setGridPoints] = useState<Point[]>([]);
+  console.log("gridPoints: ", gridPoints);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     // 클라이언트 사이드에서만 SVG 파싱 실행
-    const parsedPaths = analyzeSVGPaths(initialSvgContent);
+    const parsedPaths = analyzeSVGPaths(svgContent);
     const gridPoints = getGridPointsFromPaths(parsedPaths);
 
     // Path 정의 생성
