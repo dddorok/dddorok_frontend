@@ -337,7 +337,7 @@ const PixelArtEditor = ({ initialCells }: { initialCells: Cell[] }) => {
         </button>
       </div>
 
-      <div className="border-2 border-gray-300 inline-block">
+      <div className="border-2 border-gray-300 inline-block max-w-screen overflow-auto">
         <Dotting
           ref={dottingRef}
           rows={136}
