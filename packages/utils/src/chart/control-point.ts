@@ -1,3 +1,5 @@
+import { ControlPoint } from "./types";
+
 export const extractControlPoints = (pathData: string) => {
   const controlPoints: ControlPoint[] = [];
   const commands = pathData.match(/[MLHVCSQTAZ][^MLHVCSQTAZ]*/gi) || [];
