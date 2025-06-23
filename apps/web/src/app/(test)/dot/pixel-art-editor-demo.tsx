@@ -4,6 +4,8 @@ import { BrushTool, BrushToolType, KNITTING_SYMBOLS, Shape } from "./constant";
 import { Dotting } from "./pixel-art-editor";
 import { DottingRef, useDotting } from "./useDotting";
 
+import { Button } from "@/components/ui/button";
+
 // 기본 도형들
 const renderCircle = (
   ctx: CanvasRenderingContext2D,
@@ -180,7 +182,6 @@ const PixelArtEditor = ({ initialCells }: { initialCells: Cell[] }) => {
     canRedo,
     copy,
     paste,
-    copiedArea,
     handlePaste,
   } = useDotting(dottingRef);
   const selectedArea = dottingRef.current?.getSelectedArea();
@@ -229,16 +230,14 @@ const PixelArtEditor = ({ initialCells }: { initialCells: Cell[] }) => {
         copy();
       } else if ((e.metaKey || e.ctrlKey) && e.key === "v") {
         e.preventDefault();
-        if (copiedArea) {
-          console.log("붙여넣기 버튼 클릭됨");
-          handlePaste();
-        }
+        console.log("붙여넣기 버튼 클릭됨");
+        handlePaste();
       }
     };
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [undo, redo, copy, copiedArea, handlePaste]);
+  }, [undo, redo, copy, handlePaste]);
 
   return (
     <div className="p-4">
@@ -247,7 +246,13 @@ const PixelArtEditor = ({ initialCells }: { initialCells: Cell[] }) => {
       <div className="mb-4 flex flex-wrap gap-4 items-center">
         <div className="flex items-center gap-2">
           <label className="font-medium">브러시 도구:</label>
-          <select
+          <Button onClick={() => setBrushTool(BrushTool.DOT)}>펜</Button>
+          <Button onClick={() => setBrushTool(BrushTool.ERASER)}>지우개</Button>
+          <Button onClick={() => setBrushTool(BrushTool.SELECT)}>선택</Button>
+          <p>
+            펜을 선택하고 원하는 기호를 선택하면 뜨개질 기호를 그릴 수 있습니다.
+          </p>
+          {/* <select
             value={brushTool}
             onChange={(e) => setBrushTool(e.target.value as BrushToolType)}
             className="border rounded px-2 py-1"
@@ -257,7 +262,7 @@ const PixelArtEditor = ({ initialCells }: { initialCells: Cell[] }) => {
             <option value={BrushTool.ERASER}>지우개</option>
             <option value={BrushTool.SELECT}>선택</option>
             <option value={BrushTool.LINE}>직선</option>
-          </select>
+          </select> */}
         </div>
 
         <ShapeSelector
@@ -305,12 +310,6 @@ const PixelArtEditor = ({ initialCells }: { initialCells: Cell[] }) => {
           >
             📋 복사
           </button>
-
-          {copiedArea && (
-            <div className="text-xs text-gray-600 bg-gray-100 px-2 py-1 rounded">
-              복사됨: {copiedArea.width}×{copiedArea.height}
-            </div>
-          )}
         </div>
 
         <div className="flex gap-2">
@@ -342,7 +341,7 @@ const PixelArtEditor = ({ initialCells }: { initialCells: Cell[] }) => {
           ref={dottingRef}
           rows={136}
           cols={88}
-          gridSquareLength={30}
+          gridSquareLength={12}
           brushTool={brushTool}
           selectedShape={selectedShape}
           shapes={shapes}

@@ -51,7 +51,6 @@ export interface DottingRef {
   ) => { row: number; col: number };
   getCanvasPosition: () => { x: number; y: number } | null;
   copy: () => void;
-  getCopiedArea: () => CopiedArea | null;
   handlePaste: () => void;
 }
 
@@ -139,21 +138,6 @@ export const useDotting = (ref: React.RefObject<DottingRef | null>) => {
     console.log("붙여넣기는 Dotting 컴포넌트에서 직접 처리됩니다.");
   }, []);
 
-  // 복사된 영역 가져오기
-  const getCopiedArea = useCallback(() => {
-    if (ref.current) {
-      return ref.current.getCopiedArea();
-    }
-    return null;
-  }, [ref]);
-
-  // 붙여넣기 모드 토글
-  // const togglePasteMode = useCallback(() => {
-  //   if (ref.current) {
-  //     ref.current.togglePasteMode();
-  //   }
-  // }, [ref]);
-
   const handlePaste = useCallback(() => {
     if (ref.current) {
       ref.current.handlePaste();
@@ -170,7 +154,6 @@ export const useDotting = (ref: React.RefObject<DottingRef | null>) => {
     canRedo: canRedoState,
     copy,
     paste,
-    copiedArea: getCopiedArea(),
     handlePaste,
   };
 };

@@ -495,6 +495,7 @@ export const Dotting = forwardRef<DottingRef, DottingProps>(
     const [selectedArea, setSelectedArea] = useState<SelectedArea | null>(null);
     const [lastDrawnPos, setLastDrawnPos] = useState<GridPosition | null>(null);
     const [copiedArea, setCopiedArea] = useState<CopiedArea | null>(null);
+    console.log("copiedArea: ", copiedArea);
 
     // shape ID로 실제 shape 객체를 찾는 함수
     const getShapeById = useCallback(
@@ -584,6 +585,7 @@ export const Dotting = forwardRef<DottingRef, DottingProps>(
     // 붙여넣기 함수
     const pasteAtPosition = useCallback(
       (row: number, col: number) => {
+        console.log("copiedArea: ", copiedArea);
         if (copiedArea) {
           pasteAreaInternal(row, col, copiedArea);
           onPaste?.();
@@ -667,6 +669,7 @@ export const Dotting = forwardRef<DottingRef, DottingProps>(
     );
 
     const handlePaste = useCallback(() => {
+      console.log("handlePaste: ");
       if (!selectedArea) return;
 
       if (copiedArea) {
@@ -809,7 +812,6 @@ export const Dotting = forwardRef<DottingRef, DottingProps>(
         },
         copy: copySelectedArea,
         paste: pasteAtPosition,
-        getCopiedArea: () => copiedArea,
         handlePaste: handlePaste,
       }),
       [
@@ -829,7 +831,6 @@ export const Dotting = forwardRef<DottingRef, DottingProps>(
         selectedArea,
         panOffset,
         scale,
-        copiedArea,
       ]
     );
 
