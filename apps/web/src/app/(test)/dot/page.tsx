@@ -13,12 +13,11 @@ export default function DotPage() {
     ...projectQueries.chart("9c326ee7-1b8c-44fa-8eee-2c653f346af2"),
   });
 
-  console.log("chart: ", chart);
   const initialCells = convertCellsData(chart?.cells);
-  console.log("initialCells: ", initialCells);
   // return <KnittingPatternEditor />;
   // return <KnittingPatternEditor />;
 
+  console.log("initialCells: ", initialCells);
   if (!initialCells || initialCells.length === 0) {
     return <div>Loading...</div>;
   }
@@ -45,12 +44,14 @@ interface OriginalCell {
 
 // 동적 변환 함수
 const convertCellsData = (cellsData: OriginalCell[] | undefined): Cell[] => {
+  // '●'에 해당하는 shape를 KNITTING_SYMBOLS에서 찾아 할당
+  const dotShape = KNITTING_SYMBOLS.find((shape) => shape.id === "dot");
+  console.log("KNITTING_SYMBOLS: ", KNITTING_SYMBOLS);
   return (
     cellsData?.map((cell) => ({
       row: cell.row,
       col: cell.col,
-      // shape: getSymbolByCode(cell.symbol),
-      shape: cell.symbol === "●" ? KNITTING_SYMBOLS[0] : undefined,
+      shape: cell.symbol === "●" ? dotShape : undefined,
     })) ?? []
   );
 };
