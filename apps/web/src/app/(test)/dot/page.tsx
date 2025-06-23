@@ -26,7 +26,12 @@ export default function DotPage() {
   const maxCol = Math.max(...initialCells.map((cell) => cell.col));
   console.log("maxRow: ", maxRow, "maxCol: ", maxCol);
 
-  return <PixelArtEditor initialCells={initialCells} />;
+  return (
+    <>
+      <PixelArtEditor initialCells={initialCells} />
+      <DevKnittingSymbolsPreview />
+    </>
+  );
 }
 
 interface Cell {
@@ -55,3 +60,39 @@ const convertCellsData = (cellsData: OriginalCell[] | undefined): Cell[] => {
     })) ?? []
   );
 };
+
+function DevKnittingSymbolsPreview() {
+  return (
+    <div style={{ marginTop: 32 }}>
+      <h3 style={{ fontWeight: "bold", marginBottom: 8 }}>
+        KNITTING_SYMBOLS 미리보기 (DevTool)
+      </h3>
+      <div style={{ display: "flex", gap: 24 }}>
+        {KNITTING_SYMBOLS.map((shape) => (
+          <div key={shape.id} style={{ textAlign: "center" }}>
+            <canvas
+              width={40}
+              height={40}
+              ref={(canvas) => {
+                if (canvas) {
+                  const ctx = canvas.getContext("2d");
+                  if (ctx) {
+                    ctx.clearRect(0, 0, 40, 40);
+                    shape.render(ctx, 0, 0, 40, shape.color);
+                  }
+                }
+              }}
+              style={{
+                border: "1px solid #eee",
+                background: "#fff",
+                borderRadius: 8,
+              }}
+            />
+            <div style={{ fontSize: 12, marginTop: 4 }}>{shape.name}</div>
+            <div style={{ fontSize: 10, color: "#888" }}>{shape.id}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
