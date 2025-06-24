@@ -429,6 +429,8 @@ const executeRedo = (
   return { pixels, newIndex: historyIndex + 1 };
 };
 
+const LABEL_MARGIN_RATIO = 1.2; // 셀 크기의 1.2배만큼 여백
+
 // Dotting 컴포넌트
 export const Dotting = forwardRef<DottingRef, DottingProps>(
   (
@@ -460,9 +462,10 @@ export const Dotting = forwardRef<DottingRef, DottingProps>(
     },
     ref
   ) => {
-    // width, height를 rows, cols, gridSquareLength로 계산
-    const width = cols * gridSquareLength;
-    const height = rows * gridSquareLength;
+    const LABEL_MARGIN = gridSquareLength * LABEL_MARGIN_RATIO;
+    // width, height를 rows, cols, gridSquareLength, LABEL_MARGIN로 계산
+    const width = cols * gridSquareLength + LABEL_MARGIN;
+    const height = rows * gridSquareLength + LABEL_MARGIN;
 
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const [pixels, setPixels] = useState<(Pixel | null)[][]>(() =>
@@ -840,11 +843,12 @@ export const Dotting = forwardRef<DottingRef, DottingProps>(
         if (!canvas) return { x: 0, y: 0 };
 
         const rect = canvas.getBoundingClientRect();
-        const x = (e.clientX - rect.left - panOffset.x) / scale;
-        const y = (e.clientY - rect.top - panOffset.y) / scale;
+        // LABEL_MARGIN 만큼 빼서 실제 그리드 좌표로 변환
+        const x = (e.clientX - rect.left - panOffset.x - LABEL_MARGIN) / scale;
+        const y = (e.clientY - rect.top - panOffset.y - LABEL_MARGIN) / scale;
         return { x, y };
       },
-      [panOffset, scale]
+      [panOffset, scale, LABEL_MARGIN]
     );
 
     const getGridPos = useCallback(
@@ -1163,6 +1167,36 @@ export const Dotting = forwardRef<DottingRef, DottingProps>(
       ctx.fillStyle = backgroundColor;
       ctx.fillRect(0, 0, width, height);
 
+      // --- 상단(열 번호) 표시 ---
+      ctx.save();
+      ctx.fillStyle = "#222";
+      ctx.font = `${gridSquareLength * 0.6}px sans-serif`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "bottom";
+      for (let col = 0; col < cols; col++) {
+        ctx.fillText(
+          (col + 1).toString(),
+          LABEL_MARGIN + col * gridSquareLength + gridSquareLength / 2,
+          LABEL_MARGIN * 0.7
+        );
+      }
+      ctx.restore();
+
+      // --- 왼쪽(행 번호) 표시 ---
+      ctx.save();
+      ctx.fillStyle = "#222";
+      ctx.font = `${gridSquareLength * 0.6}px sans-serif`;
+      ctx.textAlign = "right";
+      ctx.textBaseline = "middle";
+      for (let row = 0; row < rows; row++) {
+        ctx.fillText(
+          (row + 1).toString(),
+          LABEL_MARGIN * 0.8,
+          LABEL_MARGIN + row * gridSquareLength + gridSquareLength / 2
+        );
+      }
+      ctx.restore();
+
       // 그리드 그리기
       if (isGridVisible) {
         ctx.strokeStyle = gridStrokeColor;
@@ -1171,16 +1205,16 @@ export const Dotting = forwardRef<DottingRef, DottingProps>(
 
         // 수직선
         for (let i = 0; i <= cols; i++) {
-          const x = i * gridSquareLength;
-          ctx.moveTo(x, 0);
-          ctx.lineTo(x, height);
+          const x = LABEL_MARGIN + i * gridSquareLength;
+          ctx.moveTo(x, LABEL_MARGIN);
+          ctx.lineTo(x, LABEL_MARGIN + rows * gridSquareLength);
         }
 
         // 수평선
         for (let i = 0; i <= rows; i++) {
-          const y = i * gridSquareLength;
-          ctx.moveTo(0, y);
-          ctx.lineTo(width, y);
+          const y = LABEL_MARGIN + i * gridSquareLength;
+          ctx.moveTo(LABEL_MARGIN, y);
+          ctx.lineTo(LABEL_MARGIN + cols * gridSquareLength, y);
         }
 
         ctx.stroke();
@@ -1195,8 +1229,8 @@ export const Dotting = forwardRef<DottingRef, DottingProps>(
                 // 비활성화된 셀 표시
                 ctx.fillStyle = disabledCellColor;
                 ctx.fillRect(
-                  pixel.columnIndex * gridSquareLength,
-                  pixel.rowIndex * gridSquareLength,
+                  LABEL_MARGIN + pixel.columnIndex * gridSquareLength,
+                  LABEL_MARGIN + pixel.rowIndex * gridSquareLength,
                   gridSquareLength,
                   gridSquareLength
                 );
@@ -1205,8 +1239,8 @@ export const Dotting = forwardRef<DottingRef, DottingProps>(
                 ctx.strokeStyle = "#999";
                 ctx.lineWidth = 1;
                 ctx.beginPath();
-                const x = pixel.columnIndex * gridSquareLength;
-                const y = pixel.rowIndex * gridSquareLength;
+                const x = LABEL_MARGIN + pixel.columnIndex * gridSquareLength;
+                const y = LABEL_MARGIN + pixel.rowIndex * gridSquareLength;
                 ctx.moveTo(x + 2, y + 2);
                 ctx.lineTo(x + gridSquareLength - 2, y + gridSquareLength - 2);
                 ctx.moveTo(x + gridSquareLength - 2, y + 2);
@@ -1217,8 +1251,8 @@ export const Dotting = forwardRef<DottingRef, DottingProps>(
                 drawShape(
                   ctx,
                   pixel.shape,
-                  pixel.columnIndex * gridSquareLength,
-                  pixel.rowIndex * gridSquareLength,
+                  LABEL_MARGIN + pixel.columnIndex * gridSquareLength,
+                  LABEL_MARGIN + pixel.rowIndex * gridSquareLength,
                   gridSquareLength
                 );
               }
@@ -1234,8 +1268,8 @@ export const Dotting = forwardRef<DottingRef, DottingProps>(
             drawShape(
               ctx,
               pixel.shape,
-              pixel.columnIndex * gridSquareLength,
-              pixel.rowIndex * gridSquareLength,
+              LABEL_MARGIN + pixel.columnIndex * gridSquareLength,
+              LABEL_MARGIN + pixel.rowIndex * gridSquareLength,
               gridSquareLength
             );
           }
@@ -1248,8 +1282,8 @@ export const Dotting = forwardRef<DottingRef, DottingProps>(
         ctx.lineWidth = 2;
         ctx.setLineDash([5, 5]);
         ctx.strokeRect(
-          selectedArea.startCol * gridSquareLength,
-          selectedArea.startRow * gridSquareLength,
+          LABEL_MARGIN + selectedArea.startCol * gridSquareLength,
+          LABEL_MARGIN + selectedArea.startRow * gridSquareLength,
           (selectedArea.endCol - selectedArea.startCol + 1) * gridSquareLength,
           (selectedArea.endRow - selectedArea.startRow + 1) * gridSquareLength
         );
@@ -1273,6 +1307,7 @@ export const Dotting = forwardRef<DottingRef, DottingProps>(
       rows,
       gridSquareLength,
       disabledCellColor,
+      LABEL_MARGIN,
     ]);
 
     useEffect(() => {

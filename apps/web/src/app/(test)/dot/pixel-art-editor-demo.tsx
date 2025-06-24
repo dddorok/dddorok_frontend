@@ -339,8 +339,8 @@ const PixelArtEditor = ({ initialCells }: { initialCells: Cell[] }) => {
       <div className="border-2 border-gray-300 inline-block max-w-[100vw] overflow-auto">
         <Dotting
           ref={dottingRef}
-          rows={136}
-          cols={88}
+          rows={140}
+          cols={86}
           gridSquareLength={12}
           brushTool={brushTool}
           selectedShape={selectedShape}
