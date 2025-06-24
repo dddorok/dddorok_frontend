@@ -3,7 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 // import KnittingPatternEditor from "./knitting";
 
-import { KNITTING_SYMBOLS, Shape } from "./constant";
+import { KNITTING_SYMBOL_OBJ, KNITTING_SYMBOLS, Shape } from "./constant";
 import PixelArtEditor from "./pixel-art-editor-demo";
 
 import { projectQueries } from "@/queries/project";
@@ -13,11 +13,19 @@ export default function DotPage() {
     ...projectQueries.chart("9c326ee7-1b8c-44fa-8eee-2c653f346af2"),
   });
 
-  const initialCells = convertCellsData(chart?.cells);
-  // return <KnittingPatternEditor />;
-  // return <KnittingPatternEditor />;
+  const chartShapeObj = chart?.cells.reduce(
+    (acc, cell) => {
+      acc[cell.symbol] = (acc[cell.symbol] || 0) + 1;
+      // acc[cell.id] = cell;
+      return acc;
+    },
+    {} as Record<string, number>
+  );
 
-  console.log("initialCells: ", initialCells);
+  console.log("chartShapeObj: ", chartShapeObj);
+
+  const initialCells = convertCellsData(chart?.cells);
+
   if (!initialCells || initialCells.length === 0) {
     return <div>Loading...</div>;
   }
@@ -50,13 +58,20 @@ interface OriginalCell {
 // 동적 변환 함수
 const convertCellsData = (cellsData: OriginalCell[] | undefined): Cell[] => {
   // '●'에 해당하는 shape를 KNITTING_SYMBOLS에서 찾아 할당
-  const dotShape = KNITTING_SYMBOLS.find((shape) => shape.id === "dot");
-  console.log("KNITTING_SYMBOLS: ", KNITTING_SYMBOLS);
+  // const dotShape = KNITTING_SYMBOLS.find((shape) => shape.id === "dot");
+  // console.log("KNITTING_SYMBOLS: ", KNITTING_SYMBOLS);
   return (
     cellsData?.map((cell) => ({
       row: cell.row,
       col: cell.col,
-      shape: cell.symbol === "●" ? dotShape : undefined,
+      shape:
+        cell.symbol === undefined
+          ? undefined
+          : cell.symbol === "●"
+            ? KNITTING_SYMBOL_OBJ.dot
+            : cell.symbol === "✦"
+              ? KNITTING_SYMBOL_OBJ.knit
+              : KNITTING_SYMBOL_OBJ.dot,
     })) ?? []
   );
 };

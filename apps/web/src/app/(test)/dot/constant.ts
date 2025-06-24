@@ -216,6 +216,20 @@ const renderDot = (
   ctx.fill();
 };
 
+export const KNITTING_SYMBOL_OBJ = {
+  dot: {
+    id: "dot",
+    name: "점",
+    color: "#000",
+    render: renderDot,
+  },
+  knit: {
+    id: "knit",
+    name: "뜨기",
+    color: "#2563eb",
+    render: renderKnit,
+  },
+};
 // 뜨개질 기호 정의
 export const KNITTING_SYMBOLS: Shape[] = [
   {
