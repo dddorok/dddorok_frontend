@@ -170,7 +170,6 @@ const PixelArtEditor = ({
   grid_col: number;
   grid_row: number;
 }) => {
-  console.log("initialCells: ", initialCells);
   const [brushTool, setBrushTool] = useState<BrushToolType>(BrushTool.DOT);
   const [selectedShape, setSelectedShape] = useState<Shape>(
     KNITTING_SYMBOLS[0] as Shape
@@ -219,7 +218,6 @@ const PixelArtEditor = ({
         copy();
       } else if ((e.metaKey || e.ctrlKey) && e.key === "v") {
         e.preventDefault();
-        console.log("붙여넣기 버튼 클릭됨");
         handlePaste();
       }
     };
@@ -290,7 +288,6 @@ const PixelArtEditor = ({
         <div className="flex gap-2">
           <button
             onClick={() => {
-              console.log("복사 버튼 클릭됨, brushTool:", brushTool);
               copy();
             }}
             disabled={brushTool !== BrushTool.SELECT}

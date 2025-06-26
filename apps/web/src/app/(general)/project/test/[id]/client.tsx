@@ -9,7 +9,6 @@ export default function ProjectDetailClient({ id }: { id: string }) {
   const { data: project } = useQuery({
     ...projectQueries.project(id),
   });
-  console.log("project: ", project);
   return (
     <div>
       <h1>{project?.name}</h1>

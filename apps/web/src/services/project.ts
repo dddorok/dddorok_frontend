@@ -55,6 +55,13 @@ export const getProject = async (id: string) => {
   return response.data;
 };
 
+export interface OriginalCell {
+  row: number;
+  col: number;
+  symbol: string;
+  color_code: string;
+}
+
 export interface GetChartResponse {
   id: string;
   chartTypeId: string;
@@ -63,12 +70,7 @@ export interface GetChartResponse {
   detailType: string;
   gridRow: number;
   gridCol: number;
-  cells: {
-    row: number;
-    col: number;
-    symbol: string;
-    color_code: string;
-  }[];
+  cells: OriginalCell[];
 }
 
 export const getChart = async (id: string) => {

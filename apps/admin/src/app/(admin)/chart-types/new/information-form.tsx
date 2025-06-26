@@ -112,7 +112,6 @@ export default function InformationForm({
       resource_id: resource_id,
     });
 
-    console.log("data: ", data);
     onSubmit(data.id, values);
   };
 

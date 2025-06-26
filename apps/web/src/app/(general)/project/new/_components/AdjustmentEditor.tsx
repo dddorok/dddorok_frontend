@@ -96,9 +96,7 @@ interface AdjustedPath extends PathDefinition {
 
 export function AdjustmentEditor({ svgContent }: { svgContent: string }) {
   const [pathDefs, setPathDefs] = useState<PathDefinition[]>([]);
-  console.log("pathDefs: ", pathDefs);
   const [gridPoints, setGridPoints] = useState<Point[]>([]);
-  console.log("gridPoints: ", gridPoints);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {

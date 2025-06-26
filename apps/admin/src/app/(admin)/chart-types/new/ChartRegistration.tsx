@@ -120,9 +120,7 @@ const ChartRegistration: React.FC<{
         },
       };
 
-      console.log("requestData: ", requestData);
-      const response = await updateChartTypeSvgMapping(id, requestData);
-      console.log("response: ", response);
+      await updateChartTypeSvgMapping(id, requestData);
 
       toast({
         title: "성공",
