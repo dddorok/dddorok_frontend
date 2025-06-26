@@ -1,17 +1,22 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-// import KnittingPatternEditor from "./knitting";
 
 import { KNITTING_SYMBOL_OBJ, KNITTING_SYMBOLS, Shape } from "./constant";
+import chartDummyData from "./generated_chart.json";
+// import KnittingPatternEditor from "./knitting";
+
 import PixelArtEditor from "./pixel-art-editor-demo";
 
 import { projectQueries } from "@/queries/project";
 
 export default function DotPage() {
-  const { data: chart } = useQuery({
-    ...projectQueries.chart("9c326ee7-1b8c-44fa-8eee-2c653f346af2"),
-  });
+  // const { data: chart } = useQuery({
+  //   ...projectQueries.chart("9c326ee7-1b8c-44fa-8eee-2c653f346af2"),
+  // });
+
+  const chart = chartDummyData.data.chart_parts[0];
+  console.log("chart: ", chart);
 
   const chartShapeObj = chart?.cells.reduce(
     (acc, cell) => {
@@ -24,19 +29,32 @@ export default function DotPage() {
 
   console.log("chartShapeObj: ", chartShapeObj);
 
-  const initialCells = convertCellsData(chart?.cells);
+  // grid row, col 이 그리드 전체
+  // 이주엥서 initialCells이 아니면 모두 disabledCells
+
+  if (!chart) {
+    return <div>Loading...</div>;
+  }
+
+  const { initialCells } = convertCellsData(chart?.cells);
+  const disabledCells = getDisabledCells(
+    chart.grid_row,
+    chart.grid_col,
+    initialCells
+  );
 
   if (!initialCells || initialCells.length === 0) {
     return <div>Loading...</div>;
   }
 
-  const maxRow = Math.max(...initialCells.map((cell) => cell.row));
-  const maxCol = Math.max(...initialCells.map((cell) => cell.col));
-  console.log("maxRow: ", maxRow, "maxCol: ", maxCol);
-
   return (
     <>
-      <PixelArtEditor initialCells={initialCells} />
+      <PixelArtEditor
+        initialCells={initialCells}
+        disabledCells={disabledCells}
+        grid_col={chart.grid_col}
+        grid_row={chart.grid_row}
+      />
       <DevKnittingSymbolsPreview />
     </>
   );
@@ -56,24 +74,46 @@ interface OriginalCell {
 }
 
 // 동적 변환 함수
-const convertCellsData = (cellsData: OriginalCell[] | undefined): Cell[] => {
-  // '●'에 해당하는 shape를 KNITTING_SYMBOLS에서 찾아 할당
-  // const dotShape = KNITTING_SYMBOLS.find((shape) => shape.id === "dot");
-  // console.log("KNITTING_SYMBOLS: ", KNITTING_SYMBOLS);
-  return (
-    cellsData?.map((cell) => ({
-      row: cell.row,
-      col: cell.col,
-      shape:
-        cell.symbol === undefined
-          ? undefined
-          : cell.symbol === "●"
-            ? KNITTING_SYMBOL_OBJ.dot
-            : cell.symbol === "✦"
-              ? KNITTING_SYMBOL_OBJ.knit
-              : KNITTING_SYMBOL_OBJ.dot,
-    })) ?? []
+const convertCellsData = (
+  cellsData: OriginalCell[] | undefined
+): { initialCells: Cell[] } => {
+  if (!cellsData) {
+    return { initialCells: [] };
+  }
+
+  const convertedCells = cellsData?.map((cell) => ({
+    row: cell.row,
+    col: cell.col,
+    shape:
+      cell.symbol === undefined
+        ? undefined
+        : cell.symbol === "●"
+          ? KNITTING_SYMBOL_OBJ.dot
+          : cell.symbol === "✦"
+            ? KNITTING_SYMBOL_OBJ.knit
+            : KNITTING_SYMBOL_OBJ.dot,
+  }));
+
+  const initialCells = convertedCells?.filter(
+    (cell) => cell.shape !== undefined
   );
+
+  return { initialCells };
+};
+
+const getDisabledCells = (
+  grid_row: number,
+  grid_col: number,
+  initialCells: Cell[]
+): Cell[] => {
+  const initialSet = new Set(
+    initialCells.map((cell) => `${cell.row},${cell.col}`)
+  );
+  return Array.from({ length: grid_row * grid_col }, (_, idx) => {
+    const row = Math.floor(idx / grid_col);
+    const col = idx % grid_col;
+    return { row, col, shape: undefined };
+  }).filter((cell) => !initialSet.has(`${cell.row},${cell.col}`));
 };
 
 function DevKnittingSymbolsPreview() {

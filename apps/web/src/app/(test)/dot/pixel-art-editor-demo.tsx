@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from "react";
+import React, { useState, useRef } from "react";
 
 import { BrushTool, BrushToolType, KNITTING_SYMBOLS, Shape } from "./constant";
 import { Dotting } from "./pixel-art-editor";
@@ -23,12 +23,6 @@ const renderCircle = (
   ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
   ctx.fill();
 };
-// 픽셀 데이터 타입
-interface Pixel {
-  rowIndex: number;
-  columnIndex: number;
-  shape: Shape | null;
-}
 
 // 도형 선택 컴포넌트
 const ShapeSelector: React.FC<{
@@ -165,7 +159,17 @@ interface Cell {
   shape: Shape | undefined;
 }
 
-const PixelArtEditor = ({ initialCells }: { initialCells: Cell[] }) => {
+const PixelArtEditor = ({
+  initialCells,
+  grid_col,
+  disabledCells,
+  grid_row,
+}: {
+  initialCells: Cell[];
+  disabledCells: Cell[];
+  grid_col: number;
+  grid_row: number;
+}) => {
   console.log("initialCells: ", initialCells);
   const [brushTool, setBrushTool] = useState<BrushToolType>(BrushTool.DOT);
   const [selectedShape, setSelectedShape] = useState<Shape>(
@@ -181,24 +185,9 @@ const PixelArtEditor = ({ initialCells }: { initialCells: Cell[] }) => {
     canUndo,
     canRedo,
     copy,
-    paste,
     handlePaste,
   } = useDotting(dottingRef);
   const selectedArea = dottingRef.current?.getSelectedArea();
-  // 초기 셀 데이터 예시
-  // const initialCells = [
-  //   { row: 1, col: 1, shape: KNITTING_SYMBOLS[0] }, // 뜨기
-  //   { row: 2, col: 2, shape: KNITTING_SYMBOLS[1] }, // 날리기
-  // ];
-
-  // 비활성화 셀 예시
-  const disabledCells = [
-    { row: 0, col: 0 },
-    { row: 0, col: 3 },
-    { row: 4, col: 0 },
-    { row: 4, col: 3 },
-  ];
-
   const handleExport = () => {
     const dataUrl = exportImage();
     if (dataUrl) {
@@ -339,8 +328,8 @@ const PixelArtEditor = ({ initialCells }: { initialCells: Cell[] }) => {
       <div className="border-2 border-gray-300 inline-block max-w-[100vw] overflow-auto">
         <Dotting
           ref={dottingRef}
-          rows={140}
-          cols={86}
+          rows={grid_row}
+          cols={grid_col}
           gridSquareLength={12}
           brushTool={brushTool}
           selectedShape={selectedShape}
@@ -353,53 +342,6 @@ const PixelArtEditor = ({ initialCells }: { initialCells: Cell[] }) => {
           disabledCells={disabledCells}
           disabledCellColor="#f0f0f0"
         />
-      </div>
-
-      <div className="mt-4 text-sm text-gray-600">
-        <p>
-          <strong>사용법:</strong>
-        </p>
-        <ul className="list-disc list-inside">
-          <li>펜 도구: 클릭하거나 드래그해서 선택된 뜨개질 기호로 그리기</li>
-          <li>지우개 도구: 클릭하거나 드래그해서 지우기</li>
-          <li>
-            직선 도구: 클릭해서 시작점 설정, 드래그해서 끝점까지 직선 그리기
-          </li>
-          <li>선택 도구: 드래그해서 영역 선택</li>
-          <li>없음 도구: 마우스 휠로 확대/축소, 드래그로 이동</li>
-          <li>뜨개질 기호: 상단의 기호 버튼을 클릭해서 그릴 기호 선택</li>
-          <li>도형 추가: "도형 추가" 버튼으로 커스텀 기호 추가</li>
-          <li>
-            <strong>실행 취소/다시 실행:</strong> Ctrl+Z로 실행 취소, Ctrl+Y
-            또는 Ctrl+Shift+Z로 다시 실행
-          </li>
-          <li>
-            <strong>비활성화 셀:</strong> X 표시된 회색 셀은 편집할 수 없는
-            비활성화된 영역입니다
-          </li>
-          <li>
-            <strong>복사/붙여넣기:</strong> 선택 도구로 영역을 선택한 후 "복사"
-            버튼을 클릭하면 해당 영역이 복사됩니다. "붙여넣기" 버튼을 클릭한 후
-            캔버스의 원하는 위치를 클릭하면 복사된 영역이 붙여넣어집니다.
-          </li>
-        </ul>
-
-        <div className="mt-2">
-          <p></p>
-          <div className="flex gap-2 mt-1 flex-wrap">
-            {KNITTING_SYMBOLS.map((shape) => (
-              <span
-                key={shape.id}
-                className="text-xs px-2 py-1 bg-gray-100 rounded"
-                style={{ color: shape.color }}
-              >
-                {shape.name}
-              </span>
-            ))}
-          </div>
-        </div>
-
-        {/* 활성 셀 정보 표시 */}
       </div>
     </div>
   );
