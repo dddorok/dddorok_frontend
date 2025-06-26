@@ -100,7 +100,7 @@ const renderDiamond = (
   ctx.fill();
 };
 
-export const KNITTING_SYMBOL_OBJ = {
+export const KNITTING_SYMBOL_OBJ: Record<string, Shape> = {
   verticalLine: {
     id: "verticalLine",
     name: "겉뜨기",
@@ -125,6 +125,6 @@ export const KNITTING_SYMBOL_OBJ = {
     color: "#4ECDC4",
     render: renderDiamond,
   },
-};
+} as const;
 
-export const KNITTING_SYMBOLS = Object.values(KNITTING_SYMBOL_OBJ);
+export const KNITTING_SYMBOLS = Object.values(KNITTING_SYMBOL_OBJ) as Shape[];

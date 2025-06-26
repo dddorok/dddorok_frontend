@@ -1,0 +1,56 @@
+export function SelectIcon() {
+  return (
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 20 20"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <rect
+        x="2.53125"
+        y="2.53076"
+        width="14.9384"
+        height="14.9384"
+        stroke="#1C1F25"
+        strokeWidth="1.5"
+      />
+      <rect
+        x="16.1406"
+        y="1.3064"
+        width="2.60961"
+        height="2.60961"
+        fill="white"
+        stroke="#1C1F25"
+        strokeWidth="1.5"
+      />
+      <rect
+        x="1.25"
+        y="1.25"
+        width="2.60961"
+        height="2.60961"
+        fill="white"
+        stroke="#1C1F25"
+        strokeWidth="1.5"
+      />
+      <rect
+        x="16.1406"
+        y="16.1404"
+        width="2.60961"
+        height="2.60961"
+        fill="white"
+        stroke="#1C1F25"
+        strokeWidth="1.5"
+      />
+      <rect
+        x="1.25"
+        y="16.084"
+        width="2.60961"
+        height="2.60961"
+        fill="white"
+        stroke="#1C1F25"
+        strokeWidth="1.5"
+      />
+    </svg>
+  );
+}

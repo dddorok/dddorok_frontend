@@ -1,7 +1,14 @@
 import React, { useState, useRef } from "react";
 
+import Toolbar from "./_components/Toolbar";
 import { BrushTool, BrushToolType } from "./constant";
 import { Dotting } from "./pixel-art-editor";
+import {
+  usePixelArtEditorContext,
+  PixelArtEditorProvider,
+  usePixelArtEditorCopyContext,
+  usePixelArtEditorHistoryContext,
+} from "./PixelArtEditorContext";
 import { KNITTING_SYMBOLS, Shape } from "./Shape.constants";
 import { DottingRef, useDotting } from "./useDotting";
 
@@ -165,28 +172,27 @@ const PixelArtEditor = ({
   grid_col,
   disabledCells,
   grid_row,
+  dottingRef,
 }: {
   initialCells: Cell[];
   disabledCells: Cell[];
   grid_col: number;
   grid_row: number;
+  dottingRef: React.RefObject<DottingRef>;
 }) => {
-  const [brushTool, setBrushTool] = useState<BrushToolType>(BrushTool.DOT);
-  const [selectedShape, setSelectedShape] = useState<Shape>(
-    KNITTING_SYMBOLS[0] as Shape
-  );
-  const [shapes, setShapes] = useState<Shape[]>(KNITTING_SYMBOLS);
-  const dottingRef = useRef<DottingRef | null>(null);
+  const { brushTool, setBrushTool, selectedShape } = usePixelArtEditorContext();
   const {
     clear,
     exportImage,
-    undo,
-    redo,
-    canUndo,
-    canRedo,
-    copy,
-    handlePaste,
+    // undo,
+    // redo,
+    // canUndo,
+    // canRedo,
+    // copy,
+    // handlePaste,
   } = useDotting(dottingRef);
+  const { undo, redo, canUndo, canRedo } = usePixelArtEditorHistoryContext();
+  const { copy, paste } = usePixelArtEditorCopyContext();
   const selectedArea = dottingRef.current?.getSelectedArea();
   const handleExport = () => {
     const dataUrl = exportImage();
@@ -198,140 +204,19 @@ const PixelArtEditor = ({
     }
   };
 
-  const handleAddShape = (newShape: Shape) => {
-    setShapes((prev) => [...prev, newShape]);
-  };
-
-  // 키보드 단축키 추가
-  React.useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === "z" && !e.shiftKey) {
-        e.preventDefault();
-        undo();
-      } else if (
-        (e.metaKey || e.ctrlKey) &&
-        (e.key === "y" || (e.key === "z" && e.shiftKey))
-      ) {
-        e.preventDefault();
-        redo();
-      } else if ((e.metaKey || e.ctrlKey) && e.key === "c") {
-        e.preventDefault();
-        copy();
-      } else if ((e.metaKey || e.ctrlKey) && e.key === "v") {
-        e.preventDefault();
-        handlePaste();
-      }
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [undo, redo, copy, handlePaste]);
-
   return (
     <div className="p-4">
-      <h1 className="text-2xl font-bold mb-4">뜨개질 패턴 편집기</h1>
-
-      <div className="mb-4 flex flex-wrap gap-4 items-center">
-        <div className="flex items-center gap-2">
-          <label className="font-medium">브러시 도구:</label>
-          <Button onClick={() => setBrushTool(BrushTool.DOT)}>펜</Button>
-          <Button onClick={() => setBrushTool(BrushTool.ERASER)}>지우개</Button>
-          <Button onClick={() => setBrushTool(BrushTool.SELECT)}>선택</Button>
-          <p>
-            펜을 선택하고 원하는 기호를 선택하면 뜨개질 기호를 그릴 수 있습니다.
-          </p>
-          {/* <select
-            value={brushTool}
-            onChange={(e) => setBrushTool(e.target.value as BrushToolType)}
-            className="border rounded px-2 py-1"
-          >
-            <option value={BrushTool.NONE}>없음</option>
-            <option value={BrushTool.DOT}>펜</option>
-            <option value={BrushTool.ERASER}>지우개</option>
-            <option value={BrushTool.SELECT}>선택</option>
-            <option value={BrushTool.LINE}>직선</option>
-          </select> */}
-        </div>
-
-        <ShapeSelector
-          shapes={shapes}
-          selectedShape={selectedShape}
-          onShapeSelect={setSelectedShape}
-        />
-
-        <CustomShapeAdder onAddShape={handleAddShape} />
-
-        <div className="flex gap-2">
-          <button
-            onClick={undo}
-            disabled={!canUndo}
-            className="bg-orange-500 text-white px-3 py-1 rounded hover:bg-orange-600 disabled:bg-gray-300 disabled:cursor-not-allowed"
-            title="실행 취소 (Ctrl+Z)"
-          >
-            ↶ 실행취소
-          </button>
-
-          <button
-            onClick={redo}
-            disabled={!canRedo}
-            className="bg-purple-500 text-white px-3 py-1 rounded hover:bg-purple-600 disabled:bg-gray-300 disabled:cursor-not-allowed"
-            title="다시 실행 (Ctrl+Y)"
-          >
-            ↷ 다시실행
-          </button>
-
-          <div className="text-xs text-gray-600 bg-gray-100 px-2 py-1 rounded">
-            실행취소: {canUndo ? "가능" : "불가능"} | 다시실행:{" "}
-            {canRedo ? "가능" : "불가능"}
-          </div>
-        </div>
-
-        <div className="flex gap-2">
-          <button
-            onClick={() => {
-              copy();
-            }}
-            disabled={brushTool !== BrushTool.SELECT}
-            className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed"
-            title="선택 영역 복사 (선택 도구 필요, Ctrl+C)"
-          >
-            📋 복사
-          </button>
-        </div>
-
-        <div className="flex gap-2">
-          {brushTool === BrushTool.SELECT && selectedArea && (
-            <div className="text-xs text-gray-600 bg-blue-100 px-2 py-1 rounded">
-              선택됨: {selectedArea.endRow - selectedArea.startRow} ×
-              {selectedArea.endCol - selectedArea.startCol}
-            </div>
-          )}
-        </div>
-
-        <button
-          onClick={clear}
-          className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
-        >
-          지우기
-        </button>
-
-        <button
-          onClick={handleExport}
-          className="bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600"
-        >
-          내보내기
-        </button>
-      </div>
+      <Toolbar />
 
       <div className="border-2 border-gray-300 inline-block max-w-[100vw] overflow-auto">
         <Dotting
           ref={dottingRef}
           rows={grid_row}
           cols={grid_col}
-          gridSquareLength={12}
+          gridSquareLength={30}
           brushTool={brushTool}
           selectedShape={selectedShape}
-          shapes={shapes}
+          shapes={KNITTING_SYMBOLS}
           backgroundColor="#f8f9fa"
           gridStrokeColor="#e9ecef"
           isPanZoomable={false}
@@ -345,4 +230,14 @@ const PixelArtEditor = ({
   );
 };
 
-export default PixelArtEditor;
+// PixelArtEditorProvider로 PixelArtEditor를 감싸서 export
+const PixelArtEditorWithProvider = (props: any) => {
+  const dottingRef = useRef<DottingRef | null>(null);
+  return (
+    <PixelArtEditorProvider dottingRef={dottingRef}>
+      <PixelArtEditor {...props} dottingRef={dottingRef} />
+    </PixelArtEditorProvider>
+  );
+};
+
+export default PixelArtEditorWithProvider;
