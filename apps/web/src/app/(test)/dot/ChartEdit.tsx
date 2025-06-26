@@ -1,5 +1,9 @@
-import { KNITTING_SYMBOL_OBJ, KNITTING_SYMBOLS, Shape } from "./constant";
 import PixelArtEditor from "./pixel-art-editor-demo";
+import {
+  KNITTING_SYMBOL_OBJ,
+  KNITTING_SYMBOLS,
+  Shape,
+} from "./Shape.constants";
 
 import { OriginalCell } from "@/services/project";
 
@@ -59,8 +63,8 @@ const convertCellsData = (
         : cell.symbol === "●"
           ? KNITTING_SYMBOL_OBJ.dot
           : cell.symbol === "✦"
-            ? KNITTING_SYMBOL_OBJ.knit
-            : KNITTING_SYMBOL_OBJ.dot,
+            ? KNITTING_SYMBOL_OBJ.diagonalLine
+            : KNITTING_SYMBOL_OBJ.diamond,
   }));
 
   const initialCells = convertedCells?.filter(

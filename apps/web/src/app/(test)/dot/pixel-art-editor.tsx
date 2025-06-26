@@ -8,7 +8,8 @@ import React, {
   CSSProperties,
 } from "react";
 
-import { KNITTING_SYMBOLS, BrushTool, BrushToolType, Shape } from "./constant";
+import { BrushTool, BrushToolType } from "./constant";
+import { KNITTING_SYMBOLS, Shape } from "./Shape.constants";
 
 // 픽셀 데이터 타입
 interface Pixel {

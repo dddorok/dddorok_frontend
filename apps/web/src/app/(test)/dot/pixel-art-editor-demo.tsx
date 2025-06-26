@@ -1,7 +1,8 @@
 import React, { useState, useRef } from "react";
 
-import { BrushTool, BrushToolType, KNITTING_SYMBOLS, Shape } from "./constant";
+import { BrushTool, BrushToolType } from "./constant";
 import { Dotting } from "./pixel-art-editor";
+import { KNITTING_SYMBOLS, Shape } from "./Shape.constants";
 import { DottingRef, useDotting } from "./useDotting";
 
 import { Button } from "@/components/ui/button";
