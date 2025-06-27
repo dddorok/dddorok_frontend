@@ -14,10 +14,6 @@ const encrypt = async (data: any) => {
 
 // 복호화
 const decrypt = async <T>(jwt: string): Promise<T> => {
-  // const { payload } = await jose.jwtDecrypt(jwt, secret);
-  // console.log("payload: ", payload);
-  // return payload.data as T;
-
   return JSON.parse(jwt) as T;
 };
 

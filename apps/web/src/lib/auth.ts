@@ -49,22 +49,28 @@ export async function updateSession() {
     return null;
   }
 
-  const data = await refreshToken(payload.refreshToken);
+  try {
+    const data = await refreshToken(payload.refreshToken);
 
-  const expires = new Date(Date.now() + sessionExpiresAt);
-  const newSession = await encrypt({
-    accessToken: data.access_token,
-    refreshToken: data.refresh_token,
-    expiresAt: expires,
-  });
-  console.log("newSession: ", newSession);
-  cookieStore.set(sessionCookieName, newSession, {
-    httpOnly: false,
-    secure: true,
-    // expires: expires,
-    sameSite: "lax",
-    path: "/",
-  });
+    const expires = new Date(Date.now() + sessionExpiresAt);
+    const newSession = await encrypt({
+      accessToken: data.access_token,
+      refreshToken: data.refresh_token,
+      expiresAt: expires,
+    });
+    console.log("newSession: ", newSession);
+    cookieStore.set(sessionCookieName, newSession, {
+      httpOnly: false,
+      secure: true,
+      // expires: expires,
+      sameSite: "lax",
+      path: "/",
+    });
+  } catch (error) {
+    console.error("error: ", error);
+    await deleteSession();
+    return null;
+  }
 }
 
 export async function getSession() {

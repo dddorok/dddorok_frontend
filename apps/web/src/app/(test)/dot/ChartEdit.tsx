@@ -1,5 +1,6 @@
-import { KNITTING_SYMBOL_OBJ, KNITTING_SYMBOLS, Shape } from "./constant";
-import PixelArtEditor from "./pixel-art-editor-demo";
+import { Cell } from "./chart.types";
+import PixelArtEditor from "./PivelArtEditor";
+import { KNITTING_SYMBOL_OBJ, KNITTING_SYMBOLS } from "./Shape.constants";
 
 import { OriginalCell } from "@/services/project";
 
@@ -36,12 +37,6 @@ export default function ChartEdit({
   );
 }
 
-interface Cell {
-  row: number;
-  col: number;
-  shape: Shape | undefined;
-}
-
 // 동적 변환 함수
 const convertCellsData = (
   cellsData: OriginalCell[] | undefined
@@ -59,8 +54,8 @@ const convertCellsData = (
         : cell.symbol === "●"
           ? KNITTING_SYMBOL_OBJ.dot
           : cell.symbol === "✦"
-            ? KNITTING_SYMBOL_OBJ.knit
-            : KNITTING_SYMBOL_OBJ.dot,
+            ? KNITTING_SYMBOL_OBJ.diagonalLine
+            : KNITTING_SYMBOL_OBJ.diamond,
   }));
 
   const initialCells = convertedCells?.filter(
