@@ -52,6 +52,7 @@ export interface DottingRef {
   getCanvasPosition: () => { x: number; y: number } | null;
   copy: () => void;
   handlePaste: () => void;
+  cut: () => void;
 }
 
 export const useDotting = (ref: React.RefObject<DottingRef | null>) => {
@@ -144,6 +145,12 @@ export const useDotting = (ref: React.RefObject<DottingRef | null>) => {
     }
   }, [ref]);
 
+  const cut = useCallback(() => {
+    if (ref.current) {
+      ref.current.cut();
+    }
+  }, [ref]);
+
   return {
     clear,
     getPixels,
@@ -155,5 +162,6 @@ export const useDotting = (ref: React.RefObject<DottingRef | null>) => {
     copy,
     paste,
     handlePaste,
+    cut,
   };
 };

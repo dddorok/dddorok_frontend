@@ -201,8 +201,7 @@ function EraserButton({ isOpenSubMenu }: { isOpenSubMenu: boolean }) {
 }
 
 function BrushSubMenu() {
-  const { undo, redo, canUndo, canRedo } = usePixelArtEditorHistoryContext();
-  const { copy, paste } = usePixelArtEditorCopyContext();
+  const { copy, paste, cut } = usePixelArtEditorCopyContext();
   const list = [
     {
       Icon: PasteIcon,
@@ -217,7 +216,7 @@ function BrushSubMenu() {
     {
       Icon: CutIcon,
       name: "잘라내기",
-      //   onClick: cut,
+      onClick: cut,
     },
     {
       Icon: FlipVerticalIcon,

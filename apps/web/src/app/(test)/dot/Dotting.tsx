@@ -686,6 +686,26 @@ export const Dotting = forwardRef<DottingRef, DottingProps>(
       }
     }, [selectedArea, copiedArea, pasteAtPosition]);
 
+    // 선택 영역을 null로 만드는 공통 함수
+    const clearSelectedAreaPixels = (
+      pixels: (Pixel | null)[][],
+      area: SelectedArea
+    ): (Pixel | null)[][] => {
+      return pixels.map((row, rowIdx) =>
+        row.map((pixel, colIdx) => {
+          if (
+            rowIdx >= area.startRow &&
+            rowIdx <= area.endRow &&
+            colIdx >= area.startCol &&
+            colIdx <= area.endCol
+          ) {
+            return pixel?.disabled ? pixel : null;
+          }
+          return pixel;
+        })
+      );
+    };
+
     // ref를 통해 외부에서 사용할 수 있는 메서드들
     useImperativeHandle(
       ref,
@@ -822,6 +842,26 @@ export const Dotting = forwardRef<DottingRef, DottingProps>(
         copy: copySelectedArea,
         paste: pasteAtPosition,
         handlePaste: handlePaste,
+        cut: () => {
+          if (!selectedArea) return;
+          // 1. 복사
+          const copied = copySelectedAreaInternal(
+            selectedArea.startRow,
+            selectedArea.startCol,
+            selectedArea.endRow,
+            selectedArea.endCol
+          );
+          if (copied) {
+            setCopiedArea(copied);
+            onCopy?.();
+          }
+          // 2. 선택 영역을 null로 덮어쓰기(지우기)
+          setPixels((prev) => clearSelectedAreaPixels(prev, selectedArea));
+          // 3. 히스토리 저장
+          setTimeout(() => {
+            saveToHistory(clearSelectedAreaPixels(pixels, selectedArea));
+          }, 0);
+        },
       }),
       [
         undo,
