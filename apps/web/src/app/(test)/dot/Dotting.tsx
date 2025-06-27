@@ -11,9 +11,10 @@ import React, {
 
 import { BrushTool, BrushToolType } from "./constant";
 import { KNITTING_SYMBOLS, Shape } from "./Shape.constants";
+import { flipPixelsHorizontal, flipPixelsVertical } from "./utils/pixelFlip";
 
 // 픽셀 데이터 타입
-interface Pixel {
+export interface Pixel {
   rowIndex: number;
   columnIndex: number;
   shape: Shape | null;
@@ -51,7 +52,7 @@ interface PanOffset {
   y: number;
 }
 
-interface SelectedArea {
+export interface SelectedArea {
   startRow: number;
   startCol: number;
   endRow: number;
@@ -126,6 +127,8 @@ interface DottingRef {
     canvasY: number
   ) => { row: number; col: number };
   getCanvasPosition: () => { x: number; y: number } | null;
+  flipHorizontal: () => void;
+  flipVertical: () => void;
 }
 
 const createPixel = (
@@ -438,6 +441,11 @@ const GRID_MINOR_COLOR = "#9EA5BD"; // 1칸마다 연한 선
 const GRID_MAJOR_COLOR = "#9EA5BD"; // 5칸마다 진한 선
 const GRID_MINOR_WIDTH = 1;
 const GRID_MAJOR_WIDTH = 2;
+
+// ===== 선택 영역 색상 상수 =====
+const SELECTED_AREA_BG_COLOR = "rgba(28, 31, 37, 0.1)";
+const SELECTED_AREA_BORDER_COLOR = "#1DD9E7";
+const SELECTED_AREA_BORDER_WIDTH = 0.8;
 
 export const Dotting = forwardRef<DottingRef, DottingProps>(
   (
@@ -861,6 +869,22 @@ export const Dotting = forwardRef<DottingRef, DottingProps>(
           setTimeout(() => {
             saveToHistory(clearSelectedAreaPixels(pixels, selectedArea));
           }, 0);
+        },
+        flipHorizontal: () => {
+          if (!selectedArea) return;
+          setPixels((prev) => {
+            const newPixels = flipPixelsHorizontal(prev, selectedArea);
+            saveToHistory(newPixels);
+            return newPixels;
+          });
+        },
+        flipVertical: () => {
+          if (!selectedArea) return;
+          setPixels((prev) => {
+            const newPixels = flipPixelsVertical(prev, selectedArea);
+            saveToHistory(newPixels);
+            return newPixels;
+          });
         },
       }),
       [
@@ -1294,16 +1318,30 @@ export const Dotting = forwardRef<DottingRef, DottingProps>(
 
       // 선택 영역 그리기
       if (selectedArea) {
-        ctx.strokeStyle = "#0066ff";
-        ctx.lineWidth = 2;
-        ctx.setLineDash([5, 5]);
+        // 배경 채우기
+        ctx.save();
+        ctx.globalAlpha = 1;
+        ctx.fillStyle = SELECTED_AREA_BG_COLOR;
+        ctx.fillRect(
+          LABEL_MARGIN + selectedArea.startCol * gridSquareLength,
+          LABEL_MARGIN + selectedArea.startRow * gridSquareLength,
+          (selectedArea.endCol - selectedArea.startCol + 1) * gridSquareLength,
+          (selectedArea.endRow - selectedArea.startRow + 1) * gridSquareLength
+        );
+        ctx.restore();
+
+        // 파란색 실선 border
+        ctx.save();
+        ctx.strokeStyle = SELECTED_AREA_BORDER_COLOR;
+        ctx.lineWidth = SELECTED_AREA_BORDER_WIDTH;
+        ctx.setLineDash([]); // 실선
         ctx.strokeRect(
           LABEL_MARGIN + selectedArea.startCol * gridSquareLength,
           LABEL_MARGIN + selectedArea.startRow * gridSquareLength,
           (selectedArea.endCol - selectedArea.startCol + 1) * gridSquareLength,
           (selectedArea.endRow - selectedArea.startRow + 1) * gridSquareLength
         );
-        ctx.setLineDash([]);
+        ctx.restore();
       }
 
       // 마지막에 격자 그리기 (5칸마다 진하게, 나머지 연하게)

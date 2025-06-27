@@ -22,6 +22,8 @@ interface PixelArtEditorCopyContextType {
   copy: () => void;
   paste: () => void;
   cut: () => void;
+  flipHorizontal: () => void;
+  flipVertical: () => void;
 }
 
 const PixelArtEditorContext = createContext<
@@ -58,6 +60,8 @@ export const PixelArtEditorProvider = ({
     copy,
     handlePaste,
     cut,
+    flipHorizontal,
+    flipVertical,
   } = useDotting(dottingRef);
 
   // 키보드 단축키 추가
@@ -111,6 +115,8 @@ export const PixelArtEditorProvider = ({
             copy,
             paste: handlePaste,
             cut,
+            flipHorizontal,
+            flipVertical,
           }}
         >
           {children}

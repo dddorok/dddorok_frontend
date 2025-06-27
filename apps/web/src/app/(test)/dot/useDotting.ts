@@ -53,6 +53,8 @@ export interface DottingRef {
   copy: () => void;
   handlePaste: () => void;
   cut: () => void;
+  flipHorizontal: () => void;
+  flipVertical: () => void;
 }
 
 export const useDotting = (ref: React.RefObject<DottingRef | null>) => {
@@ -151,6 +153,18 @@ export const useDotting = (ref: React.RefObject<DottingRef | null>) => {
     }
   }, [ref]);
 
+  const flipHorizontal = useCallback(() => {
+    if (ref.current) {
+      ref.current.flipHorizontal();
+    }
+  }, [ref]);
+
+  const flipVertical = useCallback(() => {
+    if (ref.current) {
+      ref.current.flipVertical();
+    }
+  }, [ref]);
+
   return {
     clear,
     getPixels,
@@ -163,5 +177,7 @@ export const useDotting = (ref: React.RefObject<DottingRef | null>) => {
     paste,
     handlePaste,
     cut,
+    flipHorizontal,
+    flipVertical,
   };
 };
