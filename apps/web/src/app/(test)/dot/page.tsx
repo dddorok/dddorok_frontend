@@ -6,7 +6,7 @@ import ChartEdit from "./ChartEdit";
 import chartDummyData from "./generated_chart.json";
 // import KnittingPatternEditor from "./knitting";
 
-import PixelArtEditor from "./pixel-art-editor-demo";
+import PixelArtEditor from "./PivelArtEditor";
 
 import { projectQueries } from "@/queries/project";
 

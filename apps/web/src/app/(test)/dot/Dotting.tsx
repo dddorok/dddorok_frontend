@@ -456,7 +456,7 @@ export const Dotting = forwardRef<DottingRef, DottingProps>(
       shapes = KNITTING_SYMBOLS,
       initialCells = [],
       disabledCells = [],
-      disabledCellColor = "#f0f0f0",
+      disabledCellColor = "#C8CDD9",
       onClick,
       onCopy,
       onPaste,
@@ -1236,16 +1236,16 @@ export const Dotting = forwardRef<DottingRef, DottingProps>(
                 );
 
                 // X 표시 추가
-                ctx.strokeStyle = "#999";
-                ctx.lineWidth = 1;
-                ctx.beginPath();
-                const x = LABEL_MARGIN + pixel.columnIndex * gridSquareLength;
-                const y = LABEL_MARGIN + pixel.rowIndex * gridSquareLength;
-                ctx.moveTo(x + 2, y + 2);
-                ctx.lineTo(x + gridSquareLength - 2, y + gridSquareLength - 2);
-                ctx.moveTo(x + gridSquareLength - 2, y + 2);
-                ctx.lineTo(x + 2, y + gridSquareLength - 2);
-                ctx.stroke();
+                // ctx.strokeStyle = "#999";
+                // ctx.lineWidth = 1;
+                // ctx.beginPath();
+                // const x = LABEL_MARGIN + pixel.columnIndex * gridSquareLength;
+                // const y = LABEL_MARGIN + pixel.rowIndex * gridSquareLength;
+                // ctx.moveTo(x + 2, y + 2);
+                // ctx.lineTo(x + gridSquareLength - 2, y + gridSquareLength - 2);
+                // ctx.moveTo(x + gridSquareLength - 2, y + 2);
+                // ctx.lineTo(x + 2, y + gridSquareLength - 2);
+                // ctx.stroke();
               } else if (pixel.shape) {
                 // 일반 도형 그리기
                 drawShape(

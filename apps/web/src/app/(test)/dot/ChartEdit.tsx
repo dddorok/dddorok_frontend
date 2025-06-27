@@ -1,9 +1,6 @@
-import PixelArtEditor from "./pixel-art-editor-demo";
-import {
-  KNITTING_SYMBOL_OBJ,
-  KNITTING_SYMBOLS,
-  Shape,
-} from "./Shape.constants";
+import { Cell } from "./chart.types";
+import PixelArtEditor from "./PivelArtEditor";
+import { KNITTING_SYMBOL_OBJ, KNITTING_SYMBOLS } from "./Shape.constants";
 
 import { OriginalCell } from "@/services/project";
 
@@ -38,12 +35,6 @@ export default function ChartEdit({
       <DevKnittingSymbolsPreview />
     </div>
   );
-}
-
-interface Cell {
-  row: number;
-  col: number;
-  shape: Shape | undefined;
 }
 
 // 동적 변환 함수
