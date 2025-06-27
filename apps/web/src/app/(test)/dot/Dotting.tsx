@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import React, {
   useState,
   useRef,
@@ -432,7 +433,12 @@ const executeRedo = (
 
 const LABEL_MARGIN_RATIO = 1.2; // 셀 크기의 1.2배만큼 여백
 
-// Dotting 컴포넌트
+// ===== 격자(그리드) 색상 상수 =====
+const GRID_MINOR_COLOR = "#9EA5BD"; // 1칸마다 연한 선
+const GRID_MAJOR_COLOR = "#9EA5BD"; // 5칸마다 진한 선
+const GRID_MINOR_WIDTH = 1;
+const GRID_MAJOR_WIDTH = 2;
+
 export const Dotting = forwardRef<DottingRef, DottingProps>(
   (
     {
@@ -1197,65 +1203,35 @@ export const Dotting = forwardRef<DottingRef, DottingProps>(
       }
       ctx.restore();
 
-      // 그리드 그리기
-      if (isGridVisible) {
-        ctx.strokeStyle = gridStrokeColor;
-        ctx.lineWidth = gridStrokeWidth;
-        ctx.beginPath();
-
-        // 수직선
-        for (let i = 0; i <= cols; i++) {
-          const x = LABEL_MARGIN + i * gridSquareLength;
-          ctx.moveTo(x, LABEL_MARGIN);
-          ctx.lineTo(x, LABEL_MARGIN + rows * gridSquareLength);
+      // 비활성화 셀 먼저 그리기
+      for (const row of pixels) {
+        if (row) {
+          for (const pixel of row) {
+            if (pixel && pixel.disabled) {
+              ctx.fillStyle = disabledCellColor;
+              ctx.fillRect(
+                LABEL_MARGIN + pixel.columnIndex * gridSquareLength,
+                LABEL_MARGIN + pixel.rowIndex * gridSquareLength,
+                gridSquareLength,
+                gridSquareLength
+              );
+            }
+          }
         }
-
-        // 수평선
-        for (let i = 0; i <= rows; i++) {
-          const y = LABEL_MARGIN + i * gridSquareLength;
-          ctx.moveTo(LABEL_MARGIN, y);
-          ctx.lineTo(LABEL_MARGIN + cols * gridSquareLength, y);
-        }
-
-        ctx.stroke();
       }
 
       // 픽셀 그리기
       for (const row of pixels) {
         if (row) {
           for (const pixel of row) {
-            if (pixel) {
-              if (pixel.disabled) {
-                // 비활성화된 셀 표시
-                ctx.fillStyle = disabledCellColor;
-                ctx.fillRect(
-                  LABEL_MARGIN + pixel.columnIndex * gridSquareLength,
-                  LABEL_MARGIN + pixel.rowIndex * gridSquareLength,
-                  gridSquareLength,
-                  gridSquareLength
-                );
-
-                // X 표시 추가
-                // ctx.strokeStyle = "#999";
-                // ctx.lineWidth = 1;
-                // ctx.beginPath();
-                // const x = LABEL_MARGIN + pixel.columnIndex * gridSquareLength;
-                // const y = LABEL_MARGIN + pixel.rowIndex * gridSquareLength;
-                // ctx.moveTo(x + 2, y + 2);
-                // ctx.lineTo(x + gridSquareLength - 2, y + gridSquareLength - 2);
-                // ctx.moveTo(x + gridSquareLength - 2, y + 2);
-                // ctx.lineTo(x + 2, y + gridSquareLength - 2);
-                // ctx.stroke();
-              } else if (pixel.shape) {
-                // 일반 도형 그리기
-                drawShape(
-                  ctx,
-                  pixel.shape,
-                  LABEL_MARGIN + pixel.columnIndex * gridSquareLength,
-                  LABEL_MARGIN + pixel.rowIndex * gridSquareLength,
-                  gridSquareLength
-                );
-              }
+            if (pixel && !pixel.disabled && pixel.shape) {
+              drawShape(
+                ctx,
+                pixel.shape,
+                LABEL_MARGIN + pixel.columnIndex * gridSquareLength,
+                LABEL_MARGIN + pixel.rowIndex * gridSquareLength,
+                gridSquareLength
+              );
             }
           }
         }
@@ -1290,6 +1266,31 @@ export const Dotting = forwardRef<DottingRef, DottingProps>(
         ctx.setLineDash([]);
       }
 
+      // 마지막에 격자 그리기 (5칸마다 진하게, 나머지 연하게)
+      if (isGridVisible) {
+        // 수직선
+        for (let i = 0; i <= cols; i++) {
+          ctx.beginPath();
+          ctx.strokeStyle = i % 5 === 0 ? GRID_MAJOR_COLOR : GRID_MINOR_COLOR;
+          ctx.lineWidth = i % 5 === 0 ? GRID_MAJOR_WIDTH : GRID_MINOR_WIDTH;
+          const x = LABEL_MARGIN + i * gridSquareLength;
+          ctx.moveTo(x, LABEL_MARGIN);
+          ctx.lineTo(x, LABEL_MARGIN + rows * gridSquareLength);
+          ctx.stroke();
+        }
+
+        // 수평선
+        for (let i = 0; i <= rows; i++) {
+          ctx.beginPath();
+          ctx.strokeStyle = i % 5 === 0 ? GRID_MAJOR_COLOR : GRID_MINOR_COLOR;
+          ctx.lineWidth = i % 5 === 0 ? GRID_MAJOR_WIDTH : GRID_MINOR_WIDTH;
+          const y = LABEL_MARGIN + i * gridSquareLength;
+          ctx.moveTo(LABEL_MARGIN, y);
+          ctx.lineTo(LABEL_MARGIN + cols * gridSquareLength, y);
+          ctx.stroke();
+        }
+      }
+
       ctx.restore();
     }, [
       pixels,
@@ -1308,6 +1309,10 @@ export const Dotting = forwardRef<DottingRef, DottingProps>(
       gridSquareLength,
       disabledCellColor,
       LABEL_MARGIN,
+      GRID_MINOR_COLOR,
+      GRID_MAJOR_COLOR,
+      GRID_MINOR_WIDTH,
+      GRID_MAJOR_WIDTH,
     ]);
 
     useEffect(() => {
