@@ -109,7 +109,7 @@ export const KNITTING_SYMBOL_OBJ: Record<string, Shape> = {
   },
   diagonalLine: {
     id: "diagonalLine",
-    name: "기울어진선",
+    name: "x",
     color: "#343844",
     render: renderDiagonalLine,
   },

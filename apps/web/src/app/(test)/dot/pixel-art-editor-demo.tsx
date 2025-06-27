@@ -181,28 +181,17 @@ const PixelArtEditor = ({
   dottingRef: React.RefObject<DottingRef>;
 }) => {
   const { brushTool, setBrushTool, selectedShape } = usePixelArtEditorContext();
-  const {
-    clear,
-    exportImage,
-    // undo,
-    // redo,
-    // canUndo,
-    // canRedo,
-    // copy,
-    // handlePaste,
-  } = useDotting(dottingRef);
-  const { undo, redo, canUndo, canRedo } = usePixelArtEditorHistoryContext();
-  const { copy, paste } = usePixelArtEditorCopyContext();
+
   const selectedArea = dottingRef.current?.getSelectedArea();
-  const handleExport = () => {
-    const dataUrl = exportImage();
-    if (dataUrl) {
-      const link = document.createElement("a");
-      link.download = "knitting-pattern.png";
-      link.href = dataUrl;
-      link.click();
-    }
-  };
+  // const handleExport = () => {
+  //   const dataUrl = exportImage();
+  //   if (dataUrl) {
+  //     const link = document.createElement("a");
+  //     link.download = "knitting-pattern.png";
+  //     link.href = dataUrl;
+  //     link.click();
+  //   }
+  // };
 
   return (
     <div className="p-4">

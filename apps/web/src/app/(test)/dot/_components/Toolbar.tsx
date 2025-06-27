@@ -10,7 +10,11 @@ import {
 } from "../_icons/Copy";
 import { SelectIcon } from "../_icons/Menu";
 import { BrushTool } from "../constant";
-import { usePixelArtEditorContext } from "../PixelArtEditorContext";
+import {
+  usePixelArtEditorContext,
+  usePixelArtEditorCopyContext,
+  usePixelArtEditorHistoryContext,
+} from "../PixelArtEditorContext";
 import { KNITTING_SYMBOLS, Shape } from "../Shape.constants";
 
 import { cn } from "@/lib/utils";
@@ -197,26 +201,33 @@ function EraserButton({ isOpenSubMenu }: { isOpenSubMenu: boolean }) {
 }
 
 function BrushSubMenu() {
+  const { undo, redo, canUndo, canRedo } = usePixelArtEditorHistoryContext();
+  const { copy, paste } = usePixelArtEditorCopyContext();
   const list = [
     {
       Icon: PasteIcon,
       name: "복사",
+      onClick: copy,
     },
     {
       Icon: CopyIcon,
       name: "붙여넣기",
+      onClick: paste,
     },
     {
       Icon: CutIcon,
       name: "잘라내기",
+      //   onClick: cut,
     },
     {
       Icon: FlipVerticalIcon,
       name: "좌우반전",
+      //   onClick: flipVertical,
     },
     {
       Icon: FlipHorizontalIcon,
       name: "상하반전",
+      //   onClick: flipHorizontal,
     },
   ];
 
@@ -225,12 +236,16 @@ function BrushSubMenu() {
       className={cn(" flex flex-nowrap gap-3", "border-b border-neutral-N600")}
     >
       {list.map((item) => (
-        <div key={item.name} className="flex flex-col items-center py-1 px-3">
+        <button
+          key={item.name}
+          className="flex flex-col items-center py-1 px-3"
+          onClick={item.onClick}
+        >
           <item.Icon />
           <p className="text-neutral-N500 text-[16px] mt-1 whitespace-nowrap">
             {item.name}
           </p>
-        </div>
+        </button>
       ))}
     </div>
   );

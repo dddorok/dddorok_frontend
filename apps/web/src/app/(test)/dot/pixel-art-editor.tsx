@@ -499,7 +499,6 @@ export const Dotting = forwardRef<DottingRef, DottingProps>(
     const [selectedArea, setSelectedArea] = useState<SelectedArea | null>(null);
     const [lastDrawnPos, setLastDrawnPos] = useState<GridPosition | null>(null);
     const [copiedArea, setCopiedArea] = useState<CopiedArea | null>(null);
-    console.log("copiedArea: ", copiedArea);
 
     // shape ID로 실제 shape 객체를 찾는 함수
     const getShapeById = useCallback(
