@@ -40,6 +40,16 @@ export const getTemplates = async (request: GetTemplateListRequest) => {
     .json();
   return response.data;
 };
+
+export interface MeasurementItemType {
+  code: string;
+  label: string;
+  value: number;
+  min: number;
+  max: number;
+  value_type: string;
+}
+
 export type MeasurementType = [
   string,
   {

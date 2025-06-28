@@ -19,6 +19,7 @@ import {
 import { SliderSection } from "./korean-slider-component";
 
 import { cn } from "@/lib/utils";
+import { MeasurementItemType, MeasurementType } from "@/services/template";
 
 // sliderData 타입 정의
 interface SliderDataItem {
@@ -33,6 +34,7 @@ interface SliderDataItem {
 
 // gridPoints를 기반으로 sliderData를 생성하는 함수
 const generateSliderDataFromGridPoints = (
+  measurementList: MeasurementItemType[],
   gridPoints: Point[]
 ): SliderDataItem[] => {
   const sliderData: SliderDataItem[] = [];
@@ -94,7 +96,13 @@ interface AdjustedPath extends PathDefinition {
   adjustedControlPoints?: ControlPoint[];
 }
 
-export function AdjustmentEditor({ svgContent }: { svgContent: string }) {
+export function AdjustmentEditor({
+  svgContent,
+  measurementList,
+}: {
+  svgContent: string;
+  measurementList: MeasurementItemType[];
+}) {
   const [pathDefs, setPathDefs] = useState<PathDefinition[]>([]);
   const [gridPoints, setGridPoints] = useState<Point[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -121,18 +129,28 @@ export function AdjustmentEditor({ svgContent }: { svgContent: string }) {
     return <div className="p-6">SVG 파싱 중...</div>;
   }
 
+  console.log("measurementList: ", measurementList);
   return (
     <AdjustmentProvider
       gridPoints={gridPoints}
       pathDefs={pathDefs}
-      sliderData={generateSliderDataFromGridPoints(gridPoints)}
+      sliderData={generateSliderDataFromGridPoints(measurementList, gridPoints)}
     >
-      <SVGPointEditor gridPoints={gridPoints} />
+      <SVGPointEditor
+        gridPoints={gridPoints}
+        measurementList={measurementList}
+      />
     </AdjustmentProvider>
   );
 }
 
-const SVGPointEditor = ({ gridPoints }: { gridPoints: Point[] }) => {
+const SVGPointEditor = ({
+  gridPoints,
+  measurementList,
+}: {
+  gridPoints: Point[];
+  measurementList: MeasurementItemType[];
+}) => {
   const { gridAdjustments, handleGridAdjustment } = useAdjustmentContext();
 
   const { handleAdjustStart, handleAdjustEnd } =
@@ -142,10 +160,11 @@ const SVGPointEditor = ({ gridPoints }: { gridPoints: Point[] }) => {
 
   // gridPoints를 기반으로 sliderData를 동적으로 생성
   const sliderData = useMemo(() => {
-    return generateSliderDataFromGridPoints(gridPoints);
+    return generateSliderDataFromGridPoints(measurementList, gridPoints);
   }, [gridPoints]);
 
   const sliders = sliderData.filter((s) => s.value_type === selectedValueType);
+  console.log("sliderData: ", sliderData);
 
   return (
     <div className="w-full max-w-7xl mx-auto p-6 bg-white">

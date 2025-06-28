@@ -114,9 +114,63 @@ function ChartSection({
         <strong className="text-neutral-N900 font-semibold">{label}</strong>를
         조정해주세요
       </h4>
-      <AdjustmentEditor svgContent={svgContent} />
+      <AdjustmentEditor
+        svgContent={svgContent}
+        measurementList={Object.values(measurements).flatMap((measurement) =>
+          measurement.map((m) => m[1])
+        )}
+      />
     </section>
   );
+}
+
+// merge
+interface MeasurementData {
+  code: string;
+  label: string;
+  value: number;
+  min: number;
+  max: number;
+  range_toggle: boolean;
+  value_type: string;
+}
+
+interface ManualData {
+  measurement_code: string;
+  start_point_id: string;
+  end_point_id: string;
+  slider_default: boolean;
+}
+
+interface MergedData extends MeasurementData, ManualData {}
+
+function mergeMeasurementDataTyped(
+  measurements: [string, MeasurementData][],
+  manual: ManualData[]
+): Record<string, MergedData> {
+  const result: Record<string, MergedData> = {};
+
+  const measurementMap = new Map<string, MeasurementData>();
+  measurements.forEach(([code, data]) => {
+    measurementMap.set(code, data);
+  });
+
+  manual
+    .filter((item) => item.slider_default === true)
+    .forEach((manualItem) => {
+      const code = manualItem.measurement_code;
+      const measurementData = measurementMap.get(code);
+
+      if (measurementData) {
+        result[code] = {
+          ...measurementData,
+          ...manualItem,
+          measurement_code: code,
+        } as MergedData;
+      }
+    });
+
+  return result;
 }
 
 const BODY_SVG_CONTENT = `<svg width="123" height="263" viewBox="0 0 123 263" fill="none" xmlns="http://www.w3.org/2000/svg">
