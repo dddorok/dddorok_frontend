@@ -223,13 +223,11 @@ function BrushSubMenu() {
       Icon: FlipVerticalIcon,
       name: "좌우반전",
       onClick: flipHorizontal,
-      disabled: true,
     },
     {
       Icon: FlipHorizontalIcon,
       name: "상하반전",
       onClick: flipVertical,
-      disabled: true,
     },
   ];
 
@@ -242,7 +240,6 @@ function BrushSubMenu() {
           key={item.name}
           className="flex flex-col items-center py-1 px-3 disabled:opacity-50 disabled:pointer-events-none"
           onClick={item.onClick}
-          disabled={item.disabled}
         >
           <item.Icon />
           <p className="text-neutral-N500 text-[16px] mt-1 whitespace-nowrap">

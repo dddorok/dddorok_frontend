@@ -9,11 +9,23 @@ export function flipPixelsHorizontal(
     const baseRow = [...(newPixels[row] ?? [])];
     const areaSlice = baseRow
       .slice(area.startCol, area.endCol + 1)
-      .map((p) => (p === undefined ? null : p));
+      .map((p, idx) => {
+        if (p === undefined || p === null) return null;
+        return {
+          ...p,
+          columnIndex: area.startCol + (area.endCol - area.startCol - idx),
+        };
+      });
     for (let i = 0; i < areaSlice.length; i++) {
       const col = area.startCol + i;
       if (!baseRow[col]?.disabled) {
         baseRow[col] = areaSlice[areaSlice.length - 1 - i] ?? null;
+        if (baseRow[col]) {
+          baseRow[col] = {
+            ...baseRow[col],
+            columnIndex: col,
+          };
+        }
       }
     }
     newPixels[row] = baseRow;
@@ -30,9 +42,15 @@ export function flipPixelsVertical(
   for (let row = area.startRow; row <= area.endRow; row++) {
     const baseRow = [...(newPixels[row] ?? [])];
     areaRows.push(
-      baseRow
-        .slice(area.startCol, area.endCol + 1)
-        .map((p) => (p === undefined ? null : p))
+      baseRow.slice(area.startCol, area.endCol + 1).map((p, idx) => {
+        if (p === undefined || p === null) return null;
+        return {
+          ...p,
+          rowIndex:
+            area.startRow +
+            (area.endRow - area.startRow - (row - area.startRow)),
+        };
+      })
     );
   }
   for (let i = 0; i < areaRows.length; i++) {
@@ -42,7 +60,15 @@ export function flipPixelsVertical(
     for (let j = 0; j < (areaRows[sourceRow]?.length ?? 0); j++) {
       const col = area.startCol + j;
       if (!baseRow[col]?.disabled) {
-        baseRow[col] = (areaRows[sourceRow] ?? [])[j] ?? null;
+        const sourceRowArr = areaRows[sourceRow] ?? [];
+        baseRow[col] = sourceRowArr[j] ?? null;
+        if (baseRow[col]) {
+          baseRow[col] = {
+            ...baseRow[col],
+            rowIndex: targetRow,
+            columnIndex: col,
+          };
+        }
       }
     }
     newPixels[targetRow] = baseRow;
