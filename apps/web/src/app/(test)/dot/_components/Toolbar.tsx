@@ -201,8 +201,8 @@ function EraserButton({ isOpenSubMenu }: { isOpenSubMenu: boolean }) {
 }
 
 function BrushSubMenu() {
-  const { undo, redo, canUndo, canRedo } = usePixelArtEditorHistoryContext();
-  const { copy, paste } = usePixelArtEditorCopyContext();
+  const { copy, paste, cut, flipHorizontal, flipVertical } =
+    usePixelArtEditorCopyContext();
   const list = [
     {
       Icon: PasteIcon,
@@ -217,17 +217,17 @@ function BrushSubMenu() {
     {
       Icon: CutIcon,
       name: "잘라내기",
-      //   onClick: cut,
+      onClick: cut,
     },
     {
       Icon: FlipVerticalIcon,
       name: "좌우반전",
-      //   onClick: flipVertical,
+      onClick: flipHorizontal,
     },
     {
       Icon: FlipHorizontalIcon,
       name: "상하반전",
-      //   onClick: flipHorizontal,
+      onClick: flipVertical,
     },
   ];
 
@@ -238,7 +238,7 @@ function BrushSubMenu() {
       {list.map((item) => (
         <button
           key={item.name}
-          className="flex flex-col items-center py-1 px-3"
+          className="flex flex-col items-center py-1 px-3 disabled:opacity-50 disabled:pointer-events-none"
           onClick={item.onClick}
         >
           <item.Icon />

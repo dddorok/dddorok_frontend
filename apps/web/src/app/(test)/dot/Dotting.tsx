@@ -11,9 +11,10 @@ import React, {
 
 import { BrushTool, BrushToolType } from "./constant";
 import { KNITTING_SYMBOLS, Shape } from "./Shape.constants";
+import { flipPixelsHorizontal, flipPixelsVertical } from "./utils/pixelFlip";
 
 // 픽셀 데이터 타입
-interface Pixel {
+export interface Pixel {
   rowIndex: number;
   columnIndex: number;
   shape: Shape | null;
@@ -51,7 +52,7 @@ interface PanOffset {
   y: number;
 }
 
-interface SelectedArea {
+export interface SelectedArea {
   startRow: number;
   startCol: number;
   endRow: number;
@@ -126,6 +127,8 @@ interface DottingRef {
     canvasY: number
   ) => { row: number; col: number };
   getCanvasPosition: () => { x: number; y: number } | null;
+  flipHorizontal: () => void;
+  flipVertical: () => void;
 }
 
 const createPixel = (
@@ -439,6 +442,22 @@ const GRID_MAJOR_COLOR = "#9EA5BD"; // 5칸마다 진한 선
 const GRID_MINOR_WIDTH = 1;
 const GRID_MAJOR_WIDTH = 2;
 
+// ===== 선택 영역 색상 상수 =====
+const SELECTED_AREA_BG_COLOR = "rgba(28, 31, 37, 0.1)";
+const SELECTED_AREA_BORDER_COLOR = "#1DD9E7";
+const SELECTED_AREA_BORDER_WIDTH = 0.8;
+
+// ===== 복사 영역 스타일 상수 =====
+const COPY_AREA_BORDER_COLOR = "#1DD9E7";
+const COPY_AREA_BORDER_WIDTH = 1.5;
+const COPY_AREA_DASH_ARRAY = [6, 4];
+
+// ===== 커서 스타일 상수 =====
+const CURSOR_DEFAULT = "default"; // 일반 커서
+const CURSOR_CROSSHAIR = "crosshair"; // 십자가
+const CURSOR_GRAB = "grab";
+const CURSOR_GRABBING = "grabbing";
+
 export const Dotting = forwardRef<DottingRef, DottingProps>(
   (
     {
@@ -617,7 +636,13 @@ export const Dotting = forwardRef<DottingRef, DottingProps>(
 
         const copiedPixels = pixels
           .slice(startRow, endRow + 1)
-          .map((row) => row.slice(startCol, endCol + 1));
+          .map((row, rowIdx) =>
+            row.slice(startCol, endCol + 1).map((pixel, colIdx) => {
+              // 복사 시 disabled 셀은 null로 저장
+              if (pixel?.disabled) return null;
+              return pixel;
+            })
+          );
 
         return {
           pixels: copiedPixels,
@@ -685,6 +710,26 @@ export const Dotting = forwardRef<DottingRef, DottingProps>(
         pasteAtPosition(selectedArea.startRow, selectedArea.startCol);
       }
     }, [selectedArea, copiedArea, pasteAtPosition]);
+
+    // 선택 영역을 null로 만드는 공통 함수
+    const clearSelectedAreaPixels = (
+      pixels: (Pixel | null)[][],
+      area: SelectedArea
+    ): (Pixel | null)[][] => {
+      return pixels.map((row, rowIdx) =>
+        row.map((pixel, colIdx) => {
+          if (
+            rowIdx >= area.startRow &&
+            rowIdx <= area.endRow &&
+            colIdx >= area.startCol &&
+            colIdx <= area.endCol
+          ) {
+            return pixel?.disabled ? pixel : null;
+          }
+          return pixel;
+        })
+      );
+    };
 
     // ref를 통해 외부에서 사용할 수 있는 메서드들
     useImperativeHandle(
@@ -822,6 +867,42 @@ export const Dotting = forwardRef<DottingRef, DottingProps>(
         copy: copySelectedArea,
         paste: pasteAtPosition,
         handlePaste: handlePaste,
+        cut: () => {
+          if (!selectedArea) return;
+          // 1. 복사
+          const copied = copySelectedAreaInternal(
+            selectedArea.startRow,
+            selectedArea.startCol,
+            selectedArea.endRow,
+            selectedArea.endCol
+          );
+          if (copied) {
+            setCopiedArea(copied);
+            onCopy?.();
+          }
+          // 2. 선택 영역을 null로 덮어쓰기(지우기)
+          setPixels((prev) => clearSelectedAreaPixels(prev, selectedArea));
+          // 3. 히스토리 저장
+          setTimeout(() => {
+            saveToHistory(clearSelectedAreaPixels(pixels, selectedArea));
+          }, 0);
+        },
+        flipHorizontal: () => {
+          if (!selectedArea) return;
+          setPixels((prev) => {
+            const newPixels = flipPixelsHorizontal(prev, selectedArea);
+            saveToHistory(newPixels);
+            return newPixels;
+          });
+        },
+        flipVertical: () => {
+          if (!selectedArea) return;
+          setPixels((prev) => {
+            const newPixels = flipPixelsVertical(prev, selectedArea);
+            saveToHistory(newPixels);
+            return newPixels;
+          });
+        },
       }),
       [
         undo,
@@ -1254,16 +1335,45 @@ export const Dotting = forwardRef<DottingRef, DottingProps>(
 
       // 선택 영역 그리기
       if (selectedArea) {
-        ctx.strokeStyle = "#0066ff";
-        ctx.lineWidth = 2;
-        ctx.setLineDash([5, 5]);
+        // 배경 채우기
+        ctx.save();
+        ctx.globalAlpha = 1;
+        ctx.fillStyle = SELECTED_AREA_BG_COLOR;
+        ctx.fillRect(
+          LABEL_MARGIN + selectedArea.startCol * gridSquareLength,
+          LABEL_MARGIN + selectedArea.startRow * gridSquareLength,
+          (selectedArea.endCol - selectedArea.startCol + 1) * gridSquareLength,
+          (selectedArea.endRow - selectedArea.startRow + 1) * gridSquareLength
+        );
+        ctx.restore();
+
+        // 파란색 실선 border
+        ctx.save();
+        ctx.strokeStyle = SELECTED_AREA_BORDER_COLOR;
+        ctx.lineWidth = SELECTED_AREA_BORDER_WIDTH;
+        ctx.setLineDash([]); // 실선
         ctx.strokeRect(
           LABEL_MARGIN + selectedArea.startCol * gridSquareLength,
           LABEL_MARGIN + selectedArea.startRow * gridSquareLength,
           (selectedArea.endCol - selectedArea.startCol + 1) * gridSquareLength,
           (selectedArea.endRow - selectedArea.startRow + 1) * gridSquareLength
         );
-        ctx.setLineDash([]);
+        ctx.restore();
+      }
+
+      // 복사된 영역 점선 border 그리기
+      if (copiedArea) {
+        ctx.save();
+        ctx.strokeStyle = COPY_AREA_BORDER_COLOR;
+        ctx.lineWidth = COPY_AREA_BORDER_WIDTH;
+        ctx.setLineDash(COPY_AREA_DASH_ARRAY); // 점선
+        ctx.strokeRect(
+          LABEL_MARGIN + copiedArea.startCol * gridSquareLength,
+          LABEL_MARGIN + copiedArea.startRow * gridSquareLength,
+          copiedArea.width * gridSquareLength,
+          copiedArea.height * gridSquareLength
+        );
+        ctx.restore();
       }
 
       // 마지막에 격자 그리기 (5칸마다 진하게, 나머지 연하게)
@@ -1313,6 +1423,7 @@ export const Dotting = forwardRef<DottingRef, DottingProps>(
       GRID_MAJOR_COLOR,
       GRID_MINOR_WIDTH,
       GRID_MAJOR_WIDTH,
+      copiedArea,
     ]);
 
     useEffect(() => {
@@ -1335,11 +1446,13 @@ export const Dotting = forwardRef<DottingRef, DottingProps>(
         style={{
           border: "1px solid #ccc",
           cursor:
-            brushTool === BrushTool.NONE
-              ? isDragging
-                ? "grabbing"
-                : "grab"
-              : "crosshair",
+            brushTool === BrushTool.SELECT
+              ? CURSOR_CROSSHAIR
+              : brushTool === BrushTool.NONE
+                ? isDragging
+                  ? CURSOR_GRABBING
+                  : CURSOR_GRAB
+                : CURSOR_CROSSHAIR,
           ...style,
         }}
         onMouseDown={handleMouseDown}

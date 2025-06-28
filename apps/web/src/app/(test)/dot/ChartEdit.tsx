@@ -32,7 +32,7 @@ export default function ChartEdit({
         grid_col={chart.grid_col}
         grid_row={chart.grid_row}
       />
-      <DevKnittingSymbolsPreview />
+      {/* <DevKnittingSymbolsPreview /> */}
     </div>
   );
 }

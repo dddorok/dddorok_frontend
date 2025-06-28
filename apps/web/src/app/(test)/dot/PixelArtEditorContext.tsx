@@ -21,6 +21,9 @@ interface PixelArtEditorHistoryContextType {
 interface PixelArtEditorCopyContextType {
   copy: () => void;
   paste: () => void;
+  cut: () => void;
+  flipHorizontal: () => void;
+  flipVertical: () => void;
 }
 
 const PixelArtEditorContext = createContext<
@@ -56,9 +59,13 @@ export const PixelArtEditorProvider = ({
     canRedo,
     copy,
     handlePaste,
+    cut,
+    flipHorizontal,
+    flipVertical,
   } = useDotting(dottingRef);
 
   // 키보드 단축키 추가
+  // TODO: 이후에 라이브러리로 교체
   React.useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === "z" && !e.shiftKey) {
@@ -76,12 +83,15 @@ export const PixelArtEditorProvider = ({
       } else if ((e.metaKey || e.ctrlKey) && e.key === "v") {
         e.preventDefault();
         handlePaste();
+      } else if ((e.metaKey || e.ctrlKey) && e.key === "x") {
+        e.preventDefault();
+        cut();
       }
     };
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [undo, redo, copy, handlePaste]);
+  }, [undo, redo, copy, handlePaste, cut]);
 
   return (
     <PixelArtEditorContext.Provider
@@ -104,6 +114,9 @@ export const PixelArtEditorProvider = ({
           value={{
             copy,
             paste: handlePaste,
+            cut,
+            flipHorizontal,
+            flipVertical,
           }}
         >
           {children}
