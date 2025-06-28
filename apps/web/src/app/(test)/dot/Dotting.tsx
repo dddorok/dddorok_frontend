@@ -636,7 +636,13 @@ export const Dotting = forwardRef<DottingRef, DottingProps>(
 
         const copiedPixels = pixels
           .slice(startRow, endRow + 1)
-          .map((row) => row.slice(startCol, endCol + 1));
+          .map((row, rowIdx) =>
+            row.slice(startCol, endCol + 1).map((pixel, colIdx) => {
+              // 복사 시 disabled 셀은 null로 저장
+              if (pixel?.disabled) return null;
+              return pixel;
+            })
+          );
 
         return {
           pixels: copiedPixels,
