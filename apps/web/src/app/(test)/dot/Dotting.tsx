@@ -447,6 +447,12 @@ const SELECTED_AREA_BG_COLOR = "rgba(28, 31, 37, 0.1)";
 const SELECTED_AREA_BORDER_COLOR = "#1DD9E7";
 const SELECTED_AREA_BORDER_WIDTH = 0.8;
 
+// ===== 커서 스타일 상수 =====
+const CURSOR_DEFAULT = "default"; // 일반 커서
+const CURSOR_CROSSHAIR = "crosshair"; // 십자가
+const CURSOR_GRAB = "grab";
+const CURSOR_GRABBING = "grabbing";
+
 export const Dotting = forwardRef<DottingRef, DottingProps>(
   (
     {
@@ -1413,11 +1419,13 @@ export const Dotting = forwardRef<DottingRef, DottingProps>(
         style={{
           border: "1px solid #ccc",
           cursor:
-            brushTool === BrushTool.NONE
-              ? isDragging
-                ? "grabbing"
-                : "grab"
-              : "crosshair",
+            brushTool === BrushTool.SELECT
+              ? CURSOR_CROSSHAIR
+              : brushTool === BrushTool.NONE
+                ? isDragging
+                  ? CURSOR_GRABBING
+                  : CURSOR_GRAB
+                : CURSOR_CROSSHAIR,
           ...style,
         }}
         onMouseDown={handleMouseDown}
