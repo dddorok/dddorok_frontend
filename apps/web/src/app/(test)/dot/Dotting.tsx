@@ -447,6 +447,11 @@ const SELECTED_AREA_BG_COLOR = "rgba(28, 31, 37, 0.1)";
 const SELECTED_AREA_BORDER_COLOR = "#1DD9E7";
 const SELECTED_AREA_BORDER_WIDTH = 0.8;
 
+// ===== 복사 영역 스타일 상수 =====
+const COPY_AREA_BORDER_COLOR = "#1DD9E7";
+const COPY_AREA_BORDER_WIDTH = 1.5;
+const COPY_AREA_DASH_ARRAY = [6, 4];
+
 // ===== 커서 스타일 상수 =====
 const CURSOR_DEFAULT = "default"; // 일반 커서
 const CURSOR_CROSSHAIR = "crosshair"; // 십자가
@@ -1350,6 +1355,21 @@ export const Dotting = forwardRef<DottingRef, DottingProps>(
         ctx.restore();
       }
 
+      // 복사된 영역 점선 border 그리기
+      if (copiedArea) {
+        ctx.save();
+        ctx.strokeStyle = COPY_AREA_BORDER_COLOR;
+        ctx.lineWidth = COPY_AREA_BORDER_WIDTH;
+        ctx.setLineDash(COPY_AREA_DASH_ARRAY); // 점선
+        ctx.strokeRect(
+          LABEL_MARGIN + copiedArea.startCol * gridSquareLength,
+          LABEL_MARGIN + copiedArea.startRow * gridSquareLength,
+          copiedArea.width * gridSquareLength,
+          copiedArea.height * gridSquareLength
+        );
+        ctx.restore();
+      }
+
       // 마지막에 격자 그리기 (5칸마다 진하게, 나머지 연하게)
       if (isGridVisible) {
         // 수직선
@@ -1397,6 +1417,7 @@ export const Dotting = forwardRef<DottingRef, DottingProps>(
       GRID_MAJOR_COLOR,
       GRID_MINOR_WIDTH,
       GRID_MAJOR_WIDTH,
+      copiedArea,
     ]);
 
     useEffect(() => {
