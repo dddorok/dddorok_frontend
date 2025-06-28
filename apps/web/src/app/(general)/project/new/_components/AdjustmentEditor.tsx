@@ -29,7 +29,7 @@ interface SliderDataItem {
   snapValues: number[];
   initialValue: number;
   average: number;
-  value_type: "row" | "col";
+  value_type: "WIDTH" | "LENGTH";
 }
 
 // gridPoints를 기반으로 sliderData를 생성하는 함수
@@ -44,11 +44,11 @@ const generateSliderDataFromGridPoints = (
   const cols = new Set<string>();
 
   gridPoints.forEach((point) => {
-    const row = point.id[0]; // 첫 번째 문자 (a, b, c, ...)
-    const col = point.id[1]; // 두 번째 문자 (1, 2, 3, ...)
+    const WIDTH = point.id[0]; // 첫 번째 문자 (a, b, c, ...)
+    const LENGTH = point.id[1]; // 두 번째 문자 (1, 2, 3, ...)
 
-    if (row) rows.add(row);
-    if (col) cols.add(col);
+    if (WIDTH) rows.add(WIDTH);
+    if (LENGTH) cols.add(LENGTH);
   });
 
   // 행과 열을 정렬
@@ -67,7 +67,7 @@ const generateSliderDataFromGridPoints = (
       snapValues: [0.1, 0.5, 1, 1.5, 2, 2.5, 3],
       initialValue: 1,
       average: 1,
-      value_type: "col",
+      value_type: "LENGTH",
     });
   }
 
@@ -83,7 +83,7 @@ const generateSliderDataFromGridPoints = (
       snapValues: [0.1, 0.5, 1, 1.5, 2, 2.5, 3],
       initialValue: 1,
       average: 1,
-      value_type: "row",
+      value_type: "WIDTH",
     });
   }
 
@@ -156,7 +156,7 @@ const SVGPointEditor = ({
   const { handleAdjustStart, handleAdjustEnd } =
     useAdjustmentProgressingContext();
 
-  const [selectedValueType, setSelectedValueType] = useState<string>("row");
+  const [selectedValueType, setSelectedValueType] = useState<string>("WIDTH");
 
   // gridPoints를 기반으로 sliderData를 동적으로 생성
   const sliderData = useMemo(() => {
@@ -175,7 +175,7 @@ const SVGPointEditor = ({
 
         <div className="bg-neutral-N100 border border-neutral-N200 p-4 px-[18px] rounded-lg">
           <div className="flex gap-4 mb-[14px] justify-center">
-            {["row", "col"].map((valueType) => (
+            {["WIDTH", "LENGTH"].map((valueType) => (
               <button
                 key={valueType}
                 onClick={() => setSelectedValueType(valueType)}
@@ -185,7 +185,7 @@ const SVGPointEditor = ({
                     "bg-primary-PR text-[#FFFFFF] text-medium-b border-primary-PR"
                 )}
               >
-                {valueType === "row" ? "길이" : "너비"}
+                {valueType === "WIDTH" ? "길이" : "너비"}
               </button>
             ))}
           </div>
@@ -318,15 +318,15 @@ function GridCoordinatePlane() {
 
         {/* 조정된 그리드 라인들 */}
         {adjustedPoints.map((point: Point) => {
-          const row = point.id[0];
-          const col = point.id[1];
+          const WIDTH = point.id[0];
+          const LENGTH = point.id[1];
 
-          if (!row || !col) return null;
+          if (!WIDTH || !LENGTH) return null;
 
           // 가로 라인 (같은 행의 다음 열로)
-          if (col < "9") {
+          if (LENGTH < "9") {
             const nextColPoint = adjustedPoints.find(
-              (p: Point) => p.id === `${row}${parseInt(col) + 1}`
+              (p: Point) => p.id === `${WIDTH}${parseInt(LENGTH) + 1}`
             );
             if (nextColPoint) {
               return (
@@ -346,16 +346,16 @@ function GridCoordinatePlane() {
         })}
 
         {adjustedPoints.map((point: Point) => {
-          const row = point.id[0];
-          const col = point.id[1];
+          const WIDTH = point.id[0];
+          const LENGTH = point.id[1];
 
-          if (!row || !col) return null;
+          if (!WIDTH || !LENGTH) return null;
 
           // 세로 라인 (같은 열의 다음 행으로)
-          if (row < "z") {
-            const nextRowChar = String.fromCharCode(row.charCodeAt(0) + 1);
+          if (WIDTH < "z") {
+            const nextRowChar = String.fromCharCode(WIDTH.charCodeAt(0) + 1);
             const nextRowPoint = adjustedPoints.find(
-              (p: Point) => p.id === `${nextRowChar}${col}`
+              (p: Point) => p.id === `${nextRowChar}${LENGTH}`
             );
             if (nextRowPoint) {
               return (
