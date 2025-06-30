@@ -8,12 +8,21 @@ import { AutoMappingTable } from "./_components/AutoMappingTable";
 import { ManualMappingTable } from "./_components/ManualMappingTable";
 import { SvgPreview } from "./_components/SvgPreview";
 import { useSvgContent } from "./hooks/useSvgContent";
+import { SliderControlModal } from "./SliderControlModal";
 import { previewH, previewW } from "./utils/etc";
 
 import { DownloadButton } from "@/components/DownloadButton";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogClose,
+} from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { toast, useToast } from "@/hooks/use-toast";
 import { getChartType } from "@/services/chart-type";
@@ -48,6 +57,16 @@ const ChartRegistration: React.FC<{
   id: string;
 }> = ({ data, id }) => {
   const [hoveredPathId, setHoveredPathId] = useState<string | null>(null);
+  const [isControlModalOpen, setIsControlModalOpen] = useState(false);
+  const [controlRows, setControlRows] = useState<
+    Array<{
+      code: string;
+      label: string;
+      control: string;
+      originalControl: string;
+      value_type: "WIDTH" | "LENGTH";
+    }>
+  >([]);
 
   const { toast } = useToast();
   const router = useRouter();
@@ -81,12 +100,80 @@ const ChartRegistration: React.FC<{
     })
     .filter((item) => item !== null);
 
+  const generateControlString = (
+    startPointId: string,
+    endPointId: string,
+    valueType: "WIDTH" | "LENGTH"
+  ): string => {
+    if (valueType === "WIDTH") {
+      const startNum = startPointId.match(/\d+/)?.[0] || "";
+      const endNum = endPointId.match(/\d+/)?.[0] || "";
+      return `${startNum}-${endNum}`;
+    } else {
+      const startChar = startPointId.charAt(0);
+      const endChar = endPointId.charAt(0);
+      return `${startChar}-${endChar}`;
+    }
+  };
+
+  // 인접한 control 조합만 반환
+  const getControlDropdownPairs = (valueType: "WIDTH" | "LENGTH") => {
+    if (!points) return [];
+    let ids: string[] = [];
+    if (valueType === "WIDTH") {
+      ids = points
+        .map((p: any) => p.id)
+        .filter((id: string) => /^\d+$/.test(id))
+        .sort((a, b) => Number(a) - Number(b));
+    } else {
+      ids = points
+        .map((p: any) => p.id)
+        .filter((id: string) => /^[a-zA-Z]$/.test(id))
+        .sort();
+    }
+    const pairs: string[] = [];
+    for (let i = 0; i < ids.length - 1; i++) {
+      pairs.push(`${ids[i]}-${ids[i + 1]}`);
+    }
+    return pairs;
+  };
+
+  // control 드롭다운 옵션 (각 row별로)
+  const getControlOptionsForRow = (row: { value_type: "WIDTH" | "LENGTH" }) => {
+    return getControlDropdownPairs(row.value_type);
+  };
+
+  // control 드롭다운에서 선택 시
+  const handleControlDropdownChange = (idx: number, value: string) => {
+    setControlRows((prev) =>
+      prev.map((row, i) => (i === idx ? { ...row, control: value } : row))
+    );
+  };
+
+  // 모달 오픈 함수
+  const openControlModal = () => {
+    setIsControlModalOpen(true);
+  };
+
+  // 저장 콜백
+  const handleSliderControlSave = (
+    rows: Array<{
+      code: string;
+      label: string;
+      control: string;
+      originalControl: string;
+      value_type: "WIDTH" | "LENGTH";
+    }>
+  ) => {
+    console.log(rows);
+  };
+
   const handleSubmit = async () => {
     try {
-      // 모든 측정 항목이 매핑되었는지 확인
       const unmappedItems = measurementItems.filter(
         (item) => !item.startPoint || !item.endPoint
       );
+
       if (unmappedItems.length > 0) {
         toast({
           title: "경고",
@@ -96,38 +183,7 @@ const ChartRegistration: React.FC<{
         return;
       }
 
-      // API 요청 데이터 구성
-      const requestData = {
-        name: data.svg_name, // TODO: 실제 이름으로 변경
-        svgFileUrl: data.svg_url, // TODO: 실제 S3 URL로 변경
-        points: points,
-        mappings: {
-          auto: autoMappingItems.map((item) => ({
-            measurement_code: item.id,
-            start_point_id: item.points[0],
-            end_point_id: item.points[1],
-            slider_default:
-              data.mapped_path_id.find((p) => p.code === item.id)
-                ?.slider_default ?? false,
-            control_points: item.controlPoints,
-          })),
-          manual: measurementItems.map((item) => ({
-            measurement_code: item.id,
-            start_point_id: item.startPoint,
-            end_point_id: item.endPoint,
-            slider_default: item.adjustable,
-          })),
-        },
-      };
-
-      await updateChartTypeSvgMapping(id, requestData);
-
-      toast({
-        title: "성공",
-        description: "차트 타입이 수정되었습니다.",
-      });
-
-      router.push("/chart-types");
+      openControlModal();
     } catch (error) {
       toast({
         title: "오류",
@@ -236,6 +292,13 @@ const ChartRegistration: React.FC<{
         <Button variant="outline">취소</Button>
         <Button onClick={handleSubmit}>저장</Button>
       </div>
+      <SliderControlModal
+        open={isControlModalOpen}
+        onOpenChange={setIsControlModalOpen}
+        measurementItems={measurementItems}
+        points={points}
+        onSave={handleSliderControlSave}
+      />
     </div>
   );
 };
@@ -290,7 +353,6 @@ const useManualMapping = (props: {
       setSelectedPointIndex(1);
       toast({ title: "끝점 선택 중입니다." });
     } else {
-      // 현재 항목의 매핑이 완료되면 다음 미완료 항목으로 자동 이동
       const currentIndex = measurementItems.findIndex(
         (item) => item.id === mappingPathId
       );
@@ -350,7 +412,6 @@ const useManualMapping = (props: {
     );
   };
 
-  // 매핑 항목 초기화
   useEffect(() => {
     initMapping();
   }, [props.manual_mapped_path_id]);
