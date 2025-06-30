@@ -185,7 +185,7 @@ export const SliderSection = ({
     percentage,
     generateTicks,
   } = useSlider({
-    initialValue,
+    initialValue: average,
     min,
     max,
     snapValues,

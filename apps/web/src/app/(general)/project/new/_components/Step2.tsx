@@ -187,7 +187,8 @@ const BODY_SVG_CONTENT = `<svg width="123" height="263" viewBox="0 0 123 263" fi
 <path id="BODY_WAIST_SLOPE_LENGTH" d="M120 259L120 111" stroke="black"/>
 <path id="BODY_FRONT_ARMHOLE_CIRCUMFERENCE" d="M120 111C120 111 108.698 111.1 98.8756 104.64C86.5 96.5 86 79.5 86 79.5L86 15" stroke="black"/>
 </g>
-</svg>`;
+</svg>
+`;
 
 const SLEEVE_SVG_CONTENT = `<svg width="88" height="260" viewBox="0 0 88 260" fill="none" xmlns="http://www.w3.org/2000/svg">
 <g id="&#236;&#133;&#139;&#236;&#157;&#184;&#237;&#152;&#149; &#236;&#134;&#140;&#235;&#167;&#164;">

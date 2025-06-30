@@ -17,7 +17,7 @@ export const useAdjuestment = ({
 
   const [gridAdjustments, setGridAdjustments] = useState<GridAdjustments>(
     sliderData.reduce((acc, slider) => {
-      acc[slider.control] = slider.initialValue;
+      acc[slider.control] = slider.initialValue / slider.average;
       return acc;
     }, {} as GridAdjustments)
   );
@@ -40,13 +40,18 @@ export const useAdjuestment = ({
   };
 
   const handleGridAdjustment = (gridKey: string, value: string): void => {
-    setGridAdjustments((prev) => ({ ...prev, [gridKey]: parseFloat(value) }));
+    const slider = sliderData.find((s) => s.control === gridKey);
+    const average = slider?.average ?? 1;
+    setGridAdjustments((prev) => ({
+      ...prev,
+      [gridKey]: parseFloat(value) / average,
+    }));
   };
 
   const resetAdjustments = (): void => {
     const resetObj: GridAdjustments = {};
-    Object.keys(originalGridSpacing).forEach((key: string) => {
-      resetObj[key] = 1;
+    sliderData.forEach((slider) => {
+      resetObj[slider.control] = 1;
     });
     setGridAdjustments(resetObj);
   };

@@ -34,62 +34,62 @@ interface SliderDataItem {
 }
 
 // gridPoints를 기반으로 sliderData를 생성하는 함수
-const generateSliderDataFromGridPoints = (
-  measurementList: MeasurementItemType[],
-  gridPoints: Point[]
-): SliderDataItem[] => {
-  const sliderData: SliderDataItem[] = [];
+// const generateSliderDataFromGridPoints = (
+//   measurementList: MeasurementItemType[],
+//   gridPoints: Point[]
+// ): SliderDataItem[] => {
+//   const sliderData: SliderDataItem[] = [];
 
-  // 그리드 포인트를 행과 열로 분류
-  const rows = new Set<string>();
-  const cols = new Set<string>();
+//   // 그리드 포인트를 행과 열로 분류
+//   const rows = new Set<string>();
+//   const cols = new Set<string>();
 
-  gridPoints.forEach((point) => {
-    const WIDTH = point.id[0]; // 첫 번째 문자 (a, b, c, ...)
-    const LENGTH = point.id[1]; // 두 번째 문자 (1, 2, 3, ...)
+//   gridPoints.forEach((point) => {
+//     const WIDTH = point.id[0]; // 첫 번째 문자 (a, b, c, ...)
+//     const LENGTH = point.id[1]; // 두 번째 문자 (1, 2, 3, ...)
 
-    if (WIDTH) rows.add(WIDTH);
-    if (LENGTH) cols.add(LENGTH);
-  });
+//     if (WIDTH) rows.add(WIDTH);
+//     if (LENGTH) cols.add(LENGTH);
+//   });
 
-  // 행과 열을 정렬
-  const sortedRows = Array.from(rows).sort();
-  const sortedCols = Array.from(cols).sort((a, b) => parseInt(a) - parseInt(b));
+//   // 행과 열을 정렬
+//   const sortedRows = Array.from(rows).sort();
+//   const sortedCols = Array.from(cols).sort((a, b) => parseInt(a) - parseInt(b));
 
-  // 열 간격 생성 (가로 간격)
-  for (let i = 0; i < sortedCols.length - 1; i++) {
-    const currentCol = sortedCols[i];
-    const nextCol = sortedCols[i + 1];
+//   // 열 간격 생성 (가로 간격)
+//   for (let i = 0; i < sortedCols.length - 1; i++) {
+//     const currentCol = sortedCols[i];
+//     const nextCol = sortedCols[i + 1];
 
-    sliderData.push({
-      control: `${currentCol}-${nextCol}`,
-      min: 0.1,
-      max: 3,
-      snapValues: [0.1, 0.5, 1, 1.5, 2, 2.5, 3],
-      initialValue: 1,
-      average: 1,
-      value_type: "LENGTH",
-    });
-  }
+//     sliderData.push({
+//       control: `${currentCol}-${nextCol}`,
+//       min: 0.1,
+//       max: 3,
+//       snapValues: [0.1, 0.5, 1, 1.5, 2, 2.5, 3],
+//       initialValue: 1,
+//       average: 1,
+//       value_type: "LENGTH",
+//     });
+//   }
 
-  // 행 간격 생성 (세로 간격)
-  for (let i = 0; i < sortedRows.length - 1; i++) {
-    const currentRow = sortedRows[i];
-    const nextRow = sortedRows[i + 1];
+//   // 행 간격 생성 (세로 간격)
+//   for (let i = 0; i < sortedRows.length - 1; i++) {
+//     const currentRow = sortedRows[i];
+//     const nextRow = sortedRows[i + 1];
 
-    sliderData.push({
-      control: `${currentRow}-${nextRow}`,
-      min: 0.1,
-      max: 3,
-      snapValues: [0.1, 0.5, 1, 1.5, 2, 2.5, 3],
-      initialValue: 1,
-      average: 1,
-      value_type: "WIDTH",
-    });
-  }
+//     sliderData.push({
+//       control: `${currentRow}-${nextRow}`,
+//       min: 0.1,
+//       max: 3,
+//       snapValues: [0.1, 0.5, 1, 1.5, 2, 2.5, 3],
+//       initialValue: 1,
+//       average: 1,
+//       value_type: "WIDTH",
+//     });
+//   }
 
-  return sliderData;
-};
+//   return sliderData;
+// };
 
 interface AdjustedPath extends PathDefinition {
   start: Point;
@@ -110,10 +110,10 @@ export function AdjustmentEditor({
   const [gridPoints, setGridPoints] = useState<Point[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  const sliderData = generateSliderDataFromGridPoints(
-    measurementList,
-    gridPoints
-  );
+  // const sliderData = generateSliderDataFromGridPoints(
+  //   measurementList,
+  //   gridPoints
+  // );
 
   useEffect(() => {
     // 클라이언트 사이드에서만 SVG 파싱 실행
@@ -212,7 +212,7 @@ const SVGPointEditor = ({
                   snapValues={slider.snapValues}
                   getDisplayValue={(value: number) => value * 10}
                   initialValue={
-                    gridAdjustments[slider.control] ?? slider.initialValue
+                    gridAdjustments[slider.control] ?? slider.average
                   }
                   average={slider.average}
                   code={slider.control}
