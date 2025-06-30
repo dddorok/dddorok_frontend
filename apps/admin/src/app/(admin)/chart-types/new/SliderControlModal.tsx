@@ -10,6 +10,15 @@ import {
   DialogClose,
 } from "@/components/ui/dialog";
 
+export interface SliderControlRowType {
+  code: string;
+  label: string;
+  controlStart: string;
+  controlEnd: string;
+  originalControl: string;
+  value_type: "WIDTH" | "LENGTH";
+}
+
 interface SliderControlModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -21,16 +30,7 @@ interface SliderControlModalProps {
     adjustable: boolean;
   }>;
   points: Array<{ id: string }>;
-  onSave: (
-    rows: Array<{
-      code: string;
-      label: string;
-      controlStart: string;
-      controlEnd: string;
-      originalControl: string;
-      value_type: "WIDTH" | "LENGTH";
-    }>
-  ) => void;
+  onSave: (rows: Array<SliderControlRowType>) => void;
 }
 
 const generateControlString = (
@@ -71,16 +71,9 @@ export const SliderControlModal: React.FC<SliderControlModalProps> = ({
   points,
   onSave,
 }) => {
-  const [controlRows, setControlRows] = useState<
-    Array<{
-      code: string;
-      label: string;
-      controlStart: string;
-      controlEnd: string;
-      originalControl: string;
-      value_type: "WIDTH" | "LENGTH";
-    }>
-  >([]);
+  const [controlRows, setControlRows] = useState<Array<SliderControlRowType>>(
+    []
+  );
 
   const initialControlRow = () => {
     // 조정 가능 항목만
@@ -157,15 +150,19 @@ export const SliderControlModal: React.FC<SliderControlModalProps> = ({
   const handleSave = () => {
     // TODO: 중복로직 체트 검토
     // control 중복 체크
-    const controls = controlRows.map((row) => row.controlStart.trim());
-    const hasDuplicate = controls.some(
-      (c, i) => c && controls.indexOf(c) !== i
-    );
-    if (hasDuplicate) {
-      alert("control 값이 중복됩니다. 각 control은 고유해야 합니다.");
-      return;
-    }
-    onSave(controlRows);
+    // const controls = controlRows.map((row) => row.controlStart.trim());
+    // const hasDuplicate = controls.some(
+    //   (c, i) => c && controls.indexOf(c) !== i
+    // );
+    // if (hasDuplicate) {
+    //   alert("control 값이 중복됩니다. 각 control은 고유해야 합니다.");
+    //   return;
+    // }
+    const rows = controlRows.map((row) => ({
+      ...row,
+      control: `${row.controlStart}-${row.controlEnd}`,
+    }));
+    onSave(rows);
     onOpenChange(false);
   };
 
@@ -229,14 +226,7 @@ function ControlRow({
   handleControlDropdownChange,
   handleControlDropdownEndChange,
 }: {
-  row: {
-    code: string;
-    label: string;
-    controlStart: string;
-    controlEnd: string;
-    originalControl: string;
-    value_type: "WIDTH" | "LENGTH";
-  };
+  row: SliderControlRowType;
   options: string[];
   handleControlDropdownChange: (value: string) => void;
   handleControlDropdownEndChange: (value: string) => void;

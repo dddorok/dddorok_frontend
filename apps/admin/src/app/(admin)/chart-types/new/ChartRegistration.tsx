@@ -8,7 +8,7 @@ import { AutoMappingTable } from "./_components/AutoMappingTable";
 import { ManualMappingTable } from "./_components/ManualMappingTable";
 import { SvgPreview } from "./_components/SvgPreview";
 import { useSvgContent } from "./hooks/useSvgContent";
-import { SliderControlModal } from "./SliderControlModal";
+import { SliderControlModal, SliderControlRowType } from "./SliderControlModal";
 import { previewH, previewW } from "./utils/etc";
 
 import { DownloadButton } from "@/components/DownloadButton";
@@ -150,22 +150,51 @@ const ChartRegistration: React.FC<{
     );
   };
 
+  const handleApiRequest = async (controlRows: Array<SliderControlRowType>) => {
+    // API 요청 데이터 구성
+    const requestData = {
+      name: data.svg_name, // TODO: 실제 이름으로 변경
+      svgFileUrl: data.svg_url, // TODO: 실제 S3 URL로 변경
+      points: points,
+      mappings: {
+        auto: autoMappingItems.map((item) => ({
+          measurement_code: item.id,
+          start_point_id: item.points[0],
+          end_point_id: item.points[1],
+          slider_default:
+            data.mapped_path_id.find((p) => p.code === item.id)
+              ?.slider_default ?? false,
+          control_points: item.controlPoints,
+        })),
+        manual: measurementItems.map((item) => ({
+          measurement_code: item.id,
+          start_point_id: item.startPoint,
+          end_point_id: item.endPoint,
+          slider_default: item.adjustable,
+        })),
+        control: controlRows,
+      },
+    };
+
+    await updateChartTypeSvgMapping(id, requestData);
+
+    toast({
+      title: "성공",
+      description: "차트 타입이 수정되었습니다.",
+    });
+
+    router.push("/chart-types");
+  };
+
   // 모달 오픈 함수
   const openControlModal = () => {
     setIsControlModalOpen(true);
   };
 
   // 저장 콜백
-  const handleSliderControlSave = (
-    rows: Array<{
-      code: string;
-      label: string;
-      control: string;
-      originalControl: string;
-      value_type: "WIDTH" | "LENGTH";
-    }>
-  ) => {
+  const handleSliderControlSave = (rows: Array<SliderControlRowType>) => {
     console.log(rows);
+    handleApiRequest(rows);
   };
 
   const handleSubmit = async () => {

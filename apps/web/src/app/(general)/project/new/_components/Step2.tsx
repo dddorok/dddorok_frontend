@@ -3,6 +3,7 @@ import { AlertCircle } from "lucide-react";
 import { useState } from "react";
 
 import { AdjustmentEditor } from "./AdjustmentEditor";
+import { BODY_DUMMY_DATA, MeasurementDummyData } from "./dummy";
 import { SliderSection } from "./korean-slider-component";
 
 import { Button } from "@/components/ui/button";
@@ -81,11 +82,13 @@ export default function Step2({
           measurements={bodyMeasurementsByValueType}
           label="몸판 길이"
           svgContent={BODY_SVG_CONTENT}
+          data={BODY_DUMMY_DATA}
         />
         <ChartSection
           measurements={sleeveMeasurementsByValueType}
           label="소매"
           svgContent={SLEEVE_SVG_CONTENT}
+          data={BODY_DUMMY_DATA}
         />
         <div className="max-w-[500px] mx-auto grid grid-cols-[76px_1fr] gap-6">
           <Button color="default" onClick={onPrev}>
@@ -103,10 +106,12 @@ function ChartSection({
   measurements,
   label,
   svgContent,
+  data,
 }: {
   measurements: Record<string, MeasurementType[]>;
   label: string;
   svgContent: string;
+  data: MeasurementDummyData[];
 }) {
   return (
     <section className="mb-8">
@@ -119,6 +124,7 @@ function ChartSection({
         measurementList={Object.values(measurements).flatMap((measurement) =>
           measurement.map((m) => m[1])
         )}
+        data={data}
       />
     </section>
   );

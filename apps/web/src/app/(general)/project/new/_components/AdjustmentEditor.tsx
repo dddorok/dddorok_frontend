@@ -16,6 +16,7 @@ import {
   useAdjustmentContext,
   useAdjustmentProgressingContext,
 } from "./AdjustmentProvider";
+import { MeasurementDummyData } from "./dummy";
 import { SliderSection } from "./korean-slider-component";
 
 import { cn } from "@/lib/utils";
@@ -99,13 +100,20 @@ interface AdjustedPath extends PathDefinition {
 export function AdjustmentEditor({
   svgContent,
   measurementList,
+  data,
 }: {
   svgContent: string;
   measurementList: MeasurementItemType[];
+  data: MeasurementDummyData[];
 }) {
   const [pathDefs, setPathDefs] = useState<PathDefinition[]>([]);
   const [gridPoints, setGridPoints] = useState<Point[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  const sliderData = generateSliderDataFromGridPoints(
+    measurementList,
+    gridPoints
+  );
 
   useEffect(() => {
     // 클라이언트 사이드에서만 SVG 파싱 실행
@@ -134,22 +142,25 @@ export function AdjustmentEditor({
     <AdjustmentProvider
       gridPoints={gridPoints}
       pathDefs={pathDefs}
-      sliderData={generateSliderDataFromGridPoints(measurementList, gridPoints)}
+      sliderData={data}
     >
       <SVGPointEditor
-        gridPoints={gridPoints}
-        measurementList={measurementList}
+        // gridPoints={gridPoints}
+        sliderData={data}
+        // measurementList={measurementList}
       />
     </AdjustmentProvider>
   );
 }
 
 const SVGPointEditor = ({
-  gridPoints,
-  measurementList,
+  // gridPoints,
+  // measurementList,
+  sliderData,
 }: {
-  gridPoints: Point[];
-  measurementList: MeasurementItemType[];
+  // gridPoints: Point[];
+  // measurementList: MeasurementItemType[];
+  sliderData: MeasurementDummyData[];
 }) => {
   const { gridAdjustments, handleGridAdjustment } = useAdjustmentContext();
 
@@ -159,9 +170,9 @@ const SVGPointEditor = ({
   const [selectedValueType, setSelectedValueType] = useState<string>("WIDTH");
 
   // gridPoints를 기반으로 sliderData를 동적으로 생성
-  const sliderData = useMemo(() => {
-    return generateSliderDataFromGridPoints(measurementList, gridPoints);
-  }, [gridPoints]);
+  // const sliderData = useMemo(() => {
+  //   return generateSliderDataFromGridPoints(measurementList, gridPoints);
+  // }, [gridPoints]);
 
   const sliders = sliderData.filter((s) => s.value_type === selectedValueType);
   console.log("sliderData: ", sliderData);
