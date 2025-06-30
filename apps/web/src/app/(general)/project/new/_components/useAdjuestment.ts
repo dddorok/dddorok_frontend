@@ -17,8 +17,6 @@ export const useAdjuestment = ({
       return acc;
     }, {} as GridAdjustments)
   );
-  console.log("gridAdjustments: ", gridAdjustments);
-  // const [adjustedPoints, setAdjustedPoints] = useState<Point[]>([]);
 
   const controls = sliderData.map((slider) => slider.control);
 

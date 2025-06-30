@@ -170,13 +170,7 @@ const SVGPointEditor = ({
 
   const [selectedValueType, setSelectedValueType] = useState<string>("WIDTH");
 
-  // gridPoints를 기반으로 sliderData를 동적으로 생성
-  // const sliderData = useMemo(() => {
-  //   return generateSliderDataFromGridPoints(measurementList, gridPoints);
-  // }, [gridPoints]);
-
   const sliders = sliderData.filter((s) => s.value_type === selectedValueType);
-  console.log("sliderData: ", sliderData);
 
   return (
     <div className="w-full max-w-7xl mx-auto p-6 bg-white">
@@ -234,8 +228,6 @@ const SVGPointEditor = ({
 
 function GridCoordinatePlane() {
   const { adjustedPoints, adjustedPaths } = useAdjustmentContext();
-  console.log("adjustedPoints: ", adjustedPoints[0]);
-  console.log("adjustedPoints: ", adjustedPoints[1]);
   const { adjustingKey } = useAdjustmentProgressingContext();
 
   // scale 설정 (기본값 10)

@@ -193,7 +193,7 @@ const ChartRegistration: React.FC<{
 
   // 저장 콜백
   const handleSliderControlSave = (rows: Array<SliderControlRowType>) => {
-    console.log(rows);
+    console.log("rows: ", rows);
     handleApiRequest(rows);
   };
 
@@ -407,7 +407,7 @@ const useManualMapping = (props: {
 
     if (chartType) {
       const manualMappingItems = props.manual_mapped_path_id?.map((item) => {
-        const currentMapping = chartType.svg_mapping.mappings.manual.find(
+        const currentMapping = chartType.svg_mapping.mappings.manual?.find(
           (map: any) => map.measurement_code === item.code
         );
         return {

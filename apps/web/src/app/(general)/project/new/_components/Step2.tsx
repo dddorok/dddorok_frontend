@@ -3,7 +3,11 @@ import { AlertCircle } from "lucide-react";
 import { useState } from "react";
 
 import { AdjustmentEditor } from "./AdjustmentEditor";
-import { BODY_DUMMY_DATA, MeasurementDummyData } from "./dummy";
+import {
+  BODY_DUMMY_DATA,
+  MeasurementDummyData,
+  SLEEVE_DUMMY_DATA,
+} from "./dummy";
 import { SliderSection } from "./korean-slider-component";
 
 import { Button } from "@/components/ui/button";
@@ -30,6 +34,12 @@ export default function Step2({
   });
 
   const measurements = template.measurements;
+  console.log("measurements: ", measurements);
+
+  console.log(
+    "---measurements: ",
+    measurements.map((m) => m[1])
+  );
 
   const onSubmit = () => {
     console.log("submit");
@@ -66,6 +76,8 @@ export default function Step2({
     {} as Record<string, GetTemplateChartListResponse["measurements"][number][]>
   );
 
+  console.log("sleeveMeasurementsByValueType: ", sleeveMeasurementsByValueType);
+
   if (template.chart_types.length === 0) {
     return (
       <div className="w-full h-full flex justify-center items-center gap-2">
@@ -88,7 +100,7 @@ export default function Step2({
           measurements={sleeveMeasurementsByValueType}
           label="소매"
           svgContent={SLEEVE_SVG_CONTENT}
-          data={BODY_DUMMY_DATA}
+          data={SLEEVE_DUMMY_DATA}
         />
         <div className="max-w-[500px] mx-auto grid grid-cols-[76px_1fr] gap-6">
           <Button color="default" onClick={onPrev}>
@@ -128,55 +140,6 @@ function ChartSection({
       />
     </section>
   );
-}
-
-// merge
-interface MeasurementData {
-  code: string;
-  label: string;
-  value: number;
-  min: number;
-  max: number;
-  range_toggle: boolean;
-  value_type: string;
-}
-
-interface ManualData {
-  measurement_code: string;
-  start_point_id: string;
-  end_point_id: string;
-  slider_default: boolean;
-}
-
-interface MergedData extends MeasurementData, ManualData {}
-
-function mergeMeasurementDataTyped(
-  measurements: [string, MeasurementData][],
-  manual: ManualData[]
-): Record<string, MergedData> {
-  const result: Record<string, MergedData> = {};
-
-  const measurementMap = new Map<string, MeasurementData>();
-  measurements.forEach(([code, data]) => {
-    measurementMap.set(code, data);
-  });
-
-  manual
-    .filter((item) => item.slider_default === true)
-    .forEach((manualItem) => {
-      const code = manualItem.measurement_code;
-      const measurementData = measurementMap.get(code);
-
-      if (measurementData) {
-        result[code] = {
-          ...measurementData,
-          ...manualItem,
-          measurement_code: code,
-        } as MergedData;
-      }
-    });
-
-  return result;
 }
 
 const BODY_SVG_CONTENT = `<svg width="123" height="263" viewBox="0 0 123 263" fill="none" xmlns="http://www.w3.org/2000/svg">

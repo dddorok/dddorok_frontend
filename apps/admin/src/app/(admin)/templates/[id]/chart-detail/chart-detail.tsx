@@ -67,6 +67,42 @@ const SliderConfigManager: React.FC = () => {
       },
     ],
     [
+      "SLEEVE_TOTAL_WIDTH",
+      {
+        code: "SLEEVE_TOTAL_WIDTH",
+        label: "소매 너비",
+        value: 12,
+        min: 3,
+        max: 5,
+        range_toggle: true,
+        value_type: "WIDTH",
+      },
+    ],
+    [
+      "SLEEVE_HEM_WIDTH",
+      {
+        code: "SLEEVE_HEM_WIDTH",
+        label: "소매 밑단 너비",
+        value: 6,
+        min: 3,
+        max: 5,
+        range_toggle: true,
+        value_type: "WIDTH",
+      },
+    ],
+    [
+      "BODY_CHEST_WIDTH",
+      {
+        code: "BODY_CHEST_WIDTH",
+        label: "가슴 너비",
+        value: 32,
+        min: 0,
+        max: 0,
+        range_toggle: false,
+        value_type: "WIDTH",
+      },
+    ],
+    [
       "BODY_HEM_WIDTH",
       {
         code: "BODY_HEM_WIDTH",
@@ -76,6 +112,30 @@ const SliderConfigManager: React.FC = () => {
         max: 5,
         range_toggle: true,
         value_type: "WIDTH",
+      },
+    ],
+    [
+      "BODY_BACK_NECK_LENGTH",
+      {
+        code: "BODY_BACK_NECK_LENGTH",
+        label: "뒷목 길이",
+        value: 1.2,
+        min: 0,
+        max: 0,
+        range_toggle: false,
+        value_type: "LENGTH",
+      },
+    ],
+    [
+      "BODY_SHOULDER_SLOPE_LENGTH",
+      {
+        code: "BODY_SHOULDER_SLOPE_LENGTH",
+        label: "어깨경사 길이",
+        value: 1,
+        min: 0,
+        max: 0,
+        range_toggle: false,
+        value_type: "LENGTH",
       },
     ],
     [
@@ -114,43 +174,43 @@ const SliderConfigManager: React.FC = () => {
         value_type: "LENGTH",
       },
     ],
+    [
+      "SLEEVE_LOWER_SLEEVE_LENGTH",
+      {
+        code: "SLEEVE_LOWER_SLEEVE_LENGTH",
+        label: "소매 하단 길이",
+        value: 18,
+        min: 3,
+        max: 5,
+        range_toggle: true,
+        value_type: "LENGTH",
+      },
+    ],
   ];
 
   const manual: ManualItem[] = [
     {
-      measurement_code: "BODY_SHOULDER_WIDTH",
+      measurement_code: "SLEEVE_TOTAL_WIDTH",
       start_point_id: "b1",
       end_point_id: "b3",
       slider_default: true,
     },
     {
-      measurement_code: "BODY_BACK_NECK_WIDTH",
-      start_point_id: "a1",
-      end_point_id: "a2",
-      slider_default: true,
-    },
-    {
-      measurement_code: "BODY_FRONT_NECK_LENGTH",
+      measurement_code: "SLEEVE_SLEEVE_CAP_LENGTH",
       start_point_id: "a1",
       end_point_id: "b1",
+      slider_default: false,
+    },
+    {
+      measurement_code: "SLEEVE_LOWER_SLEEVE_LENGTH",
+      start_point_id: "b1",
+      end_point_id: "c1",
       slider_default: true,
     },
     {
-      measurement_code: "BODY_WAIST_LENGTH",
-      start_point_id: "c4",
-      end_point_id: "d4",
-      slider_default: true,
-    },
-    {
-      measurement_code: "BODY_HEM_WIDTH",
-      start_point_id: "d1",
-      end_point_id: "d4",
-      slider_default: true,
-    },
-    {
-      measurement_code: "BODY_ARMHOLE_LENGTH",
-      start_point_id: "b4",
-      end_point_id: "c4",
+      measurement_code: "SLEEVE_HEM_WIDTH",
+      start_point_id: "c1",
+      end_point_id: "c2",
       slider_default: true,
     },
   ];

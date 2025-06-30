@@ -231,7 +231,6 @@ function ControlRow({
   handleControlDropdownChange: (value: string) => void;
   handleControlDropdownEndChange: (value: string) => void;
 }) {
-  console.log("row: ", row);
   return (
     <tr key={row.code} className="hover:bg-gray-50">
       <td className="px-2 py-2 text-xs border-b font-mono text-gray-600 bg-gray-100">
