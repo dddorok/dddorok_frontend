@@ -35,7 +35,7 @@ export const getMyProjectList = async () => {
   const response = await privateInstance
     .get<{ data: MyProjectItemType[] }>("project/my-project/list")
     .json();
-  return response;
+  return response.data;
 };
 
 export interface GetProjectResponse {

@@ -28,38 +28,12 @@ export default function Step2({
     ...templateQueries.chartList(templateId, chest_circumference),
   });
 
-  // 몸판, 소매 각각의 측정값 상태 관리
-  // const [bodyMeasurements, setBodyMeasurements] = useState<
-  //   { code: string; value: number }[]
-  // >([]);
-  // const [sleeveMeasurements, setSleeveMeasurements] = useState<
-  //   { code: string; value: number }[]
-  // >([]);
-
   const [measurements, setMeasurements] = useState<
     { code: string; value: number }[]
   >([
     ...BODY_DUMMY_DATA.map((m) => ({ code: m.code, value: m.average })),
     ...SLEEVE_DUMMY_DATA.map((m) => ({ code: m.code, value: m.average })),
   ]);
-
-  // const onSubmit = async () => {
-  //   // measurement_codes 생성 (몸판+소매)
-  //   const response = await createProject({
-  //     name: "test",
-  //     template_id: templateId,
-  //     gauge_ko: 22,
-  //     gauge_dan: 30,
-  //     measurement_codes: measurements.map((m) => ({
-  //       measurement_code: m.code,
-  //       value: m.value,
-  //     })),
-  //   });
-
-  //   console.log(response);
-  //   alert("프로젝트 생성 완료");
-  //   console.log("submit");
-  // };
 
   const handleMeasurementsChange = (value: { code: string; value: number }) => {
     setMeasurements((prev) => {
