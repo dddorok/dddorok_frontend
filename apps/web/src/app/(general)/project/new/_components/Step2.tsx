@@ -8,15 +8,10 @@ import {
   MeasurementDummyData,
   SLEEVE_DUMMY_DATA,
 } from "./dummy";
-import { SliderSection } from "./korean-slider-component";
 
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
 import { templateQueries } from "@/queries/template";
-import {
-  GetTemplateChartListResponse,
-  MeasurementType,
-} from "@/services/template";
+import { createProject } from "@/services/project";
 
 export default function Step2({
   chest_circumference,
@@ -24,7 +19,7 @@ export default function Step2({
   onPrev,
   templateId,
 }: {
-  onNext: () => void;
+  onNext: (measurements: { code: string; value: number }[]) => void;
   onPrev: () => void;
   chest_circumference: number;
   templateId: string;
@@ -33,50 +28,48 @@ export default function Step2({
     ...templateQueries.chartList(templateId, chest_circumference),
   });
 
-  const measurements = template.measurements;
-  console.log("measurements: ", measurements);
+  // 몸판, 소매 각각의 측정값 상태 관리
+  // const [bodyMeasurements, setBodyMeasurements] = useState<
+  //   { code: string; value: number }[]
+  // >([]);
+  // const [sleeveMeasurements, setSleeveMeasurements] = useState<
+  //   { code: string; value: number }[]
+  // >([]);
 
-  console.log(
-    "---measurements: ",
-    measurements.map((m) => m[1])
-  );
+  const [measurements, setMeasurements] = useState<
+    { code: string; value: number }[]
+  >([
+    ...BODY_DUMMY_DATA.map((m) => ({ code: m.code, value: m.average })),
+    ...SLEEVE_DUMMY_DATA.map((m) => ({ code: m.code, value: m.average })),
+  ]);
 
-  const onSubmit = () => {
-    console.log("submit");
+  // const onSubmit = async () => {
+  //   // measurement_codes 생성 (몸판+소매)
+  //   const response = await createProject({
+  //     name: "test",
+  //     template_id: templateId,
+  //     gauge_ko: 22,
+  //     gauge_dan: 30,
+  //     measurement_codes: measurements.map((m) => ({
+  //       measurement_code: m.code,
+  //       value: m.value,
+  //     })),
+  //   });
+
+  //   console.log(response);
+  //   alert("프로젝트 생성 완료");
+  //   console.log("submit");
+  // };
+
+  const handleMeasurementsChange = (value: { code: string; value: number }) => {
+    setMeasurements((prev) => {
+      const existingIndex = prev.findIndex((m) => m.code === value.code);
+      if (existingIndex !== -1) {
+        return prev.map((m, index) => (index === existingIndex ? value : m));
+      }
+      return [...prev, value];
+    });
   };
-
-  const bodyMeasurements = measurements.filter((measurement) =>
-    measurement[1].code.includes("BODY")
-  );
-  const sleeveMeasurements = measurements.filter((measurement) =>
-    measurement[1].code.includes("SLEEVE")
-  );
-
-  const bodyMeasurementsByValueType = bodyMeasurements.reduce(
-    (acc, measurement) => {
-      const valueType = measurement[1].value_type;
-      if (!acc[valueType]) {
-        acc[valueType] = [];
-      }
-      acc[valueType].push(measurement);
-      return acc;
-    },
-    {} as Record<string, GetTemplateChartListResponse["measurements"][number][]>
-  );
-
-  const sleeveMeasurementsByValueType = sleeveMeasurements.reduce(
-    (acc, measurement) => {
-      const valueType = measurement[1].value_type;
-      if (!acc[valueType]) {
-        acc[valueType] = [];
-      }
-      acc[valueType].push(measurement);
-      return acc;
-    },
-    {} as Record<string, GetTemplateChartListResponse["measurements"][number][]>
-  );
-
-  console.log("sleeveMeasurementsByValueType: ", sleeveMeasurementsByValueType);
 
   if (template.chart_types.length === 0) {
     return (
@@ -91,22 +84,22 @@ export default function Step2({
     <div>
       <div className="w-full mx-auto p-8 bg-gray-50 min-h-screen">
         <ChartSection
-          measurements={bodyMeasurementsByValueType}
           label="몸판 길이"
           svgContent={BODY_SVG_CONTENT}
           data={BODY_DUMMY_DATA}
+          onChange={handleMeasurementsChange}
         />
         <ChartSection
-          measurements={sleeveMeasurementsByValueType}
           label="소매"
           svgContent={SLEEVE_SVG_CONTENT}
           data={SLEEVE_DUMMY_DATA}
+          onChange={handleMeasurementsChange}
         />
         <div className="max-w-[500px] mx-auto grid grid-cols-[76px_1fr] gap-6">
           <Button color="default" onClick={onPrev}>
             이전
           </Button>
-          <Button color="fill" onClick={onSubmit}>
+          <Button color="fill" onClick={() => onNext(measurements)}>
             프로젝트 만들기 →
           </Button>
         </div>
@@ -115,15 +108,15 @@ export default function Step2({
   );
 }
 function ChartSection({
-  measurements,
   label,
   svgContent,
   data,
+  onChange,
 }: {
-  measurements: Record<string, MeasurementType[]>;
   label: string;
   svgContent: string;
   data: MeasurementDummyData[];
+  onChange: (value: { code: string; value: number }) => void;
 }) {
   return (
     <section className="mb-8">
@@ -133,10 +126,8 @@ function ChartSection({
       </h4>
       <AdjustmentEditor
         svgContent={svgContent}
-        measurementList={Object.values(measurements).flatMap((measurement) =>
-          measurement.map((m) => m[1])
-        )}
         data={data}
+        onChange={onChange}
       />
     </section>
   );

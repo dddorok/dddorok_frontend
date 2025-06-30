@@ -23,75 +23,6 @@ import { cn } from "@/lib/utils";
 import { MeasurementItemType, MeasurementType } from "@/services/template";
 
 const isDev = false as const;
-// sliderData 타입 정의
-interface SliderDataItem {
-  control: string;
-  min: number;
-  max: number;
-  snapValues: number[];
-  initialValue: number;
-  average: number;
-  value_type: "WIDTH" | "LENGTH";
-}
-
-// gridPoints를 기반으로 sliderData를 생성하는 함수
-// const generateSliderDataFromGridPoints = (
-//   measurementList: MeasurementItemType[],
-//   gridPoints: Point[]
-// ): SliderDataItem[] => {
-//   const sliderData: SliderDataItem[] = [];
-
-//   // 그리드 포인트를 행과 열로 분류
-//   const rows = new Set<string>();
-//   const cols = new Set<string>();
-
-//   gridPoints.forEach((point) => {
-//     const WIDTH = point.id[0]; // 첫 번째 문자 (a, b, c, ...)
-//     const LENGTH = point.id[1]; // 두 번째 문자 (1, 2, 3, ...)
-
-//     if (WIDTH) rows.add(WIDTH);
-//     if (LENGTH) cols.add(LENGTH);
-//   });
-
-//   // 행과 열을 정렬
-//   const sortedRows = Array.from(rows).sort();
-//   const sortedCols = Array.from(cols).sort((a, b) => parseInt(a) - parseInt(b));
-
-//   // 열 간격 생성 (가로 간격)
-//   for (let i = 0; i < sortedCols.length - 1; i++) {
-//     const currentCol = sortedCols[i];
-//     const nextCol = sortedCols[i + 1];
-
-//     sliderData.push({
-//       control: `${currentCol}-${nextCol}`,
-//       min: 0.1,
-//       max: 3,
-//       snapValues: [0.1, 0.5, 1, 1.5, 2, 2.5, 3],
-//       initialValue: 1,
-//       average: 1,
-//       value_type: "LENGTH",
-//     });
-//   }
-
-//   // 행 간격 생성 (세로 간격)
-//   for (let i = 0; i < sortedRows.length - 1; i++) {
-//     const currentRow = sortedRows[i];
-//     const nextRow = sortedRows[i + 1];
-
-//     sliderData.push({
-//       control: `${currentRow}-${nextRow}`,
-//       min: 0.1,
-//       max: 3,
-//       snapValues: [0.1, 0.5, 1, 1.5, 2, 2.5, 3],
-//       initialValue: 1,
-//       average: 1,
-//       value_type: "WIDTH",
-//     });
-//   }
-
-//   return sliderData;
-// };
-
 interface AdjustedPath extends PathDefinition {
   start: Point;
   end: Point;
@@ -100,21 +31,16 @@ interface AdjustedPath extends PathDefinition {
 
 export function AdjustmentEditor({
   svgContent,
-  measurementList,
   data,
+  onChange,
 }: {
   svgContent: string;
-  measurementList: MeasurementItemType[];
   data: MeasurementDummyData[];
+  onChange: (value: { code: string; value: number }) => void;
 }) {
   const [pathDefs, setPathDefs] = useState<PathDefinition[]>([]);
   const [gridPoints, setGridPoints] = useState<Point[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-
-  // const sliderData = generateSliderDataFromGridPoints(
-  //   measurementList,
-  //   gridPoints
-  // );
 
   useEffect(() => {
     // 클라이언트 사이드에서만 SVG 파싱 실행
@@ -138,30 +64,23 @@ export function AdjustmentEditor({
     return <div className="p-6">SVG 파싱 중...</div>;
   }
 
-  console.log("measurementList: ", measurementList);
   return (
     <AdjustmentProvider
       gridPoints={gridPoints}
       pathDefs={pathDefs}
       sliderData={data}
     >
-      <SVGPointEditor
-        // gridPoints={gridPoints}
-        sliderData={data}
-        // measurementList={measurementList}
-      />
+      <SVGPointEditor sliderData={data} onChange={onChange} />
     </AdjustmentProvider>
   );
 }
 
 const SVGPointEditor = ({
-  // gridPoints,
-  // measurementList,
   sliderData,
+  onChange,
 }: {
-  // gridPoints: Point[];
-  // measurementList: MeasurementItemType[];
   sliderData: MeasurementDummyData[];
+  onChange: (value: { code: string; value: number }) => void;
 }) => {
   const { gridAdjustments, handleGridAdjustment } = useAdjustmentContext();
 
@@ -201,19 +120,23 @@ const SVGPointEditor = ({
               {sliders.map((slider) => (
                 <SliderSection
                   key={slider.control}
-                  label={slider.control.toUpperCase()}
+                  label={slider.label}
                   min={slider.min}
                   max={slider.max}
                   snapValues={slider.snapValues}
-                  getDisplayValue={(value: number) => value * 10}
+                  getDisplayValue={(value: number) => value}
                   initialValue={
                     gridAdjustments[slider.control] ?? slider.average
                   }
                   average={slider.average}
                   code={slider.control}
-                  onValueChange={(value) =>
-                    handleGridAdjustment(slider.control, value.toString())
-                  }
+                  onValueChange={(value) => {
+                    handleGridAdjustment(slider.control, value.toString());
+                    onChange({
+                      code: slider.code,
+                      value: value,
+                    });
+                  }}
                   onAdjustStart={() => handleAdjustStart(slider.control)}
                   onAdjustEnd={handleAdjustEnd}
                 />

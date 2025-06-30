@@ -1,18 +1,20 @@
 "use client";
-import { isEmpty } from "@dddorok/utils";
+import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 
-import { AdjustmentEditor } from "./AdjustmentEditor";
 import Step1 from "./Step1";
 import Step2 from "./Step2";
 
+import { ROUTE } from "@/constants/route";
 import { cn } from "@/lib/utils";
+import { createProject } from "@/services/project";
 
 export default function NewProjectClient({
   templateId,
 }: {
   templateId: string;
 }) {
+  const router = useRouter();
   const formData = useRef<{
     name: string;
     gauge_ko: number;
@@ -24,11 +26,32 @@ export default function NewProjectClient({
     gauge_dan: 0,
     chest_width: 0,
   });
-  const [step, setStep] = useState(2);
+  const [step, setStep] = useState(1);
+
+  const onSubmit = async (measurements: { code: string; value: number }[]) => {
+    try {
+      const response = await createProject({
+        name: formData.current.name,
+        template_id: templateId,
+        gauge_ko: formData.current.gauge_ko,
+        gauge_dan: formData.current.gauge_dan,
+        measurement_codes: measurements.map((m) => ({
+          measurement_code: m.code,
+          value: m.value,
+        })),
+      });
+      console.log(response);
+      alert("프로젝트 생성 완료");
+      console.log("submit");
+      router.push(ROUTE.MYPAGE.PROJECT());
+    } catch (error) {
+      console.log(error);
+      // toast.error("프로젝트 생성 실패");
+    }
+  };
 
   return (
     <>
-      {/* <AdjustmentEditor /> */}
       {step === 1 && (
         <div className=" space-y-2 w-[450px]">
           <h3 className="text-h3 text-primary-PR py-[10px] text-center">
@@ -53,7 +76,7 @@ export default function NewProjectClient({
             <Step2
               templateId={templateId}
               chest_circumference={formData.current.chest_width}
-              onNext={() => setStep(3)}
+              onNext={onSubmit}
               onPrev={() => setStep(1)}
             />
           </div>
