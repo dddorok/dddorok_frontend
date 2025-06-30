@@ -36,7 +36,7 @@ export default function MyPage() {
       <div className="grid gap-x-[30px] gap-y-16 container py-3 grid-cols-3 lg:grid-cols-4 ">
         {myProjectList?.map((project) => (
           <Link
-            href={ROUTE.PROJECT.NEW(project.id, project.name)}
+            href={ROUTE.PROJECT.EDIT(project.id)}
             key={project.id}
             className="w-full"
           >
