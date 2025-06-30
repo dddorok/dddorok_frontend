@@ -3,7 +3,7 @@ import { createContext, useContext, useState } from "react";
 
 import { useAdjuestment } from "./useAdjuestment";
 import { getAdjustedPath } from "../_utils/getAdjustedPath";
-import { GridAdjustments, OriginalGridSpacing } from "../types";
+import { GridAdjustments } from "../types";
 import { MeasurementDummyData } from "./dummy";
 
 interface AdjustedPath extends PathDefinition {
@@ -15,7 +15,6 @@ interface AdjustedPath extends PathDefinition {
 type AdjustmentContextType = {
   gridAdjustments: GridAdjustments;
   adjustedPoints: Point[];
-  originalGridSpacing: OriginalGridSpacing;
   handleGridAdjustment: (gridKey: string, value: string) => void;
   resetAdjustments: () => void;
   adjustedPaths: AdjustedPath[];
@@ -37,7 +36,6 @@ const AdjustmentProgressingContext =
 const AdjustmentContext = createContext<AdjustmentContextType>({
   gridAdjustments: {},
   adjustedPoints: [],
-  originalGridSpacing: {},
   handleGridAdjustment: () => {},
   resetAdjustments: () => {},
   adjustedPaths: [],
@@ -54,10 +52,12 @@ export function AdjustmentProvider({
   pathDefs: PathDefinition[];
   sliderData: MeasurementDummyData[];
 }) {
+  // controls 배열 생성
+  const controls = sliderData.map((slider) => slider.control);
+
   const {
     gridAdjustments,
     adjustedPoints,
-    originalGridSpacing,
     handleGridAdjustment,
     resetAdjustments,
   } = useAdjuestment({ gridPoints, sliderData });
@@ -88,7 +88,6 @@ export function AdjustmentProvider({
       value={{
         gridAdjustments,
         adjustedPoints,
-        originalGridSpacing,
         handleGridAdjustment,
         resetAdjustments,
         adjustedPaths,

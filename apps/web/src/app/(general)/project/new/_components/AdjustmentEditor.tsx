@@ -233,6 +233,8 @@ const SVGPointEditor = ({
 
 function GridCoordinatePlane() {
   const { adjustedPoints, adjustedPaths } = useAdjustmentContext();
+  console.log("adjustedPoints: ", adjustedPoints[0]);
+  console.log("adjustedPoints: ", adjustedPoints[1]);
   const { adjustingKey } = useAdjustmentProgressingContext();
 
   // scale 설정 (기본값 10)
