@@ -22,6 +22,7 @@ import { SliderSection } from "./korean-slider-component";
 import { cn } from "@/lib/utils";
 import { MeasurementItemType, MeasurementType } from "@/services/template";
 
+const isDev = false as const;
 // sliderData 타입 정의
 interface SliderDataItem {
   control: string;
@@ -312,80 +313,86 @@ function GridCoordinatePlane() {
     <div style={{ width: "100%", height: "100%" }}>
       <svg width="100%" height="100%" viewBox={viewBox}>
         {/* 격자 */}
-        <defs>
-          <pattern
-            id="grid"
-            width="10"
-            height="10"
-            patternUnits="userSpaceOnUse"
-          >
-            <path
-              d="M 10 0 L 0 0 0 10"
-              fill="none"
-              stroke="#e5e7eb"
-              strokeWidth="0.5"
-            />
-          </pattern>
-        </defs>
-        <rect width="100%" height="100%" fill="url(#grid)" />
+        {isDev && (
+          <>
+            <defs>
+              <pattern
+                id="grid"
+                width="10"
+                height="10"
+                patternUnits="userSpaceOnUse"
+              >
+                <path
+                  d="M 10 0 L 0 0 0 10"
+                  fill="none"
+                  stroke="#e5e7eb"
+                  strokeWidth="0.5"
+                />
+              </pattern>
+            </defs>
+            <rect width="100%" height="100%" fill="url(#grid)" />
+          </>
+        )}
 
         {/* 조정된 그리드 라인들 */}
-        {adjustedPoints.map((point: Point) => {
-          const WIDTH = point.id[0];
-          const LENGTH = point.id[1];
+        {isDev &&
+          adjustedPoints.map((point: Point) => {
+            const WIDTH = point.id[0];
+            const LENGTH = point.id[1];
 
-          if (!WIDTH || !LENGTH) return null;
+            if (!WIDTH || !LENGTH) return null;
 
-          // 가로 라인 (같은 행의 다음 열로)
-          if (LENGTH < "9") {
-            const nextColPoint = adjustedPoints.find(
-              (p: Point) => p.id === `${WIDTH}${parseInt(LENGTH) + 1}`
-            );
-            if (nextColPoint) {
-              return (
-                <line
-                  key={`grid-h-${point.id}`}
-                  x1={point.x}
-                  y1={point.y}
-                  x2={nextColPoint.x}
-                  y2={nextColPoint.y}
-                  stroke="#9ca3af"
-                  strokeWidth="1"
-                />
+            // 가로 라인 (같은 행의 다음 열로)
+            if (LENGTH < "9") {
+              const nextColPoint = adjustedPoints.find(
+                (p: Point) => p.id === `${WIDTH}${parseInt(LENGTH) + 1}`
               );
+              if (nextColPoint) {
+                return (
+                  <line
+                    key={`grid-h-${point.id}`}
+                    x1={point.x}
+                    y1={point.y}
+                    x2={nextColPoint.x}
+                    y2={nextColPoint.y}
+                    stroke="#9ca3af"
+                    strokeWidth="1"
+                  />
+                );
+              }
             }
-          }
-          return null;
-        })}
+            return null;
+          })}
 
-        {adjustedPoints.map((point: Point) => {
-          const WIDTH = point.id[0];
-          const LENGTH = point.id[1];
+        {isDev &&
+          adjustedPoints.map((point: Point) => {
+            const WIDTH = point.id[0];
+            const LENGTH = point.id[1];
 
-          if (!WIDTH || !LENGTH) return null;
+            if (!WIDTH || !LENGTH) return null;
 
-          // 세로 라인 (같은 열의 다음 행으로)
-          if (WIDTH < "z") {
-            const nextRowChar = String.fromCharCode(WIDTH.charCodeAt(0) + 1);
-            const nextRowPoint = adjustedPoints.find(
-              (p: Point) => p.id === `${nextRowChar}${LENGTH}`
-            );
-            if (nextRowPoint) {
-              return (
-                <line
-                  key={`grid-v-${point.id}`}
-                  x1={point.x}
-                  y1={point.y}
-                  x2={nextRowPoint.x}
-                  y2={nextRowPoint.y}
-                  stroke="#9ca3af"
-                  strokeWidth="1"
-                />
+            // 세로 라인 (같은 열의 다음 행으로)
+            if (WIDTH < "z") {
+              const nextRowChar = String.fromCharCode(WIDTH.charCodeAt(0) + 1);
+              const nextRowPoint = adjustedPoints.find(
+                (p: Point) => p.id === `${nextRowChar}${LENGTH}`
               );
+              if (nextRowPoint) {
+                return (
+                  <line
+                    key={`grid-v-${point.id}`}
+                    x1={point.x}
+                    y1={point.y}
+                    x2={nextRowPoint.x}
+                    y2={nextRowPoint.y}
+                    stroke="#9ca3af"
+                    strokeWidth="1"
+                  />
+                );
+              }
             }
-          }
-          return null;
-        })}
+            return null;
+          })}
 
         {/* 패스 라인들 */}
         {adjustedPaths.map((pathData: AdjustedPath) => {
@@ -414,94 +421,101 @@ function GridCoordinatePlane() {
               )}
 
               {/* 제어점 표시 (곡선인 경우) */}
-              {pathData.type === "curve" && pathData.adjustedControlPoints && (
-                <g>
-                  {pathData.adjustedControlPoints.map(
-                    (cp: ControlPoint, index: number) => (
-                      <g key={`cp-${index}`}>
-                        <circle
-                          cx={cp.x}
-                          cy={cp.y}
-                          r="2"
-                          fill={pathColor}
-                          fillOpacity="0.5"
-                          stroke={pathColor}
-                          strokeWidth="1"
-                        />
-                        <line
-                          x1={
-                            index === 0
-                              ? pathData.start.x
-                              : pathData?.adjustedControlPoints![0]?.x
-                          }
-                          y1={
-                            index === 0
-                              ? pathData.start.y
-                              : pathData?.adjustedControlPoints![0]?.y
-                          }
-                          x2={cp.x}
-                          y2={cp.y}
-                          stroke={pathColor}
-                          strokeWidth="1"
-                          strokeDasharray="2,2"
-                          strokeOpacity="0.5"
-                        />
-                      </g>
-                    )
-                  )}
-                </g>
-              )}
+              {isDev &&
+                pathData.type === "curve" &&
+                pathData.adjustedControlPoints && (
+                  <g>
+                    {pathData.adjustedControlPoints.map(
+                      (cp: ControlPoint, index: number) => (
+                        <g key={`cp-${index}`}>
+                          <circle
+                            cx={cp.x}
+                            cy={cp.y}
+                            r="2"
+                            fill={pathColor}
+                            fillOpacity="0.5"
+                            stroke={pathColor}
+                            strokeWidth="1"
+                          />
+                          <line
+                            x1={
+                              index === 0
+                                ? pathData.start.x
+                                : pathData?.adjustedControlPoints![0]?.x
+                            }
+                            y1={
+                              index === 0
+                                ? pathData.start.y
+                                : pathData?.adjustedControlPoints![0]?.y
+                            }
+                            x2={cp.x}
+                            y2={cp.y}
+                            stroke={pathColor}
+                            strokeWidth="1"
+                            strokeDasharray="2,2"
+                            strokeOpacity="0.5"
+                          />
+                        </g>
+                      )
+                    )}
+                  </g>
+                )}
 
               {/* 거리 표시 */}
-              <text
-                x={(pathData.start.x + pathData.end.x) / 2}
-                y={(pathData.start.y + pathData.end.y) / 2 - 15}
-                fontSize="9"
-                fill={pathColor}
-                textAnchor="middle"
-                className="pointer-events-none select-none font-bold"
-              >
-                {calculateDistance(pathData.start, pathData.end).toFixed(1)}
-              </text>
+              {isDev && (
+                <text
+                  x={(pathData.start.x + pathData.end.x) / 2}
+                  y={(pathData.start.y + pathData.end.y) / 2 - 15}
+                  fontSize="9"
+                  fill={pathColor}
+                  textAnchor="middle"
+                  className="pointer-events-none select-none font-bold"
+                >
+                  {calculateDistance(pathData.start, pathData.end).toFixed(1)}
+                </text>
+              )}
               {/* 패스 이름 */}
-              <text
-                x={(pathData.start.x + pathData.end.x) / 2}
-                y={(pathData.start.y + pathData.end.y) / 2 + 5}
-                fontSize="7"
-                fill="#374151"
-                textAnchor="middle"
-                className="pointer-events-none select-none"
-              >
-                {pathData.id.replace("BODY_", "").replace(/_/g, " ")}
-              </text>
+              {isDev && (
+                <text
+                  x={(pathData.start.x + pathData.end.x) / 2}
+                  y={(pathData.start.y + pathData.end.y) / 2 + 5}
+                  fontSize="7"
+                  fill="#374151"
+                  textAnchor="middle"
+                  className="pointer-events-none select-none"
+                >
+                  {pathData.id.replace("BODY_", "").replace(/_/g, " ")}
+                </text>
+              )}
             </g>
           );
         })}
 
         {/* 그리드 포인트들 */}
-        {adjustedPoints.map((point: Point) => {
-          return (
-            <g key={`point-${point.id}`}>
-              <circle
-                cx={point.x}
-                cy={point.y}
-                r="3"
-                fill="#374151"
-                stroke="#ffffff"
-                strokeWidth="1"
-              />
-              <text
-                x={point.x + 6}
-                y={point.y - 6}
-                fontSize="8"
-                fill="#374151"
-                className="pointer-events-none select-none font-medium"
-              >
-                {point.id}
-              </text>
-            </g>
-          );
-        })}
+        {isDev &&
+          adjustedPoints.map((point: Point) => {
+            return (
+              <g key={`point-${point.id}`}>
+                <circle
+                  cx={point.x}
+                  cy={point.y}
+                  r="3"
+                  fill="#374151"
+                  stroke="#ffffff"
+                  strokeWidth="1"
+                />
+                <text
+                  x={point.x + 6}
+                  y={point.y - 6}
+                  fontSize="8"
+                  fill="#374151"
+                  className="pointer-events-none select-none font-medium"
+                >
+                  {point.id}
+                </text>
+              </g>
+            );
+          })}
       </svg>
     </div>
   );
