@@ -5,20 +5,21 @@ import { KNITTING_SYMBOL_OBJ, KNITTING_SYMBOLS } from "./Shape.constants";
 import { OriginalCell } from "@/services/project";
 
 export default function ChartEdit({
-  chart,
+  grid_row,
+  grid_col,
+  cells,
 }: {
-  chart: {
-    grid_row: number;
-    grid_col: number;
-    cells: OriginalCell[];
-  };
+  grid_row: number;
+  grid_col: number;
+  cells: OriginalCell[];
+  // chart: {
+  //   grid_row: number;
+  //   grid_col: number;
+  //   cells: OriginalCell[];
+  // };
 }) {
-  const { initialCells } = convertCellsData(chart?.cells);
-  const disabledCells = getDisabledCells(
-    chart.grid_row,
-    chart.grid_col,
-    initialCells
-  );
+  const { initialCells } = convertCellsData(cells);
+  const disabledCells = getDisabledCells(grid_row, grid_col, initialCells);
 
   if (!initialCells || initialCells.length === 0) {
     return <div>Loading...</div>;
@@ -29,8 +30,8 @@ export default function ChartEdit({
       <PixelArtEditor
         initialCells={initialCells}
         disabledCells={disabledCells}
-        grid_col={chart.grid_col}
-        grid_row={chart.grid_row}
+        grid_col={grid_col}
+        grid_row={grid_row}
       />
       {/* <DevKnittingSymbolsPreview /> */}
     </div>
@@ -79,39 +80,3 @@ const getDisabledCells = (
     return { row, col, shape: undefined };
   }).filter((cell) => !initialSet.has(`${cell.row},${cell.col}`));
 };
-
-function DevKnittingSymbolsPreview() {
-  return (
-    <div style={{ marginTop: 32 }}>
-      <h3 style={{ fontWeight: "bold", marginBottom: 8 }}>
-        KNITTING_SYMBOLS 미리보기 (DevTool)
-      </h3>
-      <div style={{ display: "flex", gap: 24 }}>
-        {KNITTING_SYMBOLS.map((shape) => (
-          <div key={shape.id} style={{ textAlign: "center" }}>
-            <canvas
-              width={40}
-              height={40}
-              ref={(canvas) => {
-                if (canvas) {
-                  const ctx = canvas.getContext("2d");
-                  if (ctx) {
-                    ctx.clearRect(0, 0, 40, 40);
-                    shape.render(ctx, 0, 0, 40, shape.color);
-                  }
-                }
-              }}
-              style={{
-                border: "1px solid #eee",
-                background: "#fff",
-                borderRadius: 8,
-              }}
-            />
-            <div style={{ fontSize: 12, marginTop: 4 }}>{shape.name}</div>
-            <div style={{ fontSize: 10, color: "#888" }}>{shape.id}</div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
