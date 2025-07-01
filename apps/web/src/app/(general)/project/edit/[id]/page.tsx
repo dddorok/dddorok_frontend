@@ -1,7 +1,10 @@
 import { ProjectEditClient } from "./client";
-import chartDummyData from "./generated_chart.json";
-// import KnittingPatternEditor from "./knitting";
 
-export default function DotPage({ params }: { params: { id: string } }) {
-  return <ProjectEditClient id={params.id} />;
+export default async function DotPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params;
+  return <ProjectEditClient id={id} />;
 }

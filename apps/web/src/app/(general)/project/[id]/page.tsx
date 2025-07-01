@@ -1,5 +1,10 @@
 import { ProjectClient } from "./client";
 
-export default function DotPage({ params }: { params: { id: string } }) {
-  return <ProjectClient id={params.id} />;
+export default async function DotPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params;
+  return <ProjectClient id={id} />;
 }
