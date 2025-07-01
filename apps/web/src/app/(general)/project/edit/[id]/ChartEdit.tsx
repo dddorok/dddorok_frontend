@@ -12,11 +12,6 @@ export default function ChartEdit({
   grid_row: number;
   grid_col: number;
   cells: OriginalCell[];
-  // chart: {
-  //   grid_row: number;
-  //   grid_col: number;
-  //   cells: OriginalCell[];
-  // };
 }) {
   const { initialCells } = convertCellsData(cells);
   const disabledCells = getDisabledCells(grid_row, grid_col, initialCells);

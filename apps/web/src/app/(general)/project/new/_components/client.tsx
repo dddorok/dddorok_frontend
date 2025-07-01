@@ -28,14 +28,17 @@ export default function NewProjectClient({
   });
   const [step, setStep] = useState(1);
 
-  const onSubmit = async (measurements: { code: string; value: number }[]) => {
+  const onSubmit = async (
+    measurements: { code: string; value: number }[],
+    noControlData: { code: string; value: number }[]
+  ) => {
     try {
       const response = await createProject({
         name: formData.current.name,
         template_id: templateId,
         gauge_ko: formData.current.gauge_ko,
         gauge_dan: formData.current.gauge_dan,
-        measurement_codes: measurements.map((m) => ({
+        measurement_codes: [...measurements, ...noControlData].map((m) => ({
           measurement_code: m.code,
           value: m.value,
         })),

@@ -11,7 +11,6 @@ import {
 
 import { Button } from "@/components/ui/button";
 import { templateQueries } from "@/queries/template";
-import { createProject } from "@/services/project";
 
 export default function Step2({
   chest_circumference,
@@ -19,7 +18,10 @@ export default function Step2({
   onPrev,
   templateId,
 }: {
-  onNext: (measurements: { code: string; value: number }[]) => void;
+  onNext: (
+    measurements: { code: string; value: number }[],
+    noControlData: { code: string; value: number }[]
+  ) => void;
   onPrev: () => void;
   chest_circumference: number;
   templateId: string;
@@ -28,12 +30,23 @@ export default function Step2({
     ...templateQueries.chartList(templateId, chest_circumference),
   });
 
+  const noControlData = template.measurements
+    .filter((m) => {
+      const [, data] = m as any;
+      return data.range_toggle === false;
+    })
+    .map((m) => {
+      const [, data] = m as any;
+      return data;
+    });
+
   const [measurements, setMeasurements] = useState<
     { code: string; value: number }[]
   >([
     ...BODY_DUMMY_DATA.map((m) => ({ code: m.code, value: m.average })),
     ...SLEEVE_DUMMY_DATA.map((m) => ({ code: m.code, value: m.average })),
   ]);
+  console.log("measurements: ", measurements);
 
   const handleMeasurementsChange = (value: { code: string; value: number }) => {
     setMeasurements((prev) => {
@@ -73,7 +86,10 @@ export default function Step2({
           <Button color="default" onClick={onPrev}>
             이전
           </Button>
-          <Button color="fill" onClick={() => onNext(measurements)}>
+          <Button
+            color="fill"
+            onClick={() => onNext(measurements, noControlData)}
+          >
             프로젝트 만들기 →
           </Button>
         </div>

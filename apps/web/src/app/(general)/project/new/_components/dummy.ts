@@ -18,6 +18,16 @@ export interface MeasurementDummyData {
   baseMinRange: number;
   baseMaxRange: number;
 }
+// BODY_CHEST_WIDTH, BODY_BACK_NECK_LENGTH, BODY_SHOULDER_SLOPE_LENGTH
+export const NO_CONTROL_DATA = [
+  {
+    code: "BODY_BACK_NECK_WIDTH",
+    label: "가슴 너비",
+    value: 18,
+    min: 3,
+    max: 5,
+  },
+];
 
 export const BODY_DUMMY_DATA: MeasurementDummyData[] = [
   {

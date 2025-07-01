@@ -72,27 +72,6 @@ function Chart({ id }: { id: string }) {
   if (!chart) {
     return <div>Loading...</div>;
   }
-  /* Template Component */
-
-  /* Auto layout */
-  // display: flex;
-  // flex-direction: row;
-  // justify-content: space-between;
-  // align-items: center;
-  // padding: 32px;
-  // gap: 10px;
-
-  // width: 1204px;
-  // height: 1116px;
-
-  // background: #FFFFFF;
-  // box-shadow: 0px 2px 20px rgba(28, 31, 37, 0.2);
-
-  // /* Inside auto layout */
-  // flex: none;
-  // order: 0;
-  // align-self: stretch;
-  // flex-grow: 0;
 
   return (
     <div
