@@ -458,6 +458,10 @@ const CURSOR_CROSSHAIR = "crosshair"; // 십자가
 const CURSOR_GRAB = "grab";
 const CURSOR_GRABBING = "grabbing";
 
+// ===== 행/열 번호 폰트 및 영역 상수 =====
+const LABEL_FONT_SIZE = 14; // px
+const LABEL_AREA_SIZE = 20; // px (행/열 번호가 차지하는 영역)
+
 export const Dotting = forwardRef<DottingRef, DottingProps>(
   (
     {
@@ -488,7 +492,7 @@ export const Dotting = forwardRef<DottingRef, DottingProps>(
     },
     ref
   ) => {
-    const LABEL_MARGIN = gridSquareLength * LABEL_MARGIN_RATIO;
+    const LABEL_MARGIN = LABEL_AREA_SIZE; // gridSquareLength * LABEL_MARGIN_RATIO -> LABEL_AREA_SIZE로 변경
     // width, height를 rows, cols, gridSquareLength, LABEL_MARGIN로 계산
     const width = cols * gridSquareLength + LABEL_MARGIN;
     const height = rows * gridSquareLength + LABEL_MARGIN;
@@ -1256,8 +1260,8 @@ export const Dotting = forwardRef<DottingRef, DottingProps>(
 
       // --- 상단(열 번호) 표시 ---
       ctx.save();
-      ctx.fillStyle = "#222";
-      ctx.font = `${gridSquareLength * 0.6}px sans-serif`;
+      ctx.fillStyle = "#000";
+      ctx.font = `${LABEL_FONT_SIZE}px sans-serif`;
       ctx.textAlign = "center";
       ctx.textBaseline = "bottom";
       for (let col = 0; col < cols; col++) {
@@ -1271,8 +1275,8 @@ export const Dotting = forwardRef<DottingRef, DottingProps>(
 
       // --- 왼쪽(행 번호) 표시 ---
       ctx.save();
-      ctx.fillStyle = "#222";
-      ctx.font = `${gridSquareLength * 0.6}px sans-serif`;
+      ctx.fillStyle = "#000";
+      ctx.font = `${LABEL_FONT_SIZE}px sans-serif`;
       ctx.textAlign = "right";
       ctx.textBaseline = "middle";
       for (let row = 0; row < rows; row++) {
@@ -1444,7 +1448,7 @@ export const Dotting = forwardRef<DottingRef, DottingProps>(
         width={width}
         height={height}
         style={{
-          border: "1px solid #ccc",
+          // border: "1px solid #ccc",
           cursor:
             brushTool === BrushTool.SELECT
               ? CURSOR_CROSSHAIR
@@ -1453,6 +1457,7 @@ export const Dotting = forwardRef<DottingRef, DottingProps>(
                   ? CURSOR_GRABBING
                   : CURSOR_GRAB
                 : CURSOR_CROSSHAIR,
+          border: "none",
           ...style,
         }}
         onMouseDown={handleMouseDown}

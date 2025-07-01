@@ -30,25 +30,36 @@ export function ProjectEditClient({ id }: { id: string }) {
 
   return (
     <>
-      {project.name}
-      <div className="flex gap-2">
-        {project.chart_list.map((chart) => (
-          <button
-            key={chart.chart_id}
-            onClick={() => setSelectedChart(chart.chart_id)}
-            className={cn(
-              "rounded-2xl bg-neutral-N0 border border-neutral-N300 text-neutral-600 text-[14px] font-medium",
-              "py-3 px-4 flex gap-2 items-center",
-              selectedChart === chart.chart_id &&
-                "border-primary-PR text-neutral-1000"
-            )}
-          >
-            {selectedChart === chart.chart_id && <CheckmarkIcon />}
-            {chart.name}
-          </button>
-        ))}
+      <div className="h-[100px] flex items-center justify-between">
+        <div className="container">
+          <div className="text-neutral-800 text-[24px] font-bold">
+            {project.name}
+          </div>
+        </div>
+        <div></div>
       </div>
-      {selectedChart && <Chart key={selectedChart} id={selectedChart} />}
+      <div className="bg-neutral-N200">
+        <div className="container">
+          <div className="flex gap-2 py-6">
+            {project.chart_list.map((chart) => (
+              <button
+                key={chart.chart_id}
+                onClick={() => setSelectedChart(chart.chart_id)}
+                className={cn(
+                  "rounded-2xl bg-neutral-N0 border border-neutral-N300 text-neutral-600 text-[14px] font-medium",
+                  "py-3 px-4 flex gap-2 items-center",
+                  selectedChart === chart.chart_id &&
+                    "border-primary-PR text-neutral-1000"
+                )}
+              >
+                {selectedChart === chart.chart_id && <CheckmarkIcon />}
+                {chart.name}
+              </button>
+            ))}
+          </div>
+          {selectedChart && <Chart key={selectedChart} id={selectedChart} />}
+        </div>
+      </div>
     </>
   );
 }
@@ -61,13 +72,41 @@ function Chart({ id }: { id: string }) {
   if (!chart) {
     return <div>Loading...</div>;
   }
+  /* Template Component */
+
+  /* Auto layout */
+  // display: flex;
+  // flex-direction: row;
+  // justify-content: space-between;
+  // align-items: center;
+  // padding: 32px;
+  // gap: 10px;
+
+  // width: 1204px;
+  // height: 1116px;
+
+  // background: #FFFFFF;
+  // box-shadow: 0px 2px 20px rgba(28, 31, 37, 0.2);
+
+  // /* Inside auto layout */
+  // flex: none;
+  // order: 0;
+  // align-self: stretch;
+  // flex-grow: 0;
 
   return (
-    <ChartEdit
-      grid_row={chart.gridRow}
-      grid_col={chart.gridCol}
-      cells={chart.cells}
-    />
+    <div
+      className={cn(
+        "w-[1204px] h-[1116px] bg-neutral-N0 shadow-[0px_2px_20px_rgba(28,31,37,0.2)]",
+        "p-8 min-h-fit overflow-auto"
+      )}
+    >
+      <ChartEdit
+        grid_row={chart.gridRow}
+        grid_col={chart.gridCol}
+        cells={chart.cells}
+      />
+    </div>
   );
 }
 

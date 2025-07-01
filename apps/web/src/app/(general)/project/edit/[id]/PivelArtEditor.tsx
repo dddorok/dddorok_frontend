@@ -26,26 +26,24 @@ const PixelArtEditor = ({
   const { brushTool, selectedShape } = usePixelArtEditorContext();
 
   return (
-    <div className="p-4">
+    <div className="w-fit">
       <Toolbar />
 
-      <div className="border-2 border-gray-300 inline-block max-w-[100vw] overflow-auto">
-        <Dotting
-          ref={dottingRef}
-          rows={grid_row}
-          cols={grid_col}
-          gridSquareLength={16}
-          brushTool={brushTool}
-          selectedShape={selectedShape}
-          shapes={KNITTING_SYMBOLS}
-          backgroundColor="#f8f9fa"
-          gridStrokeColor="#e9ecef"
-          isPanZoomable={false}
-          // zoomSensitivity={0.1}
-          initialCells={initialCells}
-          disabledCells={disabledCells}
-        />
-      </div>
+      <Dotting
+        ref={dottingRef}
+        rows={grid_row}
+        cols={grid_col}
+        gridSquareLength={20}
+        brushTool={brushTool}
+        selectedShape={selectedShape}
+        shapes={KNITTING_SYMBOLS}
+        backgroundColor="#fff"
+        gridStrokeColor="#e9ecef"
+        isPanZoomable={false}
+        // zoomSensitivity={0.1}
+        initialCells={initialCells}
+        disabledCells={disabledCells}
+      />
     </div>
   );
 };

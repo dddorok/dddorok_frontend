@@ -26,15 +26,12 @@ export default function ChartEdit({
   }
 
   return (
-    <div>
-      <PixelArtEditor
-        initialCells={initialCells}
-        disabledCells={disabledCells}
-        grid_col={grid_col}
-        grid_row={grid_row}
-      />
-      {/* <DevKnittingSymbolsPreview /> */}
-    </div>
+    <PixelArtEditor
+      initialCells={initialCells}
+      disabledCells={disabledCells}
+      grid_col={grid_col}
+      grid_row={grid_row}
+    />
   );
 }
 
