@@ -1,12 +1,15 @@
 "use client";
+import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
+import { toast } from "sonner";
 
 import Step1 from "./Step1";
 import Step2 from "./Step2";
 
 import { ROUTE } from "@/constants/route";
 import { cn } from "@/lib/utils";
+import { projectQueryKey } from "@/queries/project";
 import { createProject } from "@/services/project";
 
 export default function NewProjectClient({
@@ -14,6 +17,7 @@ export default function NewProjectClient({
 }: {
   templateId: string;
 }) {
+  const queryClient = useQueryClient();
   const router = useRouter();
   const formData = useRef<{
     name: string;
@@ -33,7 +37,7 @@ export default function NewProjectClient({
     noControlData: { code: string; value: number }[]
   ) => {
     try {
-      const response = await createProject({
+      await createProject({
         name: formData.current.name,
         template_id: templateId,
         gauge_ko: formData.current.gauge_ko,
@@ -43,13 +47,15 @@ export default function NewProjectClient({
           value: m.value,
         })),
       });
-      console.log(response);
-      alert("프로젝트 생성 완료");
-      console.log("submit");
+      queryClient.invalidateQueries({
+        queryKey: [projectQueryKey],
+      });
+
+      toast.success("프로젝트 생성 완료");
+
       router.push(ROUTE.MYPAGE.PROJECT());
     } catch (error) {
       console.log(error);
-      // toast.error("프로젝트 생성 실패");
     }
   };
 

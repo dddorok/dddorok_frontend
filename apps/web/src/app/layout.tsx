@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 
+import { ClientProvider } from "@/components/ClientProvider";
 import { QueryProvider } from "@/lib/react-query";
 
 import "./globals.css";
@@ -17,7 +18,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <QueryProvider>{children}</QueryProvider>
+        <ClientProvider>
+          <QueryProvider>{children}</QueryProvider>
+        </ClientProvider>
       </body>
     </html>
   );

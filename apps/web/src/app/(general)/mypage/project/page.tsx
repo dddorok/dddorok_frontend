@@ -3,6 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { Trash2, TrashIcon } from "lucide-react";
 import Link from "next/link";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { ROUTE } from "@/constants/route";
@@ -19,6 +20,7 @@ export default function MyPage() {
       <h1 className="leading-[58px] text-[21px] font-semibold text-neutral-N900 ">
         나의 프로젝트
       </h1>
+      <button onClick={() => toast.success("테스트")}>테스트</button>
       {myProjectList?.length === 0 && (
         <div className="flex flex-col mt-3 items-center gap-6">
           <>
