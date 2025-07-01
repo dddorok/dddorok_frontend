@@ -66,12 +66,19 @@ export default function TemplateListPage() {
 function TemplateItem({ template }: { template: TemplateType }) {
   return (
     <div>
-      <div className="bg-primary-PR100 border border-neutralAlpha-NA05 rounded-lg h-[216px] overflow-hidden">
-        {template.thumbnail_url && (
+      <div className="bg-primary-PR100 border border-neutralAlpha-NA05 rounded-lg h-[216px] overflow-hidden flex justify-center items-center">
+        {template.thumbnail_url ? (
           <img
             src={template.thumbnail_url}
             alt={template.name}
             className="w-full h-full object-cover"
+          />
+        ) : (
+          <img
+            src="/assets/logo/preview-logo.svg"
+            alt="preview-logo"
+            className="w-[64px] h-auto object-cover"
+            width={64}
           />
         )}
       </div>

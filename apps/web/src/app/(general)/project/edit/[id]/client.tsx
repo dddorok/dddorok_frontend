@@ -38,7 +38,7 @@ export function ProjectEditClient({ id }: { id: string }) {
         </div>
         <div></div>
       </div>
-      <div className="bg-neutral-N200">
+      <div className="bg-neutral-N200 min-h-[calc(100vh-100px)]">
         <div className="container">
           <div className="flex gap-2 py-6">
             {project.chart_list.map((chart) => (
@@ -76,7 +76,7 @@ function Chart({ id }: { id: string }) {
   return (
     <div
       className={cn(
-        "w-[1204px] h-[1116px] bg-neutral-N0 shadow-[0px_2px_20px_rgba(28,31,37,0.2)]",
+        "w-[1204px] bg-neutral-N0 shadow-[0px_2px_20px_rgba(28,31,37,0.2)]",
         "p-8 min-h-fit overflow-auto"
       )}
     >
