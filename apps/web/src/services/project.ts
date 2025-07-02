@@ -68,8 +68,8 @@ export interface GetChartResponse {
   name: string;
   section: string;
   detailType: string;
-  gridRow: number;
-  gridCol: number;
+  grid_row: number;
+  grid_col: number;
   cells: OriginalCell[];
 }
 

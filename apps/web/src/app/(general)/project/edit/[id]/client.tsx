@@ -81,8 +81,8 @@ function Chart({ id }: { id: string }) {
       )}
     >
       <ChartEdit
-        grid_row={chart.gridRow}
-        grid_col={chart.gridCol}
+        grid_row={chart.grid_row}
+        grid_col={chart.grid_col}
         cells={chart.cells}
       />
     </div>

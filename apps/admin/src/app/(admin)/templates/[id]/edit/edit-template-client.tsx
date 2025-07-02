@@ -67,7 +67,6 @@ export default function EditTemplateClient({
       ...requestData
     } = template as any;
 
-    console.log("requestData: ", requestData);
     await updateTemplate(templateId, {
       ...requestData,
       name: data.name,
