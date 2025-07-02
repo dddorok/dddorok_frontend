@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from "react";
 
-import { Shape } from "./constant";
+import { Shape } from "./Shape.constants";
 
 interface Pixel {
   rowIndex: number;

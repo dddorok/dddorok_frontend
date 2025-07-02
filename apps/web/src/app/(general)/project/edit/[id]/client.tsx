@@ -9,20 +9,23 @@ import { cn } from "@/lib/utils";
 import { projectQueries } from "@/queries/project";
 
 export function ProjectEditClient({ id }: { id: string }) {
-  const { data: project } = useQuery({
+  const { data: project, isSuccess } = useQuery({
     ...projectQueries.project(id),
+    select: (data) => {
+      return data;
+    },
   });
 
   const [selectedChart, setSelectedChart] = useState<string | null>(null);
 
   useEffect(() => {
-    if (project?.chart_list.length) {
-      const firstChart = project.chart_list[0];
+    if (isSuccess) {
+      const firstChart = project?.chart_list[0];
       if (firstChart) {
         setSelectedChart(firstChart.chart_id);
       }
     }
-  }, [project]);
+  }, [isSuccess]);
 
   if (!project) {
     return <div>Loading...</div>;

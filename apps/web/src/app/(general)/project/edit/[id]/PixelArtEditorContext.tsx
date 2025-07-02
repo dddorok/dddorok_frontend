@@ -1,8 +1,13 @@
 import React, { createContext, useContext, useState, ReactNode } from "react";
 
-import { BrushToolType, BrushTool } from "./constant";
-import { KNITTING_SYMBOL_OBJ, Shape } from "./Shape.constants";
-import { DottingRef, useDotting } from "./useDotting";
+import {
+  BrushTool,
+  BrushToolType,
+  KNITTING_SYMBOL_OBJ,
+  Shape,
+  DottingRef,
+  useDotting,
+} from "./Dotting";
 
 interface PixelArtEditorContextType {
   brushTool: BrushToolType;

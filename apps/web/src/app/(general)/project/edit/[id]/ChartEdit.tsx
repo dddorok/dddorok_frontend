@@ -1,6 +1,6 @@
 import { Cell } from "./chart.types";
+import { KNITTING_SYMBOL_OBJ } from "./Dotting/Shape.constants";
 import PixelArtEditor from "./PivelArtEditor";
-import { KNITTING_SYMBOL_OBJ, KNITTING_SYMBOLS } from "./Shape.constants";
 
 import { OriginalCell } from "@/services/project";
 

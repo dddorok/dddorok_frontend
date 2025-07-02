@@ -2,60 +2,57 @@ import React, { useRef } from "react";
 
 import Toolbar from "./_components/Toolbar";
 import { Cell } from "./chart.types";
-import { Dotting } from "./Dotting";
+import { DottingProvider } from "./Dotting";
+import { Dotting } from "./Dotting/Dotting";
+import { KNITTING_SYMBOLS } from "./Dotting/Shape.constants";
+import { DottingRef } from "./Dotting/useDotting";
 import {
   usePixelArtEditorContext,
   PixelArtEditorProvider,
 } from "./PixelArtEditorContext";
-import { KNITTING_SYMBOLS } from "./Shape.constants";
-import { DottingRef } from "./useDotting";
+
+interface PixelArtEditorProps {
+  initialCells: Cell[];
+  disabledCells: Cell[];
+  grid_col: number;
+  grid_row: number;
+  // dottingRef: React.RefObject<DottingRef>;
+}
 
 const PixelArtEditor = ({
   initialCells,
   grid_col,
   disabledCells,
   grid_row,
-  dottingRef,
-}: {
-  initialCells: Cell[];
-  disabledCells: Cell[];
-  grid_col: number;
-  grid_row: number;
-  dottingRef: React.RefObject<DottingRef>;
-}) => {
-  const { brushTool, selectedShape } = usePixelArtEditorContext();
-
+}: PixelArtEditorProps) => {
   return (
-    <div className="w-fit">
-      <Toolbar />
-
-      <Dotting
-        ref={dottingRef}
-        rows={grid_row}
-        cols={grid_col}
-        gridSquareLength={20}
-        brushTool={brushTool}
-        selectedShape={selectedShape}
-        shapes={KNITTING_SYMBOLS}
-        backgroundColor="#fff"
-        gridStrokeColor="#e9ecef"
-        isPanZoomable={false}
-        // zoomSensitivity={0.1}
-        initialCells={initialCells}
-        disabledCells={disabledCells}
-      />
-    </div>
+    <DottingProvider>
+      <div className="w-fit">
+        <Toolbar />
+        <Dotting
+          rows={grid_row}
+          cols={grid_col}
+          gridSquareLength={20}
+          shapes={KNITTING_SYMBOLS}
+          backgroundColor="#fff"
+          gridStrokeColor="#e9ecef"
+          isPanZoomable={false}
+          initialCells={initialCells}
+          disabledCells={disabledCells}
+        />
+      </div>
+    </DottingProvider>
   );
 };
 
 // PixelArtEditorProvider로 PixelArtEditor를 감싸서 export
-const PixelArtEditorWithProvider = (props: any) => {
-  const dottingRef = useRef<DottingRef | null>(null);
-  return (
-    <PixelArtEditorProvider dottingRef={dottingRef}>
-      <PixelArtEditor {...props} dottingRef={dottingRef} />
-    </PixelArtEditorProvider>
-  );
-};
+// const PixelArtEditorWithProvider = (props: any) => {
+//   const dottingRef = useRef<DottingRef | null>(null);
+//   return (
+//     // <PixelArtEditorProvider dottingRef={dottingRef}>
+//     <PixelArtEditor {...props} />
+//     // </PixelArtEditorProvider>
+//   );
+// };
 
-export default PixelArtEditorWithProvider;
+export default PixelArtEditor;

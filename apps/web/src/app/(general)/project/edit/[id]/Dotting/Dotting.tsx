@@ -9,9 +9,10 @@ import React, {
   CSSProperties,
 } from "react";
 
-import { BrushTool, BrushToolType } from "./constant";
+import { BrushTool, BrushToolType } from "./Brush.constant";
+import { useDottingContext } from "./DottingProvider";
+import { flipPixelsHorizontal, flipPixelsVertical } from "./pixelFlip";
 import { KNITTING_SYMBOLS, Shape } from "./Shape.constants";
-import { flipPixelsHorizontal, flipPixelsVertical } from "./utils/pixelFlip";
 
 // 픽셀 데이터 타입
 export interface Pixel {
@@ -472,8 +473,8 @@ export const Dotting = forwardRef<DottingRef, DottingProps>(
       gridStrokeWidth = 1,
       isGridVisible = true,
       backgroundColor = "#fff",
-      brushTool = BrushTool.DOT,
-      selectedShape = KNITTING_SYMBOLS[0],
+      // brushTool = BrushTool.DOT,
+      // selectedShape = KNITTING_SYMBOLS[0],
       isPanZoomable = true,
       zoomSensitivity = 0.1,
       isInteractionApplicable = true,
@@ -492,6 +493,8 @@ export const Dotting = forwardRef<DottingRef, DottingProps>(
     },
     ref
   ) => {
+    const { brushTool, selectedShape } = useDottingContext();
+
     const LABEL_MARGIN = LABEL_AREA_SIZE; // gridSquareLength * LABEL_MARGIN_RATIO -> LABEL_AREA_SIZE로 변경
     // width, height를 rows, cols, gridSquareLength, LABEL_MARGIN로 계산
     const width = cols * gridSquareLength + LABEL_MARGIN;

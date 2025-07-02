@@ -9,18 +9,19 @@ import {
   FlipVerticalIcon,
 } from "../_icons/Copy";
 import { SelectIcon } from "../_icons/Menu";
-import { BrushTool } from "../constant";
-import {
-  usePixelArtEditorContext,
-  usePixelArtEditorCopyContext,
-  usePixelArtEditorHistoryContext,
-} from "../PixelArtEditorContext";
-import { KNITTING_SYMBOLS, Shape } from "../Shape.constants";
+import { useDottingContext, useDottingCopyContext } from "../Dotting";
+import { BrushTool } from "../Dotting/Brush.constant";
+// import {
+//   usePixelArtEditorContext,
+//   usePixelArtEditorCopyContext,
+//   usePixelArtEditorHistoryContext,
+// } from "../PixelArtEditorContext";
+import { KNITTING_SYMBOLS, Shape } from "../Dotting/Shape.constants";
 
 import { cn } from "@/lib/utils";
 
 export default function Toolbar() {
-  const { brushTool, setBrushTool } = usePixelArtEditorContext();
+  const { brushTool, setBrushTool } = useDottingContext();
   const isOpenSubMenu = brushTool === BrushTool.SELECT;
 
   return (
@@ -64,10 +65,10 @@ export default function Toolbar() {
 function SymbolButton({ isOpenSubMenu }: { isOpenSubMenu: boolean }) {
   const [isOpen, setIsOpen] = useState(false);
 
-  const { brushTool, setBrushTool } = usePixelArtEditorContext();
+  const { brushTool, setBrushTool } = useDottingContext();
 
   const isSelected = brushTool === BrushTool.DOT && isOpen;
-  const { selectedShape, setSelectedShape } = usePixelArtEditorContext();
+  const { selectedShape, setSelectedShape } = useDottingContext();
 
   const onShapeSelect = (shape: Shape) => {
     setSelectedShape(shape);
@@ -145,7 +146,7 @@ function SymbolButton({ isOpenSubMenu }: { isOpenSubMenu: boolean }) {
 }
 
 function BrushButton({ isOpenSubMenu }: { isOpenSubMenu: boolean }) {
-  const { brushTool, setBrushTool } = usePixelArtEditorContext();
+  const { brushTool, setBrushTool } = useDottingContext();
 
   return (
     <div>
@@ -178,7 +179,7 @@ function BrushButton({ isOpenSubMenu }: { isOpenSubMenu: boolean }) {
 }
 
 function EraserButton({ isOpenSubMenu }: { isOpenSubMenu: boolean }) {
-  const { brushTool, setBrushTool } = usePixelArtEditorContext();
+  const { brushTool, setBrushTool } = useDottingContext();
 
   const isSelected = brushTool === BrushTool.ERASER;
 
@@ -202,7 +203,7 @@ function EraserButton({ isOpenSubMenu }: { isOpenSubMenu: boolean }) {
 
 function BrushSubMenu() {
   const { copy, paste, cut, flipHorizontal, flipVertical } =
-    usePixelArtEditorCopyContext();
+    useDottingCopyContext();
   const list = [
     {
       Icon: PasteIcon,
