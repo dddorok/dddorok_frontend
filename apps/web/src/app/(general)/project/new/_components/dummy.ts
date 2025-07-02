@@ -17,6 +17,7 @@ export interface MeasurementDummyData {
   originalMax: number;
   baseMinRange: number;
   baseMaxRange: number;
+  gapValue: number; // origin 데이터와의 차이
 }
 // BODY_CHEST_WIDTH, BODY_BACK_NECK_LENGTH, BODY_SHOULDER_SLOPE_LENGTH
 export const NO_CONTROL_DATA = [
@@ -51,6 +52,7 @@ export const BODY_DUMMY_DATA: MeasurementDummyData[] = [
     originalMax: 26,
     baseMinRange: 3,
     baseMaxRange: 5,
+    gapValue: 15,
   },
   {
     code: "BODY_BACK_NECK_WIDTH",
@@ -74,6 +76,7 @@ export const BODY_DUMMY_DATA: MeasurementDummyData[] = [
     originalMax: 20,
     baseMinRange: 3,
     baseMaxRange: 5,
+    gapValue: 0,
   },
   {
     code: "BODY_FRONT_NECK_LENGTH",
@@ -96,6 +99,7 @@ export const BODY_DUMMY_DATA: MeasurementDummyData[] = [
     originalMax: 10.5,
     baseMinRange: 3,
     baseMaxRange: 5,
+    gapValue: 0,
   },
   {
     code: "BODY_WAIST_LENGTH",
@@ -119,6 +123,7 @@ export const BODY_DUMMY_DATA: MeasurementDummyData[] = [
     originalMax: 29,
     baseMinRange: 3,
     baseMaxRange: 5,
+    gapValue: 0,
   },
   {
     code: "BODY_HEM_WIDTH",
@@ -142,6 +147,7 @@ export const BODY_DUMMY_DATA: MeasurementDummyData[] = [
     originalMax: 37,
     baseMinRange: 3,
     baseMaxRange: 5,
+    gapValue: 21,
   },
   {
     code: "BODY_ARMHOLE_LENGTH",
@@ -165,6 +171,7 @@ export const BODY_DUMMY_DATA: MeasurementDummyData[] = [
     originalMax: 18,
     baseMinRange: 3,
     baseMaxRange: 5,
+    gapValue: 0,
   },
 ];
 
@@ -190,6 +197,7 @@ export const SLEEVE_DUMMY_DATA: MeasurementDummyData[] = [
     originalMax: 17,
     baseMinRange: 3,
     baseMaxRange: 5,
+    gapValue: 6,
   },
   {
     code: "SLEEVE_LOWER_SLEEVE_LENGTH",
@@ -213,6 +221,7 @@ export const SLEEVE_DUMMY_DATA: MeasurementDummyData[] = [
     originalMax: 23,
     baseMinRange: 3,
     baseMaxRange: 5,
+    gapValue: 0,
   },
   {
     code: "SLEEVE_HEM_WIDTH",
@@ -235,5 +244,6 @@ export const SLEEVE_DUMMY_DATA: MeasurementDummyData[] = [
     originalMax: 11,
     baseMinRange: 3,
     baseMaxRange: 5,
+    gapValue: 0,
   },
 ];

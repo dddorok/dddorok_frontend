@@ -41,20 +41,29 @@ export default function Step2({
     });
 
   const [measurements, setMeasurements] = useState<
-    { code: string; value: number }[]
+    { code: string; value: number; gapValue: number }[]
   >([
-    ...BODY_DUMMY_DATA.map((m) => ({ code: m.code, value: m.average })),
-    ...SLEEVE_DUMMY_DATA.map((m) => ({ code: m.code, value: m.average })),
+    ...BODY_DUMMY_DATA.map((m) => ({
+      code: m.code,
+      value: m.average,
+      gapValue: m.gapValue,
+    })),
+    ...SLEEVE_DUMMY_DATA.map((m) => ({
+      code: m.code,
+      value: m.average,
+      gapValue: m.gapValue,
+    })),
   ]);
-  console.log("measurements: ", measurements);
 
   const handleMeasurementsChange = (value: { code: string; value: number }) => {
     setMeasurements((prev) => {
       const existingIndex = prev.findIndex((m) => m.code === value.code);
       if (existingIndex !== -1) {
-        return prev.map((m, index) => (index === existingIndex ? value : m));
+        return prev.map((m, index) =>
+          index === existingIndex ? { ...value, gapValue: m.gapValue } : m
+        );
       }
-      return [...prev, value];
+      return [...prev, { ...value, gapValue: 0 }];
     });
   };
 
@@ -88,7 +97,15 @@ export default function Step2({
           </Button>
           <Button
             color="fill"
-            onClick={() => onNext(measurements, noControlData)}
+            onClick={() =>
+              onNext(
+                measurements.map((m) => ({
+                  code: m.code,
+                  value: m.value + m.gapValue,
+                })),
+                noControlData
+              )
+            }
           >
             프로젝트 만들기 →
           </Button>

@@ -124,7 +124,7 @@ const SVGPointEditor = ({
                   min={slider.min}
                   max={slider.max}
                   snapValues={slider.snapValues}
-                  getDisplayValue={(value: number) => value}
+                  getDisplayValue={(value: number) => value + slider.gapValue}
                   initialValue={
                     gridAdjustments[slider.control] ?? slider.average
                   }
@@ -132,10 +132,7 @@ const SVGPointEditor = ({
                   code={slider.control}
                   onValueChange={(value) => {
                     handleGridAdjustment(slider.control, value.toString());
-                    onChange({
-                      code: slider.code,
-                      value: value,
-                    });
+                    onChange({ code: slider.code, value: value });
                   }}
                   onAdjustStart={() => handleAdjustStart(slider.control)}
                   onAdjustEnd={handleAdjustEnd}

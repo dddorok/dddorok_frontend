@@ -52,9 +52,6 @@ export function AdjustmentProvider({
   pathDefs: PathDefinition[];
   sliderData: MeasurementDummyData[];
 }) {
-  // controls 배열 생성
-  const controls = sliderData.map((slider) => slider.control);
-
   const {
     gridAdjustments,
     adjustedPoints,
