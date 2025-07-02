@@ -10,6 +10,7 @@ import React, {
 } from "react";
 
 import { BrushTool, BrushToolType } from "./Brush.constant";
+import { CellDataType, DisabledCellDataType } from "./Cell.tyles";
 import { useDottingContext } from "./DottingProvider";
 import { flipPixelsHorizontal, flipPixelsVertical } from "./pixelFlip";
 import { KNITTING_SYMBOLS, Shape } from "./Shape.constants";
@@ -31,12 +32,12 @@ interface HistoryPixel {
 }
 
 // 초기 셀 데이터 타입
-interface InitialCellData {
-  row: number;
-  col: number;
-  shape?: Shape | null;
-  disabled?: boolean;
-}
+// export interface InitialCellData {
+//   row: number;
+//   col: number;
+//   shape?: Shape | null;
+//   disabled?: boolean;
+// }
 
 interface MousePosition {
   x: number;
@@ -88,8 +89,8 @@ interface DottingProps {
   style?: CSSProperties;
   defaultPixelShape?: Shape | null;
   shapes?: Shape[]; // 외부에서 도형 리스트를 받을 수 있도록
-  initialCells?: InitialCellData[]; // 초기 선택된 셀 데이터
-  disabledCells?: { row: number; col: number }[]; // 초기 비활성화 셀 데이터
+  initialCells?: CellDataType[]; // 초기 선택된 셀 데이터
+  disabledCells?: DisabledCellDataType[]; // 초기 비활성화 셀 데이터
   disabledCellColor?: string; // 비활성화 셀 색상
   onClick?: (e: React.MouseEvent<HTMLCanvasElement>) => void; // 클릭 이벤트 핸들러
   onCopy?: () => void; // 복사 완료 시 호출
@@ -292,8 +293,8 @@ const drawShape = (
 const createInitialPixels = (
   rows: number,
   cols: number,
-  initialCells: InitialCellData[],
-  disabledCells: { row: number; col: number }[]
+  initialCells: CellDataType[],
+  disabledCells: DisabledCellDataType[]
 ): (Pixel | null)[][] => {
   const pixels: (Pixel | null)[][] = Array(rows)
     .fill(null)

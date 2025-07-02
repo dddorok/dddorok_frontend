@@ -1,4 +1,4 @@
-import { Cell } from "./chart.types";
+import { CellDataType, DisabledCellDataType } from "./Dotting/Cell.tyles";
 import { KNITTING_SYMBOL_OBJ } from "./Dotting/Shape.constants";
 import PixelArtEditor from "./PivelArtEditor";
 
@@ -33,7 +33,7 @@ export default function ChartEdit({
 // 동적 변환 함수
 const convertCellsData = (
   cellsData: OriginalCell[] | undefined
-): { initialCells: Cell[] } => {
+): { initialCells: CellDataType[] } => {
   if (!cellsData) {
     return { initialCells: [] };
   }
@@ -52,8 +52,8 @@ const convertCellsData = (
   }));
 
   const initialCells = convertedCells?.filter(
-    (cell) => cell.shape !== undefined
-  );
+    (cell) => cell.shape
+  ) as CellDataType[];
 
   return { initialCells };
 };
@@ -61,8 +61,8 @@ const convertCellsData = (
 const getDisabledCells = (
   grid_row: number,
   grid_col: number,
-  initialCells: Cell[]
-): Cell[] => {
+  initialCells: CellDataType[]
+): DisabledCellDataType[] => {
   const initialSet = new Set(
     initialCells.map((cell) => `${cell.row},${cell.col}`)
   );
