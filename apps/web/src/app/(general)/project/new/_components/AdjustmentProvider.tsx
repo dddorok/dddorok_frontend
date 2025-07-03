@@ -4,7 +4,7 @@ import { createContext, useContext, useState } from "react";
 import { useAdjuestment } from "./useAdjuestment";
 import { getAdjustedPath } from "../_utils/getAdjustedPath";
 import { GridAdjustments } from "../types";
-import { MeasurementDummyData } from "./dummy";
+import { CalculationResult } from "./range.utils";
 
 interface AdjustedPath extends PathDefinition {
   start: Point;
@@ -50,7 +50,7 @@ export function AdjustmentProvider({
   children: React.ReactNode;
   gridPoints: Point[];
   pathDefs: PathDefinition[];
-  sliderData: MeasurementDummyData[];
+  sliderData: CalculationResult[];
 }) {
   const {
     gridAdjustments,

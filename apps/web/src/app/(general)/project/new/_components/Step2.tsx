@@ -1,13 +1,9 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { AlertCircle } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { AdjustmentEditor } from "./AdjustmentEditor";
-import {
-  BODY_DUMMY_DATA,
-  MeasurementDummyData,
-  SLEEVE_DUMMY_DATA,
-} from "./dummy";
+import { CalculationResult, getRangeData } from "./range.utils";
 
 import { Button } from "@/components/ui/button";
 import { templateQueries } from "@/queries/template";
@@ -30,30 +26,51 @@ export default function Step2({
     ...templateQueries.chartList(templateId, chest_circumference),
   });
 
-  const noControlData = template.measurements
-    .filter((m) => {
-      const [, data] = m as any;
-      return data.range_toggle === false;
-    })
-    .map((m) => {
-      const [, data] = m as any;
-      return data;
-    });
+  const [svgContents, setSvgContents] = useState<
+    | {
+        content: string;
+        id: string;
+      }[]
+    | null
+  >(null);
 
   const [measurements, setMeasurements] = useState<
     { code: string; value: number; gapValue: number }[]
-  >([
-    ...BODY_DUMMY_DATA.map((m) => ({
-      code: m.code,
-      value: m.average,
-      gapValue: m.gapValue,
-    })),
-    ...SLEEVE_DUMMY_DATA.map((m) => ({
-      code: m.code,
-      value: m.average,
-      gapValue: m.gapValue,
-    })),
-  ]);
+  >([]);
+
+  useEffect(() => {
+    const fetchSvgContents = async () => {
+      const svgContents = await Promise.all(
+        template.chart_types.map(async (chart) => {
+          const { content } = await fetchSvg(chart.svg_mapping.svg_file_url);
+          return { content, id: chart.svg_mapping.chart_type_id };
+        })
+      );
+      setSvgContents(svgContents);
+    };
+    fetchSvgContents();
+
+    const initMeasurements = template.chart_types
+      .map((chart) => {
+        const sliderData = getRangeData({
+          controlData: chart.svg_mapping.mappings.control ?? [],
+          valueData: template.measurements,
+        });
+
+        return sliderData.map((m) => ({
+          code: m.code,
+          value: m.average,
+          gapValue: m.gapValue,
+        }));
+      })
+      .flat();
+
+    setMeasurements(initMeasurements);
+  }, [template]);
+
+  const noControlData = template.measurements
+    .filter((m) => m[1].range_toggle === false)
+    .map((m) => m[1]);
 
   const handleMeasurementsChange = (value: { code: string; value: number }) => {
     setMeasurements((prev) => {
@@ -67,7 +84,7 @@ export default function Step2({
     });
   };
 
-  if (template.chart_types.length === 0) {
+  if (template.chart_types.length === 0 || !svgContents) {
     return (
       <div className="w-full h-full flex justify-center items-center gap-2">
         <AlertCircle className="w-6 h-6 text-primary-PR" />
@@ -79,18 +96,32 @@ export default function Step2({
   return (
     <div>
       <div className="w-full mx-auto p-8 bg-gray-50 min-h-screen">
-        <ChartSection
-          label="몸판 길이"
-          svgContent={BODY_SVG_CONTENT}
-          data={BODY_DUMMY_DATA}
-          onChange={handleMeasurementsChange}
-        />
-        <ChartSection
-          label="소매"
-          svgContent={SLEEVE_SVG_CONTENT}
-          data={SLEEVE_DUMMY_DATA}
-          onChange={handleMeasurementsChange}
-        />
+        {template.chart_types.map((chart) => {
+          const sliderData = getRangeData({
+            controlData: chart.svg_mapping.mappings.control ?? [],
+            valueData: template.measurements,
+          });
+          console.log("sliderData: ", sliderData);
+
+          const svgContent = svgContents.find(
+            (svg) => svg.id === chart.svg_mapping.chart_type_id
+          )?.content;
+
+          if (!svgContent) {
+            return null;
+          }
+
+          return (
+            <ChartSection
+              key={chart.svg_mapping.chart_type_id}
+              label={chart.svg_mapping.name}
+              svgContent={svgContent}
+              data={sliderData}
+              onChange={handleMeasurementsChange}
+            />
+          );
+        })}
+
         <div className="max-w-[500px] mx-auto grid grid-cols-[76px_1fr] gap-6">
           <Button color="default" onClick={onPrev}>
             이전
@@ -122,7 +153,7 @@ function ChartSection({
 }: {
   label: string;
   svgContent: string;
-  data: MeasurementDummyData[];
+  data: CalculationResult[];
   onChange: (value: { code: string; value: number }) => void;
 }) {
   return (
@@ -160,3 +191,12 @@ const SLEEVE_SVG_CONTENT = `<svg width="88" height="260" viewBox="0 0 88 260" fi
 </g>
 </svg>
 `;
+export async function fetchSvg(url: string) {
+  try {
+    const response = await fetch(url);
+    const content = await response.text();
+    return { content };
+  } catch (error) {
+    throw new Error("SVG 파일을 가져오는데 실패했습니다.");
+  }
+}

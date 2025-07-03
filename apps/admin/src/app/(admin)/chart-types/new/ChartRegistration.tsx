@@ -138,18 +138,6 @@ const ChartRegistration: React.FC<{
     return pairs;
   };
 
-  // control 드롭다운 옵션 (각 row별로)
-  const getControlOptionsForRow = (row: { value_type: "WIDTH" | "LENGTH" }) => {
-    return getControlDropdownPairs(row.value_type);
-  };
-
-  // control 드롭다운에서 선택 시
-  const handleControlDropdownChange = (idx: number, value: string) => {
-    setControlRows((prev) =>
-      prev.map((row, i) => (i === idx ? { ...row, control: value } : row))
-    );
-  };
-
   const handleApiRequest = async (controlRows: Array<SliderControlRowType>) => {
     // API 요청 데이터 구성
     const requestData = {

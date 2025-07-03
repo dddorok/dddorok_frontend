@@ -16,11 +16,10 @@ import {
   useAdjustmentContext,
   useAdjustmentProgressingContext,
 } from "./AdjustmentProvider";
-import { MeasurementDummyData } from "./dummy";
 import { SliderSection } from "./korean-slider-component";
+import { CalculationResult, getSnapValues } from "./range.utils";
 
 import { cn } from "@/lib/utils";
-import { MeasurementItemType, MeasurementType } from "@/services/template";
 
 const isDev = false as const;
 interface AdjustedPath extends PathDefinition {
@@ -35,7 +34,7 @@ export function AdjustmentEditor({
   onChange,
 }: {
   svgContent: string;
-  data: MeasurementDummyData[];
+  data: CalculationResult[];
   onChange: (value: { code: string; value: number }) => void;
 }) {
   const [pathDefs, setPathDefs] = useState<PathDefinition[]>([]);
@@ -79,7 +78,7 @@ const SVGPointEditor = ({
   sliderData,
   onChange,
 }: {
-  sliderData: MeasurementDummyData[];
+  sliderData: CalculationResult[];
   onChange: (value: { code: string; value: number }) => void;
 }) => {
   const { gridAdjustments, handleGridAdjustment } = useAdjustmentContext();
@@ -123,7 +122,7 @@ const SVGPointEditor = ({
                   label={slider.label}
                   min={slider.min}
                   max={slider.max}
-                  snapValues={slider.snapValues}
+                  snapValues={getSnapValues(slider.min, slider.max)}
                   getDisplayValue={(value: number) => value + slider.gapValue}
                   initialValue={
                     gridAdjustments[slider.control] ?? slider.average

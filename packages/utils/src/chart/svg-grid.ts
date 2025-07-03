@@ -34,11 +34,11 @@ export const analyzeSVGPaths = (content: string) => {
     };
   });
   // 디버깅: path 개수 및 d 속성 출력
-  console.log("SVG path 개수:", rawPaths.length);
+  // console.log("SVG path 개수:", rawPaths.length);
 
-  rawPaths.forEach((p, i) => {
-    console.log(`path[${i}] id=${p.id} d=${p.data}`);
-  });
+  // rawPaths.forEach((p, i) => {
+  //   console.log(`path[${i}] id=${p.id} d=${p.data}`);
+  // });
 
   return rawPaths;
 };

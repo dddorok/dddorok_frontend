@@ -47,7 +47,8 @@ export interface MeasurementItemType {
   value: number;
   min: number;
   max: number;
-  value_type: string;
+  value_type: "WIDTH" | "LENGTH";
+  range_toggle: boolean;
 }
 
 export type MeasurementType = [
@@ -58,39 +59,55 @@ export type MeasurementType = [
     value: number;
     min: number;
     max: number;
-    value_type: string;
+    value_type: "WIDTH" | "LENGTH";
   },
 ];
+
+interface SvgMappingAutoType {
+  measurement_code: string;
+  start_point_id: string;
+  end_point_id: string;
+  slider_default: boolean;
+  control_points?: {
+    x: number;
+    y: number;
+  }[];
+}
+
+interface SvgMappingManualType {
+  measurement_code: string;
+  start_point_id: string;
+  end_point_id: string;
+  slider_default: boolean;
+}
+
+export interface SvgMappingControlType {
+  code: string;
+  label: string;
+  control_start: string;
+  control_end: string;
+  original_control: string;
+  value_type: "WIDTH" | "LENGTH";
+  control: string;
+}
 
 export interface GetTemplateChartListResponse {
   template_id: string;
   chart_types: {
     svg_mapping: {
-      id: {
-        buffer: Record<string, number>;
-      };
       chart_type_id: string;
-      v: number;
       created_date: string;
       mappings: {
-        measurement_code: string;
-        start_point_id: string;
-        end_point_id: string;
-        symmetric: boolean;
-        curve_type: string;
-        control_points: any[];
-      }[];
+        auto: SvgMappingAutoType[];
+        manual: SvgMappingManualType[];
+        control: SvgMappingControlType[];
+      };
       name: string;
-      points: {
-        id: string;
-        x: number;
-        y: number;
-      }[];
       svg_file_url: string;
       updated_date: string;
     };
   }[];
-  measurements: MeasurementType[];
+  measurements: [string, MeasurementItemType][];
 }
 
 export const getTemplateChartList = async (
