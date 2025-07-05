@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { cn } from "@/lib/utils";
 
@@ -8,17 +8,28 @@ interface TabItemProps {
     content: React.ReactNode;
   }[];
   defaultTabId: string;
+
+  // controlled
+  tab?: string;
+  onTabChange?: (tabId: string) => void;
 }
 
-export function LargeTab({ tabs, defaultTabId }: TabItemProps) {
-  const [activeTabId, setActiveTabId] = useState(defaultTabId);
+export function LargeTab(props: TabItemProps) {
+  const [activeTabId, setActiveTabId] = useState(props.defaultTabId);
   const handleTabClick = (tabId: string) => {
     setActiveTabId(tabId);
+    props.onTabChange?.(tabId);
   };
+
+  useEffect(() => {
+    if (props.tab) {
+      setActiveTabId(props.tab);
+    }
+  }, [props.tab]);
 
   return (
     <div className="flex items-center">
-      {tabs.map((tab) => (
+      {props.tabs.map((tab) => (
         <TabItem
           key={tab.id}
           content={tab.content}
