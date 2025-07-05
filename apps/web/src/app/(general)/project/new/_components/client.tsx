@@ -63,6 +63,13 @@ export default function NewProjectClient({
     <>
       {step === 1 && (
         <div className=" space-y-2 w-[450px]">
+          <Guide
+            title="측정 가이드"
+            list={[
+              { title: "가슴둘레 측정 방법", onClick: () => {} },
+              { title: "게이지 측정 방법", onClick: () => {} },
+            ]}
+          />
           <h3 className="text-h3 text-primary-PR py-[10px] text-center">
             Step 1. 가슴둘레/게이지 입력
           </h3>
@@ -112,6 +119,31 @@ export function ProgressDot({
             current === index + 1 && "bg-primary-PR"
           )}
         />
+      ))}
+    </div>
+  );
+}
+
+function Guide(props: {
+  list: {
+    title: string;
+    onClick: () => void;
+  }[];
+  title: string;
+}) {
+  return (
+    <div className="flex flex-col gap-2 px-4 py-3 border-primary-PR300 border rounded-md">
+      <h3 className="text-neutral-N900 mb-2 text-large font-semibold text-left">
+        {props.title}
+      </h3>
+      {props.list.map((item) => (
+        <button
+          key={item.title}
+          onClick={item.onClick}
+          className="text-neutral-N900 text-medium font-medium text-left"
+        >
+          👉🏼 {item.title}
+        </button>
       ))}
     </div>
   );
