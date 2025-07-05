@@ -8,6 +8,7 @@ interface TabItemProps<T extends string> {
     content: React.ReactNode;
   }[];
   defaultTabId: string;
+  className?: string;
 
   // controlled
   tab?: T;
@@ -28,7 +29,7 @@ export function LargeTab<T extends string = string>(props: TabItemProps<T>) {
   }, [props.tab]);
 
   return (
-    <div className="flex items-center">
+    <div className={cn("flex items-center", props.className)}>
       {props.tabs.map((tab) => (
         <TabItem
           key={tab.id}
