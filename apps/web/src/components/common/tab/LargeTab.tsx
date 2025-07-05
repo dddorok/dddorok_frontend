@@ -2,21 +2,21 @@ import { useEffect, useState } from "react";
 
 import { cn } from "@/lib/utils";
 
-interface TabItemProps {
+interface TabItemProps<T extends string> {
   tabs: {
-    id: string;
+    id: T;
     content: React.ReactNode;
   }[];
   defaultTabId: string;
 
   // controlled
-  tab?: string;
-  onTabChange?: (tabId: string) => void;
+  tab?: T;
+  onTabChange?: (tabId: T) => void;
 }
 
-export function LargeTab(props: TabItemProps) {
+export function LargeTab<T extends string = string>(props: TabItemProps<T>) {
   const [activeTabId, setActiveTabId] = useState(props.defaultTabId);
-  const handleTabClick = (tabId: string) => {
+  const handleTabClick = (tabId: T) => {
     setActiveTabId(tabId);
     props.onTabChange?.(tabId);
   };
