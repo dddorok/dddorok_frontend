@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { ClientProvider } from "@/components/ClientProvider";
 import { QueryProvider } from "@/lib/react-query";
 
-import "./globals.css";
+import "../../style/globals.css";
 
 export const metadata: Metadata = {
   title: "DDDOROK",
