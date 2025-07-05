@@ -5,7 +5,8 @@ import { cn } from "@/lib/utils";
 interface TabItemProps<T extends string> {
   tabs: {
     id: T;
-    content: React.ReactNode;
+    label: React.ReactNode;
+    content?: React.ReactNode;
   }[];
   defaultTabId: string;
   className?: string;
@@ -17,6 +18,9 @@ interface TabItemProps<T extends string> {
 
 export function LargeTab<T extends string = string>(props: TabItemProps<T>) {
   const [activeTabId, setActiveTabId] = useState(props.defaultTabId);
+
+  const currentTab = props.tabs.find((tab) => tab.id === activeTabId);
+
   const handleTabClick = (tabId: T) => {
     setActiveTabId(tabId);
     props.onTabChange?.(tabId);
@@ -29,25 +33,30 @@ export function LargeTab<T extends string = string>(props: TabItemProps<T>) {
   }, [props.tab]);
 
   return (
-    <div className={cn("flex items-center", props.className)}>
-      {props.tabs.map((tab) => (
-        <TabItem
-          key={tab.id}
-          content={tab.content}
-          isActive={tab.id === activeTabId}
-          onClick={() => handleTabClick(tab.id)}
-        />
-      ))}
+    <div className={cn("flex flex-col gap-3", props.className)}>
+      <div className={cn("flex items-center", "tab-list")}>
+        {props.tabs.map((tab) => (
+          <TabItem
+            key={tab.id}
+            label={tab.label}
+            isActive={tab.id === activeTabId}
+            onClick={() => handleTabClick(tab.id)}
+          />
+        ))}
+      </div>
+      {currentTab?.content && (
+        <div className={cn("tab-content")}>{currentTab?.content}</div>
+      )}
     </div>
   );
 }
 
 function TabItem({
-  content,
+  label,
   isActive,
   onClick,
 }: {
-  content: React.ReactNode;
+  label: React.ReactNode;
   isActive: boolean;
   onClick: () => void;
 }) {
@@ -61,7 +70,7 @@ function TabItem({
         isActive && "border-primary-PR text-primary-PR"
       )}
     >
-      {content}
+      {label}
     </div>
   );
 }
