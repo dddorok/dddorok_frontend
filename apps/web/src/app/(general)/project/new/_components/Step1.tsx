@@ -1,5 +1,7 @@
+import { CheckIcon } from "lucide-react";
 import { useState } from "react";
 
+import { LargeTab } from "@/components/common/tab/LargeTab";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -16,13 +18,25 @@ const DEV_DUMMY_DATA = {
   gauge_ko: 20,
   gauge_dan: 28,
   chest_width: 85,
-};
+  gauge_tab: "gauge_manual",
+} as const;
+
+const INITIAL_DATA = {
+  name: "",
+  gauge_ko: undefined,
+  gauge_dan: undefined,
+  chest_width: undefined,
+  gauge_tab: "gauge_manual",
+} as const;
+
+type GaugeTabType = "gauge_manual" | "gauge_after";
 
 interface FormData {
   name: string;
   gauge_ko: number;
   gauge_dan: number;
   chest_width: number;
+  gauge_tab: GaugeTabType;
 }
 
 export default function Step1({
@@ -31,15 +45,10 @@ export default function Step1({
   onNext: (data: FormData) => void;
 }) {
   const [data, setData] = useState<Partial<FormData>>(
-    process.env.NODE_ENV === "development"
-      ? DEV_DUMMY_DATA
-      : {
-          name: "",
-          gauge_ko: undefined,
-          gauge_dan: undefined,
-          chest_width: undefined,
-        }
+    process.env.NODE_ENV === "development" ? DEV_DUMMY_DATA : INITIAL_DATA
   );
+
+  const isButtonDisabled = Object.values(data).some((value) => !value);
 
   const handleChange = (key: keyof typeof data, value: string) => {
     setData({ ...data, [key]: value });
@@ -77,8 +86,32 @@ export default function Step1({
             </SelectContent>
           </Select>
         </div>
-        <div className="flex flex-col gap-[6px]">
+        <div className="flex flex-col gap-3">
           <Label required>게이지(10cm x 10cm 기준)</Label>
+          <LargeTab<GaugeTabType>
+            tabs={[
+              {
+                id: "gauge_manual",
+                content: (
+                  <>
+                    <CheckIcon className="w-[14px] h-[14px]" />
+                    직접 입력하기
+                  </>
+                ),
+              },
+              {
+                id: "gauge_after",
+                content: (
+                  <>
+                    <CheckIcon className="w-[14px] h-[14px]" />
+                    나중에 등록하기
+                  </>
+                ),
+              },
+            ]}
+            defaultTabId="gauge_manual"
+            onTabChange={(tab) => handleChange("gauge_tab", tab)}
+          />
           <div className="grid grid-cols-2 gap-6">
             <div className="flex gap-2 items-center">
               <Input
@@ -103,13 +136,8 @@ export default function Step1({
         <Button
           className="w-full"
           color="default"
-          disabled={
-            data.name === "" ||
-            data.chest_width === undefined ||
-            data.gauge_ko === undefined ||
-            data.gauge_dan === undefined
-          }
-          onClick={() => onNext(data as any)}
+          disabled={isButtonDisabled}
+          onClick={() => onNext(data as FormData)}
         >
           입력 완료
         </Button>
