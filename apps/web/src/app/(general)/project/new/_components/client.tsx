@@ -5,6 +5,7 @@ import { useRef, useState } from "react";
 import { toast } from "sonner";
 
 import Step1 from "./Step1";
+import { FormData } from "./Step1";
 import Step2 from "./Step2";
 
 import { ROUTE } from "@/constants/route";
@@ -19,16 +20,12 @@ export default function NewProjectClient({
 }) {
   const queryClient = useQueryClient();
   const router = useRouter();
-  const formData = useRef<{
-    name: string;
-    gauge_ko: number;
-    gauge_dan: number;
-    chest_width: number;
-  }>({
+  const formData = useRef<FormData>({
     name: "",
     gauge_ko: 0,
     gauge_dan: 0,
     chest_width: 0,
+    gauge_tab: "gauge_manual",
   });
   const [step, setStep] = useState(1);
 
@@ -46,6 +43,7 @@ export default function NewProjectClient({
           measurement_code: m.code,
           value: m.value,
         })),
+        is_temporary: formData.current.gauge_tab === "gauge_after",
       });
       queryClient.invalidateQueries({
         queryKey: [projectQueryKey],

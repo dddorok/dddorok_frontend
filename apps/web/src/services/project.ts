@@ -9,6 +9,7 @@ interface CreateProjectRequest {
     measurement_code: string;
     value: number;
   }[];
+  is_temporary: boolean;
 }
 
 export const createProject = async (request: CreateProjectRequest) => {
