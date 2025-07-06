@@ -66,28 +66,21 @@ jobs:
 
       - name: Vercel Deploy (prebuilt)
         id: deploy-web
-        working-directory: ${{ env.APP_DIR }}
         run: |
-          OUTPUT_DIR=".vercel/output"
-
+          OUTPUT_DIR="${{ env.APP_DIR }}/.vercel/output"
           echo "▶ Checking build output at $OUTPUT_DIR"
-          if [ -d "$OUTPUT_DIR" ]; then
-            echo "✅ Found $OUTPUT_DIR:"
-            ls -al "$OUTPUT_DIR"
-            echo "▶ File list (depth 2):"
-            find "$OUTPUT_DIR" -maxdepth 2 -type f | sed 's|^|   - |'
-          else
+          if [ ! -d "$OUTPUT_DIR" ]; then
             echo "❌ ERROR: $OUTPUT_DIR not found!"
             exit 1
           fi
 
           echo "▶ Deploying prebuilt from $OUTPUT_DIR"
           npx vercel deploy \
-            "$OUTPUT_DIR" \
             --prebuilt \
             --prod \
             --yes \
-            --token="$VERCEL_TOKEN"
+            --token="$VERCEL_TOKEN" \
+            "$OUTPUT_DIR"
 
       - name: Install jq for rollback
         run: sudo apt-get update && sudo apt-get install -y jq
