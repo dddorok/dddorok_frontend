@@ -60,7 +60,7 @@ jobs:
         run: |
           url=$(npx vercel deploy \
             --cwd apps/web \
-            apps/web/.vercel/output \
+            .vercel/output \
             --prebuilt \
             --prod \
             --token $VERCEL_TOKEN)
@@ -137,7 +137,7 @@ jobs:
         run: |
           url=$(npx vercel deploy \
             --cwd apps/admin \
-            apps/admin/.vercel/output \
+            .vercel/output \
             --prebuilt \
             --prod \
             --token $VERCEL_TOKEN)
