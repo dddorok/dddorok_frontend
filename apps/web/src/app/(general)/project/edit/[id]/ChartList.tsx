@@ -23,14 +23,6 @@ export function ChartList({ project }: { project: GetProjectResponse }) {
 
   return (
     <>
-      <div className="h-[100px] flex items-center justify-between">
-        <div className="container">
-          <div className="text-neutral-800 text-[24px] font-bold">
-            {project.name}
-          </div>
-        </div>
-        <div></div>
-      </div>
       <div className="bg-neutral-N200 min-h-[calc(100vh-100px)]">
         <div className="container">
           <div className="flex gap-2 py-6">

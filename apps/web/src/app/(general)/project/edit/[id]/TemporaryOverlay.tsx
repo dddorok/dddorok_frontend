@@ -1,8 +1,14 @@
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 export function TemporaryOverlay() {
   return (
-    <div className="flex flex-col gap-4 items-center text-neutral-N0 text-center justify-center py-12 bg-neutralAlpha-NA40">
+    <div
+      className={cn(
+        "flex flex-col gap-4 items-center text-neutral-N0 text-center justify-center py-12 bg-neutralAlpha-NA40",
+        "fixed top-[100px] w-full z-50 h-fit"
+      )}
+    >
       ⚠️
       <br />
       이 프로젝트는 임의 게이지로 생성되어 있어 편집과 저장이 제한됩니다.
