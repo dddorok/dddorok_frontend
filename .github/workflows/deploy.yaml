@@ -40,7 +40,7 @@ jobs:
           pnpm install --frozen-lockfile
         working-directory: ${{ github.workspace }}
 
-      - name: Debug: verify app dir
+      - name: Debug verify app dir
         run: |
           echo "PWD: $(pwd)"
           echo "Expecting application at $APP_DIR"
@@ -144,7 +144,7 @@ jobs:
           pnpm install --frozen-lockfile
         working-directory: ${{ github.workspace }}
 
-      - name: Debug: verify app dir
+      - name: Debug verify app dir
         run: |
           echo "PWD: $(pwd)"
           echo "Expecting application at $APP_DIR"
