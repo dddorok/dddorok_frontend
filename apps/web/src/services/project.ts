@@ -43,6 +43,7 @@ export interface GetProjectResponse {
   id: string;
   name: string;
   created_date: string;
+  is_temporary: boolean;
   chart_list: {
     chart_id: string;
     name: string;
