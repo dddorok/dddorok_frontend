@@ -45,7 +45,7 @@ jobs:
       - name: Vercel Deploy
         id: deploy
         run: |
-          url=$(npx vercel deploy .vercel/output --prod --token $VERCEL_TOKEN)
+          url=$(npx vercel deploy .vercel/output --prebuilt --prod --token $VERCEL_TOKEN)
           echo "url=$url" >> $GITHUB_OUTPUT
 
       - name: Install jq
@@ -101,7 +101,7 @@ jobs:
       - name: Vercel Deploy
         id: deploy
         run: |
-          url=$(npx vercel deploy .vercel/output --prod --token $VERCEL_TOKEN)
+          url=$(npx vercel deploy .vercel/output --prebuilt --prod --token $VERCEL_TOKEN)
           echo "url=$url" >> $GITHUB_OUTPUT
 
       - name: Install jq
