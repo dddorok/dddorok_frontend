@@ -17,12 +17,12 @@ jobs:
     concurrency: web-prod
     env:
       # 절대경로 변수
-      APP_DIR:           ${{ github.workspace }}/apps/web
-      VERCEL_TOKEN:      ${{ secrets.VERCEL_TOKEN }}
-      VERCEL_ORG_ID:     ${{ secrets.VERCEL_ORG_ID }}
+      APP_DIR: ${{ github.workspace }}/apps/web
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
       VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_WEB }}
-      PROD_ALIAS:        "web.dddorok.vercel.app"
-      HEALTH_PATH:       "/health"
+      PROD_ALIAS: "web.dddorok.vercel.app"
+      HEALTH_PATH: "/health"
 
     steps:
       - name: Checkout code
@@ -66,15 +66,28 @@ jobs:
 
       - name: Vercel Deploy (prebuilt)
         id: deploy-web
+        working-directory: $APP_DIR
         run: |
-          echo "→ deploy with --cwd $APP_DIR"
+          OUTPUT_DIR=".vercel/output"
+
+          echo "▶ Checking build output at $OUTPUT_DIR"
+          if [ -d "$OUTPUT_DIR" ]; then
+            echo "✅ Found $OUTPUT_DIR:"
+            ls -al "$OUTPUT_DIR"
+            echo "▶ File list (depth 2):"
+            find "$OUTPUT_DIR" -maxdepth 2 -type f | sed 's|^|   - |'
+          else
+            echo "❌ ERROR: $OUTPUT_DIR not found!"
+            exit 1
+          fi
+
+          echo "▶ Deploying prebuilt from $OUTPUT_DIR"
           npx vercel deploy \
-            --cwd "$APP_DIR" \
+            "$OUTPUT_DIR" \
             --prebuilt \
             --prod \
             --yes \
-            --token="$VERCEL_TOKEN" \
-            ".vercel/output"
+            --token="$VERCEL_TOKEN"
 
       - name: Install jq for rollback
         run: sudo apt-get update && sudo apt-get install -y jq
@@ -103,12 +116,12 @@ jobs:
     runs-on: ubuntu-latest
     concurrency: admin-prod
     env:
-      APP_DIR:           ${{ github.workspace }}/apps/admin
-      VERCEL_TOKEN:      ${{ secrets.VERCEL_TOKEN }}
-      VERCEL_ORG_ID:     ${{ secrets.VERCEL_ORG_ID }}
+      APP_DIR: ${{ github.workspace }}/apps/admin
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
       VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_ADMIN }}
-      PROD_ALIAS:        "admin.dddorok.vercel.app"
-      HEALTH_PATH:       "/health"
+      PROD_ALIAS: "admin.dddorok.vercel.app"
+      HEALTH_PATH: "/health"
 
     steps:
       - name: Checkout code
