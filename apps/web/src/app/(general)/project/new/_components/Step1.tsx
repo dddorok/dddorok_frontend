@@ -51,7 +51,8 @@ export default function Step1({
   onNext: (data: FormData) => void;
 }) {
   const [data, setData] = useState<Partial<FormData>>(
-    process.env.NODE_ENV === "development" ? DEV_DUMMY_DATA : INITIAL_DATA
+    INITIAL_DATA
+    // process.env.NODE_ENV === "development" ? DEV_DUMMY_DATA : INITIAL_DATA
   );
 
   const isButtonDisabled = Object.values(data).some((value) => !value);
@@ -86,7 +87,10 @@ export default function Step1({
             onValueChange={(value) => handleChange("chest_width", value)}
           >
             <SelectTrigger>
-              <SelectValue placeholder="가슴둘레를 선택해주세요." />
+              <SelectValue
+                placeholder="가슴둘레를 선택해주세요."
+                className="data-[placeholder]:text-neutral-N400 aaaaa"
+              />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="85">80-85 cm</SelectItem>
@@ -151,6 +155,7 @@ export default function Step1({
                 ),
               },
             ]}
+            defaultValue={data.gauge_tab}
             value={data.gauge_tab}
             onChange={(value) => handleGaugeTabChange(value as GaugeTabType)}
           />
@@ -171,7 +176,7 @@ export default function Step1({
         </div>
         <Button
           className="w-full"
-          color="default"
+          color="white"
           disabled={isButtonDisabled}
           onClick={() => onNext(data as FormData)}
         >

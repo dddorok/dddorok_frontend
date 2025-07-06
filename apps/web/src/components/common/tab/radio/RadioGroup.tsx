@@ -10,8 +10,7 @@ interface RadioOptionType {
 
 interface RadioGroupProps {
   options: RadioOptionType[];
-  defaultSelected?: string;
-
+  defaultValue?: string;
   value?: string;
   onChange?: (value: string) => void;
 
@@ -19,7 +18,7 @@ interface RadioGroupProps {
 }
 
 export function RadioGroup(props: RadioGroupProps) {
-  const [selected, setSelected] = useState(props.defaultSelected);
+  const [selected, setSelected] = useState(props.defaultValue);
 
   const onChange = (value: string) => {
     setSelected(value);
