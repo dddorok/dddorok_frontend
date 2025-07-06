@@ -19,7 +19,7 @@ jobs:
       GITHUB_ROOT:       ${{ github.workspace }}
       APP_DIR:           ${{ github.workspace }}/apps/web
       VERCEL_TOKEN:      ${{ secrets.VERCEL_TOKEN }}
-      VERCEL_SCOPE:      ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_ORG_ID:     ${{ secrets.VERCEL_ORG_ID }}
       VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_WEB }}
       PROD_ALIAS:        "web.dddorok.vercel.app"
       HEALTH_PATH:       "/health"
@@ -38,7 +38,6 @@ jobs:
           echo "PWD: $(pwd)"
           echo "Installing at $GITHUB_ROOT"
           pnpm install --frozen-lockfile
-        working-directory: ${{ github.workspace }}
 
       - name: Debug verify app dir
         run: |
@@ -56,8 +55,6 @@ jobs:
           echo "PWD: $(pwd)"
           echo "Running: npx vercel pull $APP_DIR"
           npx vercel pull "$APP_DIR" \
-            --scope "$VERCEL_SCOPE" \
-            --project "$VERCEL_PROJECT_ID" \
             --yes \
             --environment production \
             --token "$VERCEL_TOKEN"
@@ -69,8 +66,6 @@ jobs:
           echo "PWD: $(pwd)"
           echo "Running: npx vercel build $APP_DIR"
           npx vercel build "$APP_DIR" \
-            --scope "$VERCEL_SCOPE" \
-            --project "$VERCEL_PROJECT_ID" \
             --prod \
             --token "$VERCEL_TOKEN"
           echo "Build output at $APP_DIR/.vercel/output:"
@@ -82,13 +77,10 @@ jobs:
           echo "PWD: $(pwd)"
           echo "Running: npx vercel deploy $APP_DIR/.vercel/output"
           npx vercel deploy "$APP_DIR/.vercel/output" \
-            --scope "$VERCEL_SCOPE" \
-            --project "$VERCEL_PROJECT_ID" \
             --prebuilt \
             --prod \
             --token "$VERCEL_TOKEN" \
             --yes
-          # CLI가 출력하는 URL을 캡처하려면 echo "url=$DEPLOY_URL" >> $GITHUB_OUTPUT 구문 추가
 
       - name: Install jq for rollback
         run: |
@@ -123,7 +115,7 @@ jobs:
       GITHUB_ROOT:       ${{ github.workspace }}
       APP_DIR:           ${{ github.workspace }}/apps/admin
       VERCEL_TOKEN:      ${{ secrets.VERCEL_TOKEN }}
-      VERCEL_SCOPE:      ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_ORG_ID:     ${{ secrets.VERCEL_ORG_ID }}
       VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_ADMIN }}
       PROD_ALIAS:        "admin.dddorok.vercel.app"
       HEALTH_PATH:       "/health"
@@ -142,7 +134,6 @@ jobs:
           echo "PWD: $(pwd)"
           echo "Installing at $GITHUB_ROOT"
           pnpm install --frozen-lockfile
-        working-directory: ${{ github.workspace }}
 
       - name: Debug verify app dir
         run: |
@@ -160,8 +151,6 @@ jobs:
           echo "PWD: $(pwd)"
           echo "Running: npx vercel pull $APP_DIR"
           npx vercel pull "$APP_DIR" \
-            --scope "$VERCEL_SCOPE" \
-            --project "$VERCEL_PROJECT_ID" \
             --yes \
             --environment production \
             --token "$VERCEL_TOKEN"
@@ -173,8 +162,6 @@ jobs:
           echo "PWD: $(pwd)"
           echo "Running: npx vercel build $APP_DIR"
           npx vercel build "$APP_DIR" \
-            --scope "$VERCEL_SCOPE" \
-            --project "$VERCEL_PROJECT_ID" \
             --prod \
             --token "$VERCEL_TOKEN"
           echo "Build output at $APP_DIR/.vercel/output:"
@@ -186,8 +173,6 @@ jobs:
           echo "PWD: $(pwd)"
           echo "Running: npx vercel deploy $APP_DIR/.vercel/output"
           npx vercel deploy "$APP_DIR/.vercel/output" \
-            --scope "$VERCEL_SCOPE" \
-            --project "$VERCEL_PROJECT_ID" \
             --prebuilt \
             --prod \
             --token "$VERCEL_TOKEN" \
