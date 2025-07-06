@@ -75,12 +75,7 @@ jobs:
           fi
 
           echo "▶ Deploying prebuilt from $OUTPUT_DIR"
-          npx vercel deploy \
-            --prebuilt \
-            --prod \
-            --yes \
-            --token="$VERCEL_TOKEN" \
-            "$OUTPUT_DIR"
+          npx vercel deploy "$OUTPUT" --prebuilt --prod --yes --token="$VERCEL_TOKEN"
 
       - name: Install jq for rollback
         run: sudo apt-get update && sudo apt-get install -y jq
