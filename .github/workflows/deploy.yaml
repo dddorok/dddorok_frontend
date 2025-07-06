@@ -36,10 +36,17 @@ jobs:
       - name: Vercel Build
         run: npx vercel build --prod --token $VERCEL_TOKEN
 
+      - name: DEBUG – where is output?
+        run: |
+          echo "ls apps/web/.vercel/output:"
+          ls -al apps/web/.vercel/output || true
+          echo "ls .vercel/output in repo root:"
+          ls -al .vercel/output || true
+
       - name: Vercel Deploy
         id: deploy
         run: |
-          url=$(npx vercel deploy .vercel/output --prebuilt --prod --token $VERCEL_TOKEN)
+          url=$(npx vercel deploy apps/web/.vercel/output --prebuilt --prod --token $VERCEL_TOKEN)
           echo "url=$url" >> $GITHUB_OUTPUT
 
       - name: Install jq
@@ -92,7 +99,7 @@ jobs:
       - name: Vercel Deploy
         id: deploy
         run: |
-          url=$(npx vercel deploy .vercel/output --prebuilt --prod --token $VERCEL_TOKEN)
+          url=$(npx vercel deploy apps/admin/.vercel/output --prebuilt --prod --token $VERCEL_TOKEN)
           echo "url=$url" >> $GITHUB_OUTPUT
 
       - name: Install jq
