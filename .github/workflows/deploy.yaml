@@ -17,7 +17,7 @@ jobs:
     concurrency: web-prod
     env:
       # 절대경로 변수
-      APP_DIR: ${{ github.workspace }}/apps/web
+      APP_DIR: ${{ github.workspace }}
       VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
       VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
       VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_WEB }}
@@ -47,7 +47,6 @@ jobs:
         run: |
           echo "→ pull settings with --cwd $APP_DIR"
           npx vercel pull \
-            --cwd "$APP_DIR" \
             --yes \
             --environment=production \
             --token="$VERCEL_TOKEN"
@@ -56,9 +55,7 @@ jobs:
 
       - name: Vercel Build (prebuilt)
         run: |
-          echo "→ build with --cwd $APP_DIR"
           npx vercel build \
-            --cwd "$APP_DIR" \
             --prod \
             --token="$VERCEL_TOKEN"
           echo "Output at $APP_DIR/.vercel/output"
@@ -75,7 +72,7 @@ jobs:
           fi
 
           echo "▶ Deploying prebuilt from $OUTPUT_DIR"
-          npx vercel deploy "$OUTPUT" --prebuilt --prod --yes --token="$VERCEL_TOKEN"
+          npx vercel deploy .vercel/output --prebuilt --prod --yes --token="$VERCEL_TOKEN"
 
       - name: Install jq for rollback
         run: sudo apt-get update && sudo apt-get install -y jq
