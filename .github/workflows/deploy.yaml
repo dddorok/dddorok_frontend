@@ -1,0 +1,127 @@
+name: Deploy Web & Admin to Vercel (manual-selectable)
+
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: '배포할 앱 선택'
+        required: true
+        default: 'all'
+        type: choice
+        options:
+          - all     # web + admin
+          - web
+          - admin
+
+jobs:
+  # ──────────────────────────── WEB ────────────────────────────
+  deploy-web:
+    if: github.event.inputs.target == 'all' || github.event.inputs.target == 'web'
+    runs-on: ubuntu-latest
+    concurrency: web-prod
+    env:
+      VERCEL_TOKEN:        ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_ORG_ID:       ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID:   ${{ secrets.VERCEL_PROJECT_ID_WEB }}
+      PROD_ALIAS:          "web.dddorok.vercel.app"
+      HEALTH_PATH:         "/health"
+    defaults:
+      run:
+        working-directory: apps/web
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v3
+        with: { version: 9 }
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Vercel Pull
+        run: npx vercel pull --yes --environment=production --token $VERCEL_TOKEN
+
+      - name: Vercel Build
+        run: npx vercel build --prod --token $VERCEL_TOKEN
+
+      - name: Vercel Deploy
+        id: deploy
+        run: |
+          url=$(npx vercel deploy --prebuilt --prod --token $VERCEL_TOKEN)
+          echo "url=$url" >> $GITHUB_OUTPUT
+
+      - name: Install jq
+        run: sudo apt-get update && sudo apt-get install -y jq
+
+      - name: Smoke test & auto-rollback
+        run: |
+          target="${{ steps.deploy.outputs.url }}$HEALTH_PATH"
+          echo "Health-check → $target"
+          code=$(curl -s -o /dev/null -w "%{http_code}" "$target")
+          if [ "$code" != "200" ]; then
+            echo "❌ Health-check failed ($code) → rolling back"
+            prev=$(curl -s -H "Authorization: Bearer $VERCEL_TOKEN" \
+              "https://api.vercel.com/v6/deployments?projectId=$VERCEL_PROJECT_ID&limit=2&state=READY" \
+              | jq -r '.deployments[1].uid')
+            curl -s -X POST -H "Authorization: Bearer $VERCEL_TOKEN" \
+              -H "Content-Type: application/json" \
+              "https://api.vercel.com/v2/aliases" \
+              -d "{\"deploymentId\":\"$prev\",\"alias\":\"$PROD_ALIAS\"}"
+            exit 1
+          else
+            echo "✅ Health-check OK"
+          fi
+
+  # ────────────────────────── ADMIN ────────────────────────────
+  deploy-admin:
+    if: github.event.inputs.target == 'all' || github.event.inputs.target == 'admin'
+    runs-on: ubuntu-latest
+    concurrency: admin-prod
+    env:
+      VERCEL_TOKEN:        ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_ORG_ID:       ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID:   ${{ secrets.VERCEL_PROJECT_ID_ADMIN }}
+      PROD_ALIAS:          "admin.dddorok.vercel.app"
+      HEALTH_PATH:         "/health"
+    defaults:
+      run:
+        working-directory: apps/admin
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v3
+        with: { version: 9 }
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Vercel Pull
+        run: npx vercel pull --yes --environment=production --token $VERCEL_TOKEN
+
+      - name: Vercel Build
+        run: npx vercel build --prod --token $VERCEL_TOKEN
+
+      - name: Vercel Deploy
+        id: deploy
+        run: |
+          url=$(npx vercel deploy --prebuilt --prod --token $VERCEL_TOKEN)
+          echo "url=$url" >> $GITHUB_OUTPUT
+
+      - name: Install jq
+        run: sudo apt-get update && sudo apt-get install -y jq
+
+      - name: Smoke test & auto-rollback
+        run: |
+          target="${{ steps.deploy.outputs.url }}$HEALTH_PATH"
+          echo "Health-check → $target"
+          code=$(curl -s -o /dev/null -w "%{http_code}" "$target")
+          if [ "$code" != "200" ]; then
+            echo "❌ Health-check failed ($code) → rolling back"
+            prev=$(curl -s -H "Authorization: Bearer $VERCEL_TOKEN" \
+              "https://api.vercel.com/v6/deployments?projectId=$VERCEL_PROJECT_ID&limit=2&state=READY" \
+              | jq -r '.deployments[1].uid')
+            curl -s -X POST -H "Authorization: Bearer $VERCEL_TOKEN" \
+              -H "Content-Type: application/json" \
+              "https://api.vercel.com/v2/aliases" \
+              -d "{\"deploymentId\":\"$prev\",\"alias\":\"$PROD_ALIAS\"}"
+            exit 1
+          else
+            echo "✅ Health-check OK"
+          fi
