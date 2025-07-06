@@ -10,19 +10,18 @@ on:
         type: choice
         options: [all, web, admin]
 
+# ────────────────────────── WEB ──────────────────────────
 jobs:
   deploy-web:
     if: ${{ github.event.inputs.target == 'all' || github.event.inputs.target == 'web' }}
     runs-on: ubuntu-latest
     concurrency: web-prod
     env:
-      # 절대경로 변수
-      APP_DIR: ${{ github.workspace }}
-      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      APP_DIR:           ${{ github.workspace }}              # 루트 기준
+      VERCEL_TOKEN:      ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_ORG_ID:     ${{ secrets.VERCEL_ORG_ID }}
       VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_WEB }}
-      PROD_ALIAS: "web.dddorok.vercel.app"
-      HEALTH_PATH: "/health"
+      PROD_ALIAS:        "web.dddorok.vercel.app"
 
     steps:
       - name: Checkout code
@@ -33,76 +32,63 @@ jobs:
         with:
           version: 9
 
-      - name: Install deps at root
+      - name: Install deps
         run: |
           echo "PWD: $(pwd)"
           pnpm install --frozen-lockfile
 
-      - name: Debug verify APP_DIR
+      # ─── Pull & Build (prebuilt) ───
+      - name: Vercel Pull
         run: |
-          echo "APP_DIR = $APP_DIR"
-          ls -al "$APP_DIR"
+          echo "→ vercel pull"
+          npx vercel pull --yes --environment=production --token="$VERCEL_TOKEN"
 
-      - name: Vercel Pull (settings)
+      - name: Vercel Build
         run: |
-          echo "→ pull settings with --cwd $APP_DIR"
-          npx vercel pull \
-            --yes \
-            --environment=production \
-            --token="$VERCEL_TOKEN"
-          echo "Pulled into $APP_DIR/.vercel"
-          ls -al "$APP_DIR/.vercel"
+          npx vercel build --prod --token="$VERCEL_TOKEN"
+          echo "▶ Build output"
+          ls -al .vercel/output
 
-      - name: Vercel Build (prebuilt)
+      # ─── Deploy (prebuilt) ───
+      - name: Vercel Deploy
+        id: deploy-web
         run: |
-          npx vercel build \
-            --prod \
-            --token="$VERCEL_TOKEN"
-          echo "Output at $APP_DIR/.vercel/output"
-          ls -al "$APP_DIR/.vercel/output"
-
-      - name: Vercel Deploy (prebuilt)
-        run: |
-          # 현재 작업 디렉터리와 .vercel/output 존재 여부 확인
           echo "PWD: $(pwd)"
           ls -al .vercel/output || { echo "❌ .vercel/output not found"; exit 1; }
+          DEPLOY_URL=$(npx vercel deploy . --prebuilt --prod --yes --token="$VERCEL_TOKEN" | tail -1)
+          echo "url=$DEPLOY_URL" >> "$GITHUB_OUTPUT"
+          echo "▶ Deployed → $DEPLOY_URL"
 
-          # prebuilt 배포
-          npx vercel deploy . --prebuilt --prod --yes --token="$VERCEL_TOKEN"
-
-      - name: Install jq for rollback
-        run: sudo apt-get update && sudo apt-get install -y jq
-
-      - name: Smoke test & rollback
+      # ─── Slack 알림 ───
+      - name: Slack Notify Success
+        if: success()
         run: |
-          URL="${{ steps.deploy-web.outputs.url }}$HEALTH_PATH"
-          echo "Health-check → $URL"
-          CODE=$(curl -s -o /dev/null -w "%{http_code}" "$URL")
-          if [ "$CODE" != "200" ]; then
-            echo "❌ Health-check failed → rolling back"
-            PREV=$(curl -s -H "Authorization: Bearer $VERCEL_TOKEN" \
-              "https://api.vercel.com/v6/deployments?projectId=$VERCEL_PROJECT_ID&limit=2&state=READY" \
-              | jq -r '.deployments[1].uid')
-            curl -X POST -H "Authorization: Bearer $VERCEL_TOKEN" \
-              -H "Content-Type: application/json" \
-              "https://api.vercel.com/v2/aliases" \
-              -d "{\"deploymentId\":\"$PREV\",\"alias\":\"$PROD_ALIAS\"}"
-            exit 1
-          else
-            echo "✅ OK"
-          fi
+          curl -X POST -H 'Content-type: application/json' \
+            --data '{
+              "text": "✅ *배포 성공 - dddorok-frontend-web* 🚀\n\n*커밋 메시지:* \n${{ github.event.head_commit.message }}\n\n*커밋 링크:* <https://github.com/${{ github.repository }}/commit/${{ github.sha }}|🔗 확인하기>\n*워크플로우:* <https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}|🛠 Action 확인하기>\n\n<@U08KFM61DPZ>"
+            }' \
+            ${{ secrets.SLACK_WEBHOOK_URL }}
 
+      - name: Slack Notify Failure
+        if: failure()
+        run: |
+          curl -X POST -H 'Content-type: application/json' \
+            --data '{
+              "text": "🚨 *배포 실패 - dddorok-frontend-web* 🚨\n\n*커밋 메시지:* \n${{ github.event.head_commit.message }}\n\n*커밋 링크:* <https://github.com/${{ github.repository }}/commit/${{ github.sha }}|🔗 확인하기>\n*워크플로우:* <https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}|🛠 Action 확인하기>\n\n🔴 즉시 확인 및 조치 요망! <@U08KFM61DPZ>"
+            }' \
+            ${{ secrets.SLACK_WEBHOOK_URL }}
+
+# ───────────────────────── ADMIN ──────────────────────────
   deploy-admin:
     if: ${{ github.event.inputs.target == 'all' || github.event.inputs.target == 'admin' }}
     runs-on: ubuntu-latest
     concurrency: admin-prod
     env:
-      APP_DIR: ${{ github.workspace }}/apps/admin
-      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      APP_DIR:           ${{ github.workspace }}              # 동일 루트
+      VERCEL_TOKEN:      ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_ORG_ID:     ${{ secrets.VERCEL_ORG_ID }}
       VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_ADMIN }}
-      PROD_ALIAS: "admin.dddorok.vercel.app"
-      HEALTH_PATH: "/health"
+      PROD_ALIAS:        "admin.dddorok.vercel.app"
 
     steps:
       - name: Checkout code
@@ -113,54 +99,41 @@ jobs:
         with:
           version: 9
 
-      - name: Install deps at root
+      - name: Install deps
         run: pnpm install --frozen-lockfile
 
-      - name: Debug verify APP_DIR
-        run: |
-          echo "APP_DIR = $APP_DIR"
-          ls -al "$APP_DIR"
+      # Pull & Build
+      - name: Vercel Pull
+        run: npx vercel pull --yes --environment=production --token="$VERCEL_TOKEN"
 
-      - name: Vercel Pull (settings)
+      - name: Vercel Build
         run: |
-          npx vercel pull \
-            --cwd "$APP_DIR" \
-            --yes \
-            --environment=production \
-            --token="$VERCEL_TOKEN"
+          npx vercel build --prod --token="$VERCEL_TOKEN"
+          ls -al .vercel/output
 
-      - name: Vercel Build (prebuilt)
-        run: |
-          npx vercel build \
-            --cwd "$APP_DIR" \
-            --prod \
-            --token="$VERCEL_TOKEN"
-
-      - name: Vercel Deploy (prebuilt)
+      # Deploy
+      - name: Vercel Deploy
         id: deploy-admin
         run: |
-          npx vercel deploy \
-            --cwd "$APP_DIR" \
-            --prebuilt \
-            --prod \
-            --yes \
-            --token="$VERCEL_TOKEN" \
-            ".vercel/output" \
+          DEPLOY_URL=$(npx vercel deploy . --prebuilt --prod --yes --token="$VERCEL_TOKEN" | tail -1)
+          echo "url=$DEPLOY_URL" >> "$GITHUB_OUTPUT"
+          echo "▶ Deployed → $DEPLOY_URL"
 
-      - name: Install jq for rollback
-        run: sudo apt-get update && sudo apt-get install -y jq
-
-      - name: Smoke test & rollback
+      # Slack
+      - name: Slack Notify Success
+        if: success()
         run: |
-          URL="${{ steps.deploy-admin.outputs.url }}$HEALTH_PATH"
-          CODE=$(curl -s -o /dev/null -w "%{http_code}" "$URL")
-          if [ "$CODE" != "200" ]; then
-            PREV=$(curl -s -H "Authorization: Bearer $VERCEL_TOKEN" \
-              "https://api.vercel.com/v6/deployments?projectId=$VERCEL_PROJECT_ID&limit=2&state=READY" \
-              | jq -r '.deployments[1].uid')
-            curl -X POST -H "Authorization: Bearer $VERCEL_TOKEN" \
-              -H "Content-Type: application/json" \
-              "https://api.vercel.com/v2/aliases" \
-              -d "{\"deploymentId\":\"$PREV\",\"alias\":\"$PROD_ALIAS\"}"
-            exit 1
-          fi
+          curl -X POST -H 'Content-type: application/json' \
+            --data '{
+              "text": "✅ *배포 성공 - dddorok-frontend-admin* 🚀\n\n*커밋 메시지:* \n${{ github.event.head_commit.message }}\n\n*커밋 링크:* <https://github.com/${{ github.repository }}/commit/${{ github.sha }}|🔗 확인하기>\n*워크플로우:* <https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}|🛠 Action 확인하기>\n\n<@U08KFM61DPZ>"
+            }' \
+            ${{ secrets.SLACK_WEBHOOK_URL }}
+
+      - name: Slack Notify Failure
+        if: failure()
+        run: |
+          curl -X POST -H 'Content-type: application/json' \
+            --data '{
+              "text": "🚨 *배포 실패 - dddorok-frontend-admin* 🚨\n\n*커밋 메시지:* \n${{ github.event.head_commit.message }}\n\n*커밋 링크:* <https://github.com/${{ github.repository }}/commit/${{ github.sha }}|🔗 확인하기>\n*워크플로우:* <https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}|🛠 Action 확인하기>\n\n🔴 즉시 확인 및 조치 요망! <@U08KFM61DPZ>"
+            }' \
+            ${{ secrets.SLACK_WEBHOOK_URL }}
