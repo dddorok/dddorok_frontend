@@ -31,15 +31,15 @@ jobs:
       - run: pnpm install --frozen-lockfile
 
       - name: Vercel Pull
-        run: npx vercel pull apps/web --yes --environment=production --token $VERCEL_TOKEN
+        run: npx vercel pull --yes --environment=production --token $VERCEL_TOKEN
 
       - name: Vercel Build
-        run: npx vercel build apps/web --prod --token $VERCEL_TOKEN
+        run: npx vercel build --prod --token $VERCEL_TOKEN
 
       - name: Vercel Deploy
         id: deploy
         run: |
-          url=$(npx vercel deploy apps/web/.vercel/output --prebuilt --prod --token $VERCEL_TOKEN)
+          url=$(npx vercel deploy .vercel/output --prebuilt --prod --token $VERCEL_TOKEN)
           echo "url=$url" >> $GITHUB_OUTPUT
 
       - name: Install jq
@@ -84,15 +84,15 @@ jobs:
       - run: pnpm install --frozen-lockfile
 
       - name: Vercel Pull
-        run: npx vercel pull apps/admin --yes --environment=production --token $VERCEL_TOKEN
+        run: npx vercel pull --yes --environment=production --token $VERCEL_TOKEN
 
       - name: Vercel Build
-        run: npx vercel build apps/admin --prod --token $VERCEL_TOKEN
+        run: npx vercel build --prod --token $VERCEL_TOKEN
 
       - name: Vercel Deploy
         id: deploy
         run: |
-          url=$(npx vercel deploy apps/admin/.vercel/output --prebuilt --prod --token $VERCEL_TOKEN)
+          url=$(npx vercel deploy .vercel/output --prebuilt --prod --token $VERCEL_TOKEN)
           echo "url=$url" >> $GITHUB_OUTPUT
 
       - name: Install jq
