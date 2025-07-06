@@ -1,5 +1,6 @@
+import { useQuery } from "@tanstack/react-query";
 import { CheckIcon, InfoIcon } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { LargeTab } from "@/components/common/tab/LargeTab";
 import { RadioGroup } from "@/components/common/tab/radio/RadioGroup";
@@ -13,6 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { projectQueries } from "@/queries/project";
 
 const DEV_DUMMY_DATA = {
   name: "test",
@@ -45,15 +47,37 @@ export interface FormData {
   gauge_tab: GaugeTabType;
 }
 
+const useGetInitialProjectName = (templateName: string) => {
+  const { data: myProjectList } = useQuery({
+    ...projectQueries.myProjectList(),
+  });
+
+  const getInitialName = () => {
+    if (!myProjectList) {
+      return null;
+    }
+    return `${templateName}-${myProjectList?.length + 1}`;
+  };
+
+  return getInitialName() ?? "";
+};
+
 export default function Step1({
   onNext,
+  templateName,
 }: {
   onNext: (data: FormData) => void;
+  templateName: string;
 }) {
-  const [data, setData] = useState<Partial<FormData>>(
-    INITIAL_DATA
-    // process.env.NODE_ENV === "development" ? DEV_DUMMY_DATA : INITIAL_DATA
-  );
+  const initialProjectName = useGetInitialProjectName(templateName);
+
+  const [data, setData] = useState<Partial<FormData>>({
+    ...INITIAL_DATA,
+  });
+
+  useEffect(() => {
+    setData({ ...data, name: initialProjectName });
+  }, [initialProjectName]);
 
   const isButtonDisabled = Object.values(data).some((value) => !value);
 
@@ -69,6 +93,18 @@ export default function Step1({
     }
   };
 
+  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+
+    // - 글자수 : 최소 3자~최대 20자 이내
+    // - 영문/한글/숫자 조합 가능, 특수문자 불가
+    // - 디폴트값 : title1 (번호는 사용자가 생성한 프로젝트 수 조회해서 입력되도록 함
+    // if (value.length > 10) {
+    //   return;
+    // }
+    handleChange("name", value);
+  };
+
   return (
     <div className="">
       <div className="flex flex-col gap-8 mt-6">
@@ -77,7 +113,7 @@ export default function Step1({
           <Input
             type="text"
             value={data.name}
-            onChange={(e) => handleChange("name", e.target.value)}
+            onChange={(e) => handleNameChange(e)}
           />
         </div>
         <div className="flex flex-col gap-[6px]">

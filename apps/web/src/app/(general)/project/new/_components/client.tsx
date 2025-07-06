@@ -15,8 +15,10 @@ import { createProject } from "@/services/project";
 
 export default function NewProjectClient({
   templateId,
+  templateName,
 }: {
   templateId: string;
+  templateName: string;
 }) {
   const queryClient = useQueryClient();
   const router = useRouter();
@@ -60,7 +62,7 @@ export default function NewProjectClient({
   return (
     <>
       {step === 1 && (
-        <div className=" space-y-2 w-[450px]">
+        <div className="space-y-2 w-[450px]">
           <Guide
             title="측정 가이드"
             list={[
@@ -73,6 +75,7 @@ export default function NewProjectClient({
           </h3>
           <ProgressDot current={1} total={2} />
           <Step1
+            templateName={templateName}
             onNext={(data) => {
               formData.current = data;
               setStep(2);

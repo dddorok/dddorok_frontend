@@ -29,7 +29,10 @@ export default async function NewProjectPage({
             <h2 className="text-neutral-N900 text-h3-m font-medium">{name}</h2>
           </div>
           <Suspense>
-            <NewProjectClient templateId={templateId} />
+            <NewProjectClient
+              templateId={templateId}
+              templateName={name ?? ""}
+            />
           </Suspense>
         </div>
       </div>
