@@ -4,32 +4,33 @@ on:
   workflow_dispatch:
     inputs:
       target:
-        description: '배포할 앱 선택'
+        description: "배포할 앱 선택"
         required: true
-        default: 'all'
+        default: "all"
         type: choice
         options: [all, web, admin]
 
 jobs:
-  # ──────────────────────────── WEB ────────────────────────────
   deploy-web:
     if: github.event.inputs.target == 'all' || github.event.inputs.target == 'web'
     runs-on: ubuntu-latest
     concurrency: web-prod
     env:
-      VERCEL_TOKEN:      ${{ secrets.VERCEL_TOKEN }}
-      VERCEL_ORG_ID:     ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
       VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_WEB }}
-      PROD_ALIAS:        "web.dddorok.vercel.app"
-      HEALTH_PATH:       "/health"
+      PROD_ALIAS: "web.dddorok.vercel.app"
+      HEALTH_PATH: "/health"
+
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: (Optional) Install deps for lint/type-check
-        run: pnpm install --frozen-lockfile
+      - uses: pnpm/action-setup@v3
+        with: { version: 10 }
 
-      - name: Vercel Deploy (Web – server‐side build)
+      - run: pnpm install --frozen-lockfile
+
+      - name: Vercel Deploy (Web – server-side build)
         id: deploy-web
         run: |
           echo "▶ Deploying apps/web via Vercel server-side build"
@@ -63,23 +64,24 @@ jobs:
             echo "✅ Health-check OK"
           fi
 
-  # ────────────────────────── ADMIN ────────────────────────────
   deploy-admin:
     if: github.event.inputs.target == 'all' || github.event.inputs.target == 'admin'
     runs-on: ubuntu-latest
     concurrency: admin-prod
     env:
-      VERCEL_TOKEN:      ${{ secrets.VERCEL_TOKEN }}
-      VERCEL_ORG_ID:     ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
       VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_ADMIN }}
-      PROD_ALIAS:        "admin.dddorok.vercel.app"
-      HEALTH_PATH:       "/health"
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      PROD_ALIAS: "admin.dddorok.vercel.app"
+      HEALTH_PATH: "/health"
 
-      - name: (Optional) Install deps for lint/type-check
-        run: pnpm install --frozen-lockfile
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v3
+        with: { version: 10 }
+
+      - run: pnpm install --frozen-lockfile
 
       - name: Vercel Deploy (Admin – server‐side build)
         id: deploy-admin
@@ -99,7 +101,6 @@ jobs:
       - name: Smoke test & auto-rollback (Admin)
         run: |
           target="${{ steps.deploy-admin.outputs.url }}$HEALTH_PATH"
-          echo "Health-check → $target"
           code=$(curl -s -o /dev/null -w "%{http_code}" "$target")
           if [ "$code" != "200" ]; then
             echo "❌ Health-check failed ($code) → rolling back"
