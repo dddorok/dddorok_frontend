@@ -81,3 +81,21 @@ export const getChart = async (id: string) => {
     .json<GetChartResponse>();
   return response;
 };
+
+interface UpdateProjectRequest {
+  name: string;
+  template_id: string;
+  gauge_ko: number;
+  gauge_dan: number;
+  is_temporary: boolean;
+}
+
+export const updateProject = async (
+  project_id: string,
+  request: Partial<UpdateProjectRequest>
+) => {
+  const response = await privateInstance
+    .patch(`project/${project_id}`, { json: request })
+    .json();
+  return response;
+};
