@@ -47,13 +47,13 @@ export default function NewProjectClient({
         })),
         is_temporary: formData.current.gauge_tab === "gauge_after",
       });
-      queryClient.invalidateQueries({
+      await queryClient.invalidateQueries({
         queryKey: [projectQueryKey],
       });
 
       toast.success("프로젝트 생성 완료");
 
-      router.push(ROUTE.MYPAGE.PROJECT());
+      await router.push(ROUTE.MYPAGE.PROJECT());
     } catch (error) {
       console.log(error);
     }

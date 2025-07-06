@@ -12,6 +12,8 @@ import { projectQueries } from "@/queries/project";
 export default function MyPage() {
   const { data: myProjectList } = useQuery({
     ...projectQueries.myProjectList(),
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
   });
 
   return (

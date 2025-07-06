@@ -33,8 +33,8 @@ const INITIAL_DATA = {
 } as const;
 
 const COMMON_GAUGE_DATA = {
-  gauge_ko: 28,
-  gauge_dan: 20,
+  gauge_ko: 20,
+  gauge_dan: 28,
 } as const;
 
 type GaugeTabType = "gauge_manual" | "gauge_after";
