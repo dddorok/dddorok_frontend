@@ -11,51 +11,57 @@ on:
         options: [all, web, admin]
 
 jobs:
-  # ─────────────────────── WEB ───────────────────────
   deploy-web:
-    if: github.event.inputs.target == 'all' || github.event.inputs.target == 'web'
+    if: ${{ github.event.inputs.target == 'all' || github.event.inputs.target == 'web' }}
     runs-on: ubuntu-latest
     concurrency: web-prod
     env:
-      GITHUB_ROOT: ${{ github.workspace }}
-      APP_DIR:    ${{ github.workspace }}/apps/web
+      GITHUB_ROOT:       ${{ github.workspace }}
+      APP_DIR:           ${{ github.workspace }}/apps/web
       VERCEL_TOKEN:      ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_SCOPE:      ${{ secrets.VERCEL_ORG_ID }}
       VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_WEB }}
       PROD_ALIAS:        "web.dddorok.vercel.app"
       HEALTH_PATH:       "/health"
+
     steps:
-      - name: Checkout
+      - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup pnpm
+      - name: Setup pnpm@9
         uses: pnpm/action-setup@v3
         with:
           version: 9
 
-      - name: Install dependencies
+      - name: Install dependencies (monorepo root)
         run: |
           echo "PWD: $(pwd)"
           echo "Installing at $GITHUB_ROOT"
           pnpm install --frozen-lockfile
         working-directory: ${{ github.workspace }}
 
-      - name: Debug verify app dir exists
+      - name: Debug: verify app dir
         run: |
           echo "PWD: $(pwd)"
-          echo "Expecting app at $APP_DIR"
+          echo "Expecting application at $APP_DIR"
           ls -al "$APP_DIR" || true
+
+      - name: Clean up old .vercel
+        run: |
+          echo "Removing stale $APP_DIR/.vercel if any"
+          rm -rf "$APP_DIR/.vercel"
 
       - name: Vercel Pull
         run: |
           echo "PWD: $(pwd)"
           echo "Running: npx vercel pull $APP_DIR"
           npx vercel pull "$APP_DIR" \
-            --org "$VERCEL_ORG_ID" \
+            --scope "$VERCEL_SCOPE" \
             --project "$VERCEL_PROJECT_ID" \
             --yes \
-            --environment=production \
+            --environment production \
             --token "$VERCEL_TOKEN"
-          echo "Pulled .vercel into $APP_DIR/.vercel"
+          echo "Pulled into $APP_DIR/.vercel:"
           ls -al "$APP_DIR/.vercel" || true
 
       - name: Vercel Build (prebuilt)
@@ -63,11 +69,11 @@ jobs:
           echo "PWD: $(pwd)"
           echo "Running: npx vercel build $APP_DIR"
           npx vercel build "$APP_DIR" \
-          --org "$VERCEL_ORG_ID" \
-          --project "$VERCEL_PROJECT_ID" \
-          --prod \
-          --token "$VERCEL_TOKEN"
-          echo "Built to $APP_DIR/.vercel/output"
+            --scope "$VERCEL_SCOPE" \
+            --project "$VERCEL_PROJECT_ID" \
+            --prod \
+            --token "$VERCEL_TOKEN"
+          echo "Build output at $APP_DIR/.vercel/output:"
           ls -al "$APP_DIR/.vercel/output" || true
 
       - name: Vercel Deploy (prebuilt)
@@ -76,19 +82,20 @@ jobs:
           echo "PWD: $(pwd)"
           echo "Running: npx vercel deploy $APP_DIR/.vercel/output"
           npx vercel deploy "$APP_DIR/.vercel/output" \
-            --org "$VERCEL_ORG_ID" \
+            --scope "$VERCEL_SCOPE" \
             --project "$VERCEL_PROJECT_ID" \
             --prebuilt \
             --prod \
-            --token "$VERCEL_TOKEN"
-        # GitHub Actions will capture "url=" if needed
+            --token "$VERCEL_TOKEN" \
+            --yes
+          # CLI가 출력하는 URL을 캡처하려면 echo "url=$DEPLOY_URL" >> $GITHUB_OUTPUT 구문 추가
 
-      - name: Install jq
+      - name: Install jq for rollback
         run: |
           echo "PWD: $(pwd)"
           sudo apt-get update && sudo apt-get install -y jq
 
-      - name: Smoke test & auto-rollback
+      - name: Smoke test & auto-rollback (Web)
         run: |
           echo "PWD: $(pwd)"
           DEPLOY_URL="${{ steps.deploy-web.outputs.url }}$HEALTH_PATH"
@@ -108,57 +115,69 @@ jobs:
             echo "✅ Health-check OK"
           fi
 
-  # ────────────────────── ADMIN ──────────────────────
   deploy-admin:
-    if: github.event.inputs.target == 'all' || github.event.inputs.target == 'admin'
+    if: ${{ github.event.inputs.target == 'all' || github.event.inputs.target == 'admin' }}
     runs-on: ubuntu-latest
     concurrency: admin-prod
     env:
-      GITHUB_ROOT:        ${{ github.workspace }}
-      APP_DIR:            ${{ github.workspace }}/apps/admin
-      VERCEL_TOKEN:       ${{ secrets.VERCEL_TOKEN }}
-      VERCEL_PROJECT_ID:  ${{ secrets.VERCEL_PROJECT_ID_ADMIN }}
-      PROD_ALIAS:         "admin.dddorok.vercel.app"
-      HEALTH_PATH:        "/health"
+      GITHUB_ROOT:       ${{ github.workspace }}
+      APP_DIR:           ${{ github.workspace }}/apps/admin
+      VERCEL_TOKEN:      ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_SCOPE:      ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_ADMIN }}
+      PROD_ALIAS:        "admin.dddorok.vercel.app"
+      HEALTH_PATH:       "/health"
+
     steps:
-      - name: Checkout
+      - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup pnpm
+      - name: Setup pnpm@9
         uses: pnpm/action-setup@v3
         with:
           version: 9
 
-      - name: Install dependencies
+      - name: Install dependencies (monorepo root)
         run: |
           echo "PWD: $(pwd)"
           echo "Installing at $GITHUB_ROOT"
           pnpm install --frozen-lockfile
         working-directory: ${{ github.workspace }}
 
-      - name: Debug verify app dir exists
+      - name: Debug: verify app dir
         run: |
           echo "PWD: $(pwd)"
-          echo "Expecting app at $APP_DIR"
+          echo "Expecting application at $APP_DIR"
           ls -al "$APP_DIR" || true
+
+      - name: Clean up old .vercel
+        run: |
+          echo "Removing stale $APP_DIR/.vercel if any"
+          rm -rf "$APP_DIR/.vercel"
 
       - name: Vercel Pull
         run: |
           echo "PWD: $(pwd)"
           echo "Running: npx vercel pull $APP_DIR"
           npx vercel pull "$APP_DIR" \
+            --scope "$VERCEL_SCOPE" \
+            --project "$VERCEL_PROJECT_ID" \
             --yes \
-            --environment=production \
+            --environment production \
             --token "$VERCEL_TOKEN"
-          echo "Pulled .vercel into $APP_DIR/.vercel"
+          echo "Pulled into $APP_DIR/.vercel:"
           ls -al "$APP_DIR/.vercel" || true
 
       - name: Vercel Build (prebuilt)
         run: |
           echo "PWD: $(pwd)"
           echo "Running: npx vercel build $APP_DIR"
-          npx vercel build "$APP_DIR" --prod --token "$VERCEL_TOKEN"
-          echo "Built to $APP_DIR/.vercel/output"
+          npx vercel build "$APP_DIR" \
+            --scope "$VERCEL_SCOPE" \
+            --project "$VERCEL_PROJECT_ID" \
+            --prod \
+            --token "$VERCEL_TOKEN"
+          echo "Build output at $APP_DIR/.vercel/output:"
           ls -al "$APP_DIR/.vercel/output" || true
 
       - name: Vercel Deploy (prebuilt)
@@ -167,16 +186,19 @@ jobs:
           echo "PWD: $(pwd)"
           echo "Running: npx vercel deploy $APP_DIR/.vercel/output"
           npx vercel deploy "$APP_DIR/.vercel/output" \
+            --scope "$VERCEL_SCOPE" \
+            --project "$VERCEL_PROJECT_ID" \
             --prebuilt \
             --prod \
-            --token "$VERCEL_TOKEN"
+            --token "$VERCEL_TOKEN" \
+            --yes
 
-      - name: Install jq
+      - name: Install jq for rollback
         run: |
           echo "PWD: $(pwd)"
           sudo apt-get update && sudo apt-get install -y jq
 
-      - name: Smoke test & auto-rollback
+      - name: Smoke test & auto-rollback (Admin)
         run: |
           echo "PWD: $(pwd)"
           DEPLOY_URL="${{ steps.deploy-admin.outputs.url }}$HEALTH_PATH"
