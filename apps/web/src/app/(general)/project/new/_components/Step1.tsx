@@ -129,14 +129,11 @@ export default function Step1({
               />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="85">80-85 cm</SelectItem>
-              <SelectItem value="90">85-90 cm</SelectItem>
-              <SelectItem value="95">90-95 cm</SelectItem>
-              <SelectItem value="100">95-100 cm</SelectItem>
-              <SelectItem value="105">100-105 cm</SelectItem>
-              <SelectItem value="110">105-110 cm</SelectItem>
-              <SelectItem value="115">110-115 cm</SelectItem>
-              <SelectItem value="120">115-120 cm</SelectItem>
+              {CHEST_WIDTH_OPTIONS.map((option) => (
+                <SelectItem key={option.value} value={option.value.toString()}>
+                  {option.label}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
@@ -222,3 +219,22 @@ export default function Step1({
     </div>
   );
 }
+
+const CHEST_WIDTH_OPTIONS = [
+  { value: 50, label: "50-53 cm" },
+  { value: 54, label: "54-57 cm" },
+  { value: 58, label: "58-61 cm" },
+  { value: 62, label: "62-65 cm" },
+  { value: 66, label: "66-69 cm" },
+  { value: 70, label: "70-73 cm" },
+  { value: 74, label: "74-79 cm" },
+  { value: 80, label: "80-84 cm" },
+  { value: 85, label: "85-89 cm" },
+  { value: 90, label: "90-94 cm" },
+  { value: 95, label: "95-99 cm" },
+  { value: 100, label: "100-104 cm" },
+  { value: 105, label: "105-109 cm" },
+  { value: 110, label: "110-114 cm" },
+  { value: 115, label: "115-119 cm" },
+  { value: 120, label: "120-124 cm" },
+];
