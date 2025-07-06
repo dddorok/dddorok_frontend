@@ -11,7 +11,6 @@ on:
         options: [all, web, admin]
 
 jobs:
-  # ──────────────────────────── WEB ────────────────────────────
   deploy-web:
     if: github.event.inputs.target == 'all' || github.event.inputs.target == 'web'
     runs-on: ubuntu-latest
@@ -27,41 +26,41 @@ jobs:
       - uses: actions/checkout@v4
 
       - uses: pnpm/action-setup@v3
-        with:
-          version: 10
+        with: { version: 10 }
 
       - run: pnpm install --frozen-lockfile
 
-      # (선택) 혹시 남아있는 .vercel 지우기
       - name: Clean up old .vercel for Web
         run: rm -rf apps/web/.vercel
 
       - name: Vercel Pull (Web)
         run: |
-          npx vercel pull apps/web \
+          npx vercel pull \
+            --cwd apps/web \
             --yes \
             --environment=production \
             --token $VERCEL_TOKEN
-        # → apps/web/.vercel 생성
 
       - name: Vercel Build (Web)
         run: |
-          npx vercel build apps/web \
+          npx vercel build \
+            --cwd apps/web \
             --prod \
             --token $VERCEL_TOKEN
-        # → apps/web/.vercel/output 생성
 
       - name: DEBUG – where is Web output?
         run: |
-          echo "📂 apps/web/.vercel 폴더:"
+          echo "📂 apps/web/.vercel:"
           ls -al apps/web/.vercel || true
-          echo "📂 apps/web/.vercel/output 폴더:"
+          echo "📂 apps/web/.vercel/output:"
           ls -al apps/web/.vercel/output || true
 
       - name: Vercel Deploy (Web)
         id: deploy-web
         run: |
-          url=$(npx vercel deploy apps/web/.vercel/output \
+          url=$(npx vercel deploy \
+            --cwd apps/web \
+            apps/web/.vercel/output \
             --prebuilt \
             --prod \
             --token $VERCEL_TOKEN)
@@ -89,7 +88,6 @@ jobs:
             echo "✅ Health-check OK"
           fi
 
-  # ────────────────────────── ADMIN ────────────────────────────
   deploy-admin:
     if: github.event.inputs.target == 'all' || github.event.inputs.target == 'admin'
     runs-on: ubuntu-latest
@@ -105,8 +103,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - uses: pnpm/action-setup@v3
-        with:
-          version: 10
+        with: { version: 10 }
 
       - run: pnpm install --frozen-lockfile
 
@@ -115,30 +112,32 @@ jobs:
 
       - name: Vercel Pull (Admin)
         run: |
-          npx vercel pull apps/admin \
+          npx vercel pull \
+            --cwd apps/admin \
             --yes \
             --environment=production \
             --token $VERCEL_TOKEN
-        # → apps/admin/.vercel 생성
 
       - name: Vercel Build (Admin)
         run: |
-          npx vercel build apps/admin \
+          npx vercel build \
+            --cwd apps/admin \
             --prod \
             --token $VERCEL_TOKEN
-        # → apps/admin/.vercel/output 생성
 
       - name: DEBUG – where is Admin output?
         run: |
-          echo "📂 apps/admin/.vercel 폴더:"
+          echo "📂 apps/admin/.vercel:"
           ls -al apps/admin/.vercel || true
-          echo "📂 apps/admin/.vercel/output 폴더:"
+          echo "📂 apps/admin/.vercel/output:"
           ls -al apps/admin/.vercel/output || true
 
       - name: Vercel Deploy (Admin)
         id: deploy-admin
         run: |
-          url=$(npx vercel deploy apps/admin/.vercel/output \
+          url=$(npx vercel deploy \
+            --cwd apps/admin \
+            apps/admin/.vercel/output \
             --prebuilt \
             --prod \
             --token $VERCEL_TOKEN)
@@ -150,7 +149,6 @@ jobs:
       - name: Smoke test & auto-rollback (Admin)
         run: |
           target="${{ steps.deploy-admin.outputs.url }}$HEALTH_PATH"
-          echo "Health-check → $target"
           code=$(curl -s -o /dev/null -w "%{http_code}" "$target")
           if [ "$code" != "200" ]; then
             echo "❌ Health-check failed ($code) → rolling back"
