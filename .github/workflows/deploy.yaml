@@ -73,7 +73,8 @@ jobs:
             --prebuilt \
             --prod \
             --yes \
-            --token="$VERCEL_TOKEN"
+            --token="$VERCEL_TOKEN" \
+            ".vercel/output"
 
       - name: Install jq for rollback
         run: sudo apt-get update && sudo apt-get install -y jq
@@ -149,7 +150,8 @@ jobs:
             --prebuilt \
             --prod \
             --yes \
-            --token="$VERCEL_TOKEN"
+            --token="$VERCEL_TOKEN" \
+            ".vercel/output" \
 
       - name: Install jq for rollback
         run: sudo apt-get update && sudo apt-get install -y jq
