@@ -4,9 +4,9 @@ on:
   workflow_dispatch:
     inputs:
       target:
-        description: '배포할 앱 선택'
+        description: "배포할 앱 선택"
         required: true
-        default: 'all'
+        default: "all"
         type: choice
         options: [all, web, admin]
 
@@ -16,11 +16,11 @@ jobs:
     runs-on: ubuntu-latest
     concurrency: web-prod
     env:
-      VERCEL_TOKEN:      ${{ secrets.VERCEL_TOKEN }}
-      VERCEL_ORG_ID:     ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
       VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_WEB }}
-      PROD_ALIAS:        "web.dddorok.vercel.app"
-      HEALTH_PATH:       "/health"
+      PROD_ALIAS: "web.dddorok.vercel.app"
+      HEALTH_PATH: "/health"
 
     steps:
       - uses: actions/checkout@v4
@@ -48,22 +48,28 @@ jobs:
             --prod \
             --token $VERCEL_TOKEN
 
-      - name: DEBUG – where is Web output?
+      - name: DEBUG - where is Web output?
         run: |
-          echo "📂 apps/web/.vercel:"
-          ls -al apps/web/.vercel || true
-          echo "📂 apps/web/.vercel/output:"
-          ls -al apps/web/.vercel/output || true
+          BASE="$GITHUB_WORKSPACE/apps/web/.vercel"
+          echo "📂 $BASE:"
+          ls -al "$BASE" || true
+
+          OUT="$BASE/output"
+          echo "📂 $OUT:"
+          ls -al "$OUT" || true
 
       - name: Vercel Deploy (Web)
         id: deploy-web
         run: |
-          url=$(npx vercel deploy \
-            --cwd apps/web \
-            .vercel/output \
-            --prebuilt \
-            --prod \
-            --token $VERCEL_TOKEN)
+          OUTPUT_DIR="$GITHUB_WORKSPACE/apps/web/.vercel/output"
+          echo "Deploying from $OUTPUT_DIR"
+
+          url=$(
+            npx vercel deploy "$OUTPUT_DIR" \
+              --prebuilt \
+              --prod \
+              --token $VERCEL_TOKEN
+          )
           echo "url=$url" >> $GITHUB_OUTPUT
 
       - name: Install jq
@@ -93,11 +99,11 @@ jobs:
     runs-on: ubuntu-latest
     concurrency: admin-prod
     env:
-      VERCEL_TOKEN:      ${{ secrets.VERCEL_TOKEN }}
-      VERCEL_ORG_ID:     ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
       VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_ADMIN }}
-      PROD_ALIAS:        "admin.dddorok.vercel.app"
-      HEALTH_PATH:       "/health"
+      PROD_ALIAS: "admin.dddorok.vercel.app"
+      HEALTH_PATH: "/health"
 
     steps:
       - uses: actions/checkout@v4
