@@ -138,7 +138,7 @@ function Guide(props: {
         <button
           key={item.title}
           onClick={item.onClick}
-          className="text-neutral-N900 text-medium font-medium text-left"
+          className="text-neutral-N900 text-list font-medium text-left"
         >
           👉🏼 {item.title}
         </button>

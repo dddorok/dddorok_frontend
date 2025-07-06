@@ -19,17 +19,25 @@ const SelectTrigger = React.forwardRef<
   <SelectPrimitive.Trigger
     ref={ref}
     className={cn(
+      "group/select-trigger",
       "flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm",
-      "data-[placeholder]:text-neutral-N400 focus:outline-none ",
+      "data-[placeholder]:text-neutral-N400 focus:outline-none",
       "disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1",
       "border-neutral-N300 border rounded-md bg-neutral-N0",
+      "data-[state=open]:border-primary-PR",
       className
     )}
     {...props}
   >
     {children}
     <SelectPrimitive.Icon asChild>
-      <ChevronDown className="h-6 w-6 text-primary-PR" />
+      <ChevronDown
+        className={cn(
+          "h-6 w-6 text-primary-PR",
+          "transition-transform duration-200",
+          "group-data-[state=open]/select-trigger:rotate-180"
+        )}
+      />
     </SelectPrimitive.Icon>
   </SelectPrimitive.Trigger>
 ));
@@ -90,7 +98,6 @@ const SelectContent = React.forwardRef<
       <SelectScrollUpButton />
       <SelectPrimitive.Viewport
         className={cn(
-          "p-1",
           position === "popper" &&
             "h-[var(--radix-select-trigger-height)] w-full min-w-[var(--radix-select-trigger-width)]"
         )}
@@ -122,7 +129,8 @@ const SelectItem = React.forwardRef<
   <SelectPrimitive.Item
     ref={ref}
     className={cn(
-      "relative flex w-full cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+      "relative flex w-full cursor-default select-none items-center py-1.5 pl-8 pr-2 text-sm outline-none focus:bg-accent focus:text-neutral-200 data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+      "border-b border-neutral-N200 last:border-b-0",
       className
     )}
     {...props}

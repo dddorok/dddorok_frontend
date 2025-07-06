@@ -126,4 +126,10 @@ export const fontSize: Record<
       fontWeight: "400",
     },
   ],
+  list: [
+    "16px",
+    {
+      lineHeight: "1.5em",
+    },
+  ],
 };
