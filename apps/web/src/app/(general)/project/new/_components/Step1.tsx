@@ -1,7 +1,8 @@
-import { CheckIcon } from "lucide-react";
+import { CheckIcon, InfoIcon } from "lucide-react";
 import { useState } from "react";
 
 import { LargeTab } from "@/components/common/tab/LargeTab";
+import { RadioGroup } from "@/components/common/tab/radio/RadioGroup";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -61,7 +62,7 @@ export default function Step1({
 
   const handleGaugeTabChange = (tab: GaugeTabType) => {
     if (tab === "gauge_manual") {
-      setData({ ...data, gauge_ko: undefined, gauge_dan: undefined });
+      setData({ ...data, gauge_tab: tab });
     } else {
       setData({ ...data, gauge_tab: tab, ...COMMON_GAUGE_DATA });
     }
@@ -101,110 +102,72 @@ export default function Step1({
         </div>
         <div className="flex flex-col gap-3">
           <Label required>게이지(10cm x 10cm 기준)</Label>
-          <LargeTab<GaugeTabType>
-            tabs={[
+          <RadioGroup
+            options={[
               {
                 id: "gauge_manual",
-                label: (
-                  <>
-                    <CheckIcon className="w-[14px] h-[14px]" />
-                    직접 입력하기
-                  </>
-                ),
+                label: "게이지 직접 입력",
                 content: (
-                  <>
-                    <div className="grid grid-cols-2 gap-6">
-                      <div className="flex gap-2 items-center">
-                        <Input
-                          type="text"
-                          placeholder="예) 20"
-                          value={data.gauge_ko}
-                          onChange={(e) =>
-                            handleChange("gauge_ko", e.target.value)
-                          }
-                        />
-                        <Label className="mb-0">코</Label>
-                      </div>
-                      <div className="flex gap-2 items-center">
-                        <Input
-                          type="text"
-                          placeholder="예) 28"
-                          value={data.gauge_dan}
-                          onChange={(e) =>
-                            handleChange("gauge_dan", e.target.value)
-                          }
-                        />
-                        <Label className="mb-0">단</Label>
-                      </div>
+                  <div className="grid grid-cols-2 gap-6 mt-2">
+                    <div className="flex gap-2 items-center">
+                      <Input
+                        type="text"
+                        placeholder="예) 20"
+                        value={data.gauge_ko}
+                        onChange={(e) =>
+                          handleChange("gauge_ko", e.target.value)
+                        }
+                        disabled={data.gauge_tab !== "gauge_manual"}
+                      />
+                      <Label className="mb-0">코</Label>
                     </div>
-                    <div className="px-1 py-2 bg-neutral-N100 rounded-sm mt-3 grid grid-cols-[12px_1fr] gap-2">
-                      <div className="text-xsmall">✔️</div>
-                      <div className="text-xsmall text-neutral-N500">
-                        일반적인 손뜨개 게이지 (10x10cm 기준)
-                        <br />
-                        <ul>
-                          <li>기본 실(4ply): 22~24코 × 30~34단</li>
-                          <li>굵은 실(Chunky): 14~16코 × 20~24단</li>
-                          <li>얇은 실(Fingering): 28~32코 × 36~40단</li>
-                        </ul>
-                      </div>
+                    <div className="flex gap-2 items-center">
+                      <Input
+                        type="text"
+                        placeholder="예) 28"
+                        value={data.gauge_dan}
+                        onChange={(e) =>
+                          handleChange("gauge_dan", e.target.value)
+                        }
+                        disabled={data.gauge_tab !== "gauge_manual"}
+                      />
+                      <Label className="mb-0">단</Label>
                     </div>
-                  </>
+                  </div>
                 ),
               },
               {
                 id: "gauge_after",
-                label: (
-                  <>
-                    <CheckIcon className="w-[14px] h-[14px]" />
-                    나중에 등록하기
-                  </>
-                ),
+                label: "게이지 임의 입력",
                 content: (
-                  <>
-                    <div className="grid grid-cols-2 gap-6">
-                      <div className="flex gap-2 items-center">
-                        <Input
-                          type="text"
-                          placeholder="예) 20"
-                          value={data.gauge_ko}
-                          onChange={(e) =>
-                            handleChange("gauge_ko", e.target.value)
-                          }
-                        />
-                        <Label className="mb-0">코</Label>
-                      </div>
-                      <div className="flex gap-2 items-center">
-                        <Input
-                          type="text"
-                          placeholder="예) 28"
-                          value={data.gauge_dan}
-                          onChange={(e) =>
-                            handleChange("gauge_dan", e.target.value)
-                          }
-                        />
-                        <Label className="mb-0">단</Label>
-                      </div>
+                  <div className="rounded-sm mt-3 hidden grid-cols-[12px_1fr]  gap-2 group-data-[selected=true]/option:grid ">
+                    <InfoIcon className="w-[12px] h-[12px] text-neutral-N400" />
+                    <div className="text-xsmall text-neutral-N500">
+                      게이지를 아직 측정하지 않으셨나요?
+                      <br />
+                      임의 게이지로 먼저 시작해보세요.
                     </div>
-                    <div className="px-1 py-2 bg-neutral-N100 rounded-sm mt-3 grid grid-cols-[12px_1fr] gap-2">
-                      <div className="text-xsmall">✔️</div>
-                      <div className="text-xsmall text-neutral-N500">
-                        일반적인 손뜨개 게이지 (10x10cm 기준)
-                        <br />
-                        <ul>
-                          <li>기본 실(4ply): 22~24코 × 30~34단</li>
-                          <li>굵은 실(Chunky): 14~16코 × 20~24단</li>
-                          <li>얇은 실(Fingering): 28~32코 × 36~40단</li>
-                        </ul>
-                      </div>
-                    </div>
-                  </>
+                  </div>
                 ),
               },
             ]}
-            defaultTabId="gauge_manual"
-            onTabChange={(tab) => handleGaugeTabChange(tab as GaugeTabType)}
+            value={data.gauge_tab}
+            onChange={(value) => handleGaugeTabChange(value as GaugeTabType)}
           />
+          {data.gauge_tab === "gauge_manual" && (
+            <div className="px-1 py-2 bg-neutral-N100 rounded-sm mt-3 grid grid-cols-[12px_1fr] gap-2">
+              <div className="text-xsmall">✔️</div>
+              <div className="text-xsmall text-neutral-N500">
+                일반적인 손뜨개 게이지 (10x10cm 기준)
+                <br />
+                <ul>
+                  <li>기본 실(4ply): 22~24코 × 30~34단</li>
+                  <li>굵은 실(Chunky): 14~16코 × 20~24단</li>
+                  <li>얇은 실(Fingering): 28~32코 × 36~40단</li>
+                </ul>
+              </div>
+            </div>
+          )}
         </div>
         <Button
           className="w-full"
