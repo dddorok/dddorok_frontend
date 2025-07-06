@@ -43,6 +43,7 @@ export interface GetProjectResponse {
   id: string;
   name: string;
   created_date: string;
+  is_temporary: boolean;
   chart_list: {
     chart_id: string;
     name: string;
@@ -78,5 +79,23 @@ export const getChart = async (id: string) => {
   const response = await privateInstance
     .get(`project/chart/${id}`)
     .json<GetChartResponse>();
+  return response;
+};
+
+interface UpdateProjectRequest {
+  name: string;
+  template_id: string;
+  gauge_ko: number;
+  gauge_dan: number;
+  is_temporary: boolean;
+}
+
+export const updateProject = async (
+  project_id: string,
+  request: Partial<UpdateProjectRequest>
+) => {
+  const response = await privateInstance
+    .patch(`project/${project_id}`, { json: request })
+    .json();
   return response;
 };
