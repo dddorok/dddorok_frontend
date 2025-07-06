@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     concurrency: web-prod
     env:
-      GITHUB_ROOT:       ${{ github.workspace }}
+      # 절대경로 변수
       APP_DIR:           ${{ github.workspace }}/apps/web
       VERCEL_TOKEN:      ${{ secrets.VERCEL_TOKEN }}
       VERCEL_ORG_ID:     ${{ secrets.VERCEL_ORG_ID }}
@@ -33,78 +33,68 @@ jobs:
         with:
           version: 9
 
-      - name: Install dependencies (monorepo root)
+      - name: Install deps at root
         run: |
           echo "PWD: $(pwd)"
-          echo "Installing at $GITHUB_ROOT"
           pnpm install --frozen-lockfile
 
-      - name: Debug verify app dir
+      - name: Debug verify APP_DIR
         run: |
-          echo "PWD: $(pwd)"
-          echo "Expecting application at $APP_DIR"
-          ls -al "$APP_DIR" || true
+          echo "APP_DIR = $APP_DIR"
+          ls -al "$APP_DIR"
 
-      - name: Clean up old .vercel
+      - name: Vercel Pull (settings)
         run: |
-          echo "Removing stale $APP_DIR/.vercel if any"
-          rm -rf "$APP_DIR/.vercel"
-
-      - name: Vercel Pull
-        run: |
-          echo "PWD: $(pwd)"
-          echo "Running: npx vercel pull $APP_DIR"
-          npx vercel pull "$APP_DIR" \
+          echo "→ pull settings with --cwd $APP_DIR"
+          npx vercel pull \
+            --cwd "$APP_DIR" \
             --yes \
-            --environment production \
-            --token "$VERCEL_TOKEN"
-          echo "Pulled into $APP_DIR/.vercel:"
-          ls -al "$APP_DIR/.vercel" || true
+            --environment=production \
+            --token="$VERCEL_TOKEN"
+          echo "Pulled into $APP_DIR/.vercel"
+          ls -al "$APP_DIR/.vercel"
 
       - name: Vercel Build (prebuilt)
         run: |
-          echo "PWD: $(pwd)"
-          echo "Running: npx vercel build $APP_DIR"
-          npx vercel build "$APP_DIR" \
+          echo "→ build with --cwd $APP_DIR"
+          npx vercel build \
+            --cwd "$APP_DIR" \
             --prod \
-            --token "$VERCEL_TOKEN"
-          echo "Build output at $APP_DIR/.vercel/output:"
-          ls -al "$APP_DIR/.vercel/output" || true
+            --token="$VERCEL_TOKEN"
+          echo "Output at $APP_DIR/.vercel/output"
+          ls -al "$APP_DIR/.vercel/output"
 
       - name: Vercel Deploy (prebuilt)
         id: deploy-web
         run: |
-          echo "PWD: $(pwd)"
-          echo "Running: npx vercel deploy $APP_DIR/.vercel/output"
-          npx vercel deploy "$APP_DIR/.vercel/output" \
+          echo "→ deploy with --cwd $APP_DIR"
+          npx vercel deploy \
+            --cwd "$APP_DIR" \
             --prebuilt \
             --prod \
-            --token "$VERCEL_TOKEN" \
-            --yes
+            --yes \
+            --token="$VERCEL_TOKEN"
 
       - name: Install jq for rollback
-        run: |
-          echo "PWD: $(pwd)"
-          sudo apt-get update && sudo apt-get install -y jq
+        run: sudo apt-get update && sudo apt-get install -y jq
 
-      - name: Smoke test & auto-rollback (Web)
+      - name: Smoke test & rollback
         run: |
-          echo "PWD: $(pwd)"
-          DEPLOY_URL="${{ steps.deploy-web.outputs.url }}$HEALTH_PATH"
-          echo "Health-check → $DEPLOY_URL"
-          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "$DEPLOY_URL")
-          if [ "$HTTP_CODE" != "200" ]; then
-            echo "❌ Health-check failed ($HTTP_CODE), rolling back"
-            PREV_UID=$(curl -s -H "Authorization: Bearer $VERCEL_TOKEN" \
+          URL="${{ steps.deploy-web.outputs.url }}$HEALTH_PATH"
+          echo "Health-check → $URL"
+          CODE=$(curl -s -o /dev/null -w "%{http_code}" "$URL")
+          if [ "$CODE" != "200" ]; then
+            echo "❌ Health-check failed → rolling back"
+            PREV=$(curl -s -H "Authorization: Bearer $VERCEL_TOKEN" \
               "https://api.vercel.com/v6/deployments?projectId=$VERCEL_PROJECT_ID&limit=2&state=READY" \
               | jq -r '.deployments[1].uid')
-            curl -s -X POST -H "Authorization: Bearer $VERCEL_TOKEN" \
+            curl -X POST -H "Authorization: Bearer $VERCEL_TOKEN" \
               -H "Content-Type: application/json" \
               "https://api.vercel.com/v2/aliases" \
-              -d "{\"deploymentId\":\"$PREV_UID\",\"alias\":\"$PROD_ALIAS\"}"
+              -d "{\"deploymentId\":\"$PREV\",\"alias\":\"$PROD_ALIAS\"}"
             exit 1
           else
-            echo "✅ Health-check OK"
+            echo "✅ OK"
           fi
 
   deploy-admin:
@@ -112,7 +102,6 @@ jobs:
     runs-on: ubuntu-latest
     concurrency: admin-prod
     env:
-      GITHUB_ROOT:       ${{ github.workspace }}
       APP_DIR:           ${{ github.workspace }}/apps/admin
       VERCEL_TOKEN:      ${{ secrets.VERCEL_TOKEN }}
       VERCEL_ORG_ID:     ${{ secrets.VERCEL_ORG_ID }}
@@ -129,76 +118,53 @@ jobs:
         with:
           version: 9
 
-      - name: Install dependencies (monorepo root)
-        run: |
-          echo "PWD: $(pwd)"
-          echo "Installing at $GITHUB_ROOT"
-          pnpm install --frozen-lockfile
+      - name: Install deps at root
+        run: pnpm install --frozen-lockfile
 
-      - name: Debug verify app dir
+      - name: Debug verify APP_DIR
         run: |
-          echo "PWD: $(pwd)"
-          echo "Expecting application at $APP_DIR"
-          ls -al "$APP_DIR" || true
+          echo "APP_DIR = $APP_DIR"
+          ls -al "$APP_DIR"
 
-      - name: Clean up old .vercel
+      - name: Vercel Pull (settings)
         run: |
-          echo "Removing stale $APP_DIR/.vercel if any"
-          rm -rf "$APP_DIR/.vercel"
-
-      - name: Vercel Pull
-        run: |
-          echo "PWD: $(pwd)"
-          echo "Running: npx vercel pull $APP_DIR"
-          npx vercel pull "$APP_DIR" \
+          npx vercel pull \
+            --cwd "$APP_DIR" \
             --yes \
-            --environment production \
-            --token "$VERCEL_TOKEN"
-          echo "Pulled into $APP_DIR/.vercel:"
-          ls -al "$APP_DIR/.vercel" || true
+            --environment=production \
+            --token="$VERCEL_TOKEN"
 
       - name: Vercel Build (prebuilt)
         run: |
-          echo "PWD: $(pwd)"
-          echo "Running: npx vercel build $APP_DIR"
-          npx vercel build "$APP_DIR" \
+          npx vercel build \
+            --cwd "$APP_DIR" \
             --prod \
-            --token "$VERCEL_TOKEN"
-          echo "Build output at $APP_DIR/.vercel/output:"
-          ls -al "$APP_DIR/.vercel/output" || true
+            --token="$VERCEL_TOKEN"
 
       - name: Vercel Deploy (prebuilt)
         id: deploy-admin
         run: |
-          echo "PWD: $(pwd)"
-          echo "Running: npx vercel deploy $APP_DIR/.vercel/output"
-          npx vercel deploy "$APP_DIR/.vercel/output" \
+          npx vercel deploy \
+            --cwd "$APP_DIR" \
             --prebuilt \
             --prod \
-            --token "$VERCEL_TOKEN" \
-            --yes
+            --yes \
+            --token="$VERCEL_TOKEN"
 
       - name: Install jq for rollback
-        run: |
-          echo "PWD: $(pwd)"
-          sudo apt-get update && sudo apt-get install -y jq
+        run: sudo apt-get update && sudo apt-get install -y jq
 
-      - name: Smoke test & auto-rollback (Admin)
+      - name: Smoke test & rollback
         run: |
-          echo "PWD: $(pwd)"
-          DEPLOY_URL="${{ steps.deploy-admin.outputs.url }}$HEALTH_PATH"
-          echo "Health-check → $DEPLOY_URL"
-          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "$DEPLOY_URL")
-          if [ "$HTTP_CODE" != "200" ]; then
-            echo "❌ Health-check failed ($HTTP_CODE), rolling back"
-            PREV_UID=$(curl -s -H "Authorization: Bearer $VERCEL_TOKEN" \
+          URL="${{ steps.deploy-admin.outputs.url }}$HEALTH_PATH"
+          CODE=$(curl -s -o /dev/null -w "%{http_code}" "$URL")
+          if [ "$CODE" != "200" ]; then
+            PREV=$(curl -s -H "Authorization: Bearer $VERCEL_TOKEN" \
               "https://api.vercel.com/v6/deployments?projectId=$VERCEL_PROJECT_ID&limit=2&state=READY" \
               | jq -r '.deployments[1].uid')
-            curl -s -X POST -H "Authorization: Bearer $VERCEL_TOKEN" \
+            curl -X POST -H "Authorization: Bearer $VERCEL_TOKEN" \
               -H "Content-Type: application/json" \
               "https://api.vercel.com/v2/aliases" \
-              -d "{\"deploymentId\":\"$PREV_UID\",\"alias\":\"$PROD_ALIAS\"}"
+              -d "{\"deploymentId\":\"$PREV\",\"alias\":\"$PROD_ALIAS\"}"
             exit 1
-          else
-            echo "✅ Health-check OK"
           fi
