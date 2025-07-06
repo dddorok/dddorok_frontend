@@ -1,8 +1,8 @@
-import type { Meta, StoryObj } from "@storybook/nextjs-vite";
-
 import { fn } from "storybook/test";
 
 import { Button } from "./button";
+
+import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 
 // More on how to set up stories at: https://storybook.js.org/docs/writing-stories#default-export
 const meta = {
@@ -23,8 +23,43 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Secondary: Story = {
+export const Default: Story = {
   args: {
     children: "Button",
+  },
+};
+
+export const Fill: Story = {
+  args: {
+    children: "Button",
+    color: "fill",
+  },
+};
+
+export const Trans: Story = {
+  args: {
+    children: "Button",
+    color: "trans",
+  },
+};
+
+export const TransWhite: Story = {
+  args: {
+    children: "Button",
+    color: "transWhite",
+  },
+  decorators: [
+    (Story) => (
+      <div className="bg-neutral-N900 p-4">
+        <Story />
+      </div>
+    ),
+  ],
+};
+
+export const White: Story = {
+  args: {
+    children: "Button",
+    color: "white",
   },
 };

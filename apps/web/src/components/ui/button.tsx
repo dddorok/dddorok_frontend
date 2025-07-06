@@ -33,20 +33,13 @@ const buttonVariants = cva(
           "bg-transparent",
           "border border-primary-PR600",
           "text-primary-PR600",
-          // "hover:bg-primary-PR100",
-          // "active:bg-primary-PR200",
-          // "focus:ring-primary-PR300",
           "backdrop-blur-sm",
         ],
 
-        // Fill: 파란색 배경 + 흰색 텍스트
         fill: [
           "bg-primary-PR", // #75C0EF
           "border-0",
           "text-neutral-N0", // #FFFFFF
-          // "hover:bg-primary-PR600", // hover state
-          // "active:bg-primary-PR400", // active state
-          "focus:ring-primary-PR300",
         ],
 
         // Trans: 투명 배경 + 회색 테두리 + 회색 텍스트
@@ -54,10 +47,13 @@ const buttonVariants = cva(
           "bg-neutralAlpha-NA05", // rgba(28, 31, 37, 0.05)
           "border border-neutral-N400", // #C8CDD9
           "text-neutral-N800", // #4B5162
-          // "hover:bg-neutralAlpha-NA10", // hover state
-          // "active:bg-neutralAlpha-NA20", // active state
-          "focus:ring-neutral-N400",
         ],
+        transWhite: [
+          "bg-neutral-NA05",
+          "border border-neutral-N400",
+          "text-neutral-N0",
+        ],
+        white: ["bg-primary-PR100", "border-0", "text-primary-PR"],
       },
 
       disabled: {
@@ -67,7 +63,6 @@ const buttonVariants = cva(
           "text-neutral-N0", // #FFFFFF
           "cursor-not-allowed",
           "opacity-60",
-          // "hover:bg-neutral-N400 active:bg-neutral-N400",
         ],
         false: "",
       },
