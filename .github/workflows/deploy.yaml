@@ -11,106 +11,178 @@ on:
         options: [all, web, admin]
 
 jobs:
+  # ─────────────────────── WEB ───────────────────────
   deploy-web:
     if: github.event.inputs.target == 'all' || github.event.inputs.target == 'web'
     runs-on: ubuntu-latest
     concurrency: web-prod
     env:
-      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      GITHUB_ROOT: ${{ github.workspace }}
+      APP_DIR:    ${{ github.workspace }}/apps/web
+      VERCEL_TOKEN:      ${{ secrets.VERCEL_TOKEN }}
       VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_WEB }}
-      PROD_ALIAS: "web.dddorok.vercel.app"
-      HEALTH_PATH: "/health"
-
+      PROD_ALIAS:        "web.dddorok.vercel.app"
+      HEALTH_PATH:       "/health"
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - uses: pnpm/action-setup@v3
-        with: { version: 10 }
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 9
 
-      - run: pnpm install --frozen-lockfile
+      - name: Install dependencies
+        run: |
+          echo "PWD: $(pwd)"
+          echo "Installing at $GITHUB_ROOT"
+          pnpm install --frozen-lockfile
+        working-directory: ${{ github.workspace }}
 
-      - name: Vercel Deploy (Web – server-side build)
+      - name: Debug verify app dir exists
+        run: |
+          echo "PWD: $(pwd)"
+          echo "Expecting app at $APP_DIR"
+          ls -al "$APP_DIR" || true
+
+      - name: Vercel Pull
+        run: |
+          echo "PWD: $(pwd)"
+          echo "Running: npx vercel pull $APP_DIR"
+          npx vercel pull "$APP_DIR" \
+            --yes \
+            --environment=production \
+            --token "$VERCEL_TOKEN"
+          echo "Pulled .vercel into $APP_DIR/.vercel"
+          ls -al "$APP_DIR/.vercel" || true
+
+      - name: Vercel Build (prebuilt)
+        run: |
+          echo "PWD: $(pwd)"
+          echo "Running: npx vercel build $APP_DIR"
+          npx vercel build "$APP_DIR" --prod --token "$VERCEL_TOKEN"
+          echo "Built to $APP_DIR/.vercel/output"
+          ls -al "$APP_DIR/.vercel/output" || true
+
+      - name: Vercel Deploy (prebuilt)
         id: deploy-web
         run: |
-          echo "▶ Deploying apps/web via Vercel server-side build"
-          url=$(
-            npx vercel deploy apps/web \
-              --prod \
-              --yes \
-              --token $VERCEL_TOKEN
-          )
-          echo "url=$url" >> $GITHUB_OUTPUT
+          echo "PWD: $(pwd)"
+          echo "Running: npx vercel deploy $APP_DIR/.vercel/output"
+          npx vercel deploy "$APP_DIR/.vercel/output" \
+            --prebuilt \
+            --prod \
+            --token "$VERCEL_TOKEN"
+        # GitHub Actions will capture "url=" if needed
 
       - name: Install jq
-        run: sudo apt-get update && sudo apt-get install -y jq
-
-      - name: Smoke test & auto-rollback (Web)
         run: |
-          target="${{ steps.deploy-web.outputs.url }}$HEALTH_PATH"
-          echo "Health-check → $target"
-          code=$(curl -s -o /dev/null -w "%{http_code}" "$target")
-          if [ "$code" != "200" ]; then
-            echo "❌ Health-check failed ($code) → rolling back"
-            prev=$(curl -s -H "Authorization: Bearer $VERCEL_TOKEN" \
+          echo "PWD: $(pwd)"
+          sudo apt-get update && sudo apt-get install -y jq
+
+      - name: Smoke test & auto-rollback
+        run: |
+          echo "PWD: $(pwd)"
+          DEPLOY_URL="${{ steps.deploy-web.outputs.url }}$HEALTH_PATH"
+          echo "Health-check → $DEPLOY_URL"
+          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "$DEPLOY_URL")
+          if [ "$HTTP_CODE" != "200" ]; then
+            echo "❌ Health-check failed ($HTTP_CODE), rolling back"
+            PREV_UID=$(curl -s -H "Authorization: Bearer $VERCEL_TOKEN" \
               "https://api.vercel.com/v6/deployments?projectId=$VERCEL_PROJECT_ID&limit=2&state=READY" \
               | jq -r '.deployments[1].uid')
             curl -s -X POST -H "Authorization: Bearer $VERCEL_TOKEN" \
               -H "Content-Type: application/json" \
               "https://api.vercel.com/v2/aliases" \
-              -d "{\"deploymentId\":\"$prev\",\"alias\":\"$PROD_ALIAS\"}"
+              -d "{\"deploymentId\":\"$PREV_UID\",\"alias\":\"$PROD_ALIAS\"}"
             exit 1
           else
             echo "✅ Health-check OK"
           fi
 
+  # ────────────────────── ADMIN ──────────────────────
   deploy-admin:
     if: github.event.inputs.target == 'all' || github.event.inputs.target == 'admin'
     runs-on: ubuntu-latest
     concurrency: admin-prod
     env:
-      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_ADMIN }}
-      PROD_ALIAS: "admin.dddorok.vercel.app"
-      HEALTH_PATH: "/health"
-
+      GITHUB_ROOT:        ${{ github.workspace }}
+      APP_DIR:            ${{ github.workspace }}/apps/admin
+      VERCEL_TOKEN:       ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_PROJECT_ID:  ${{ secrets.VERCEL_PROJECT_ID_ADMIN }}
+      PROD_ALIAS:         "admin.dddorok.vercel.app"
+      HEALTH_PATH:        "/health"
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - uses: pnpm/action-setup@v3
-        with: { version: 10 }
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 9
 
-      - run: pnpm install --frozen-lockfile
+      - name: Install dependencies
+        run: |
+          echo "PWD: $(pwd)"
+          echo "Installing at $GITHUB_ROOT"
+          pnpm install --frozen-lockfile
+        working-directory: ${{ github.workspace }}
 
-      - name: Vercel Deploy (Admin – server‐side build)
+      - name: Debug verify app dir exists
+        run: |
+          echo "PWD: $(pwd)"
+          echo "Expecting app at $APP_DIR"
+          ls -al "$APP_DIR" || true
+
+      - name: Vercel Pull
+        run: |
+          echo "PWD: $(pwd)"
+          echo "Running: npx vercel pull $APP_DIR"
+          npx vercel pull "$APP_DIR" \
+            --yes \
+            --environment=production \
+            --token "$VERCEL_TOKEN"
+          echo "Pulled .vercel into $APP_DIR/.vercel"
+          ls -al "$APP_DIR/.vercel" || true
+
+      - name: Vercel Build (prebuilt)
+        run: |
+          echo "PWD: $(pwd)"
+          echo "Running: npx vercel build $APP_DIR"
+          npx vercel build "$APP_DIR" --prod --token "$VERCEL_TOKEN"
+          echo "Built to $APP_DIR/.vercel/output"
+          ls -al "$APP_DIR/.vercel/output" || true
+
+      - name: Vercel Deploy (prebuilt)
         id: deploy-admin
         run: |
-          echo "▶ Deploying apps/admin via Vercel server-side build"
-          url=$(
-            npx vercel deploy apps/admin \
-              --prod \
-              --yes \
-              --token $VERCEL_TOKEN
-          )
-          echo "url=$url" >> $GITHUB_OUTPUT
+          echo "PWD: $(pwd)"
+          echo "Running: npx vercel deploy $APP_DIR/.vercel/output"
+          npx vercel deploy "$APP_DIR/.vercel/output" \
+            --prebuilt \
+            --prod \
+            --token "$VERCEL_TOKEN"
 
       - name: Install jq
-        run: sudo apt-get update && sudo apt-get install -y jq
-
-      - name: Smoke test & auto-rollback (Admin)
         run: |
-          target="${{ steps.deploy-admin.outputs.url }}$HEALTH_PATH"
-          code=$(curl -s -o /dev/null -w "%{http_code}" "$target")
-          if [ "$code" != "200" ]; then
-            echo "❌ Health-check failed ($code) → rolling back"
-            prev=$(curl -s -H "Authorization: Bearer $VERCEL_TOKEN" \
+          echo "PWD: $(pwd)"
+          sudo apt-get update && sudo apt-get install -y jq
+
+      - name: Smoke test & auto-rollback
+        run: |
+          echo "PWD: $(pwd)"
+          DEPLOY_URL="${{ steps.deploy-admin.outputs.url }}$HEALTH_PATH"
+          echo "Health-check → $DEPLOY_URL"
+          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "$DEPLOY_URL")
+          if [ "$HTTP_CODE" != "200" ]; then
+            echo "❌ Health-check failed ($HTTP_CODE), rolling back"
+            PREV_UID=$(curl -s -H "Authorization: Bearer $VERCEL_TOKEN" \
               "https://api.vercel.com/v6/deployments?projectId=$VERCEL_PROJECT_ID&limit=2&state=READY" \
               | jq -r '.deployments[1].uid')
             curl -s -X POST -H "Authorization: Bearer $VERCEL_TOKEN" \
               -H "Content-Type: application/json" \
               "https://api.vercel.com/v2/aliases" \
-              -d "{\"deploymentId\":\"$prev\",\"alias\":\"$PROD_ALIAS\"}"
+              -d "{\"deploymentId\":\"$PREV_UID\",\"alias\":\"$PROD_ALIAS\"}"
             exit 1
           else
             echo "✅ Health-check OK"
