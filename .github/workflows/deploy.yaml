@@ -4,76 +4,39 @@ on:
   workflow_dispatch:
     inputs:
       target:
-        description: "배포할 앱 선택"
+        description: '배포할 앱 선택'
         required: true
-        default: "all"
+        default: 'all'
         type: choice
         options: [all, web, admin]
 
 jobs:
+  # ──────────────────────────── WEB ────────────────────────────
   deploy-web:
     if: github.event.inputs.target == 'all' || github.event.inputs.target == 'web'
     runs-on: ubuntu-latest
     concurrency: web-prod
     env:
-      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_TOKEN:      ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_ORG_ID:     ${{ secrets.VERCEL_ORG_ID }}
       VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_WEB }}
-      PROD_ALIAS: "web.dddorok.vercel.app"
-      HEALTH_PATH: "/health"
-
+      PROD_ALIAS:        "web.dddorok.vercel.app"
+      HEALTH_PATH:       "/health"
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-      - uses: pnpm/action-setup@v3
-        with: { version: 10 }
+      - name: (Optional) Install deps for lint/type-check
+        run: pnpm install --frozen-lockfile
 
-      - run: pnpm install --frozen-lockfile
-
-      - name: Clean up old .vercel for Web
-        run: rm -rf apps/web/.vercel
-
-      - name: Vercel Pull (Web)
-        run: |
-          npx vercel pull \
-            --cwd apps/web \
-            --yes \
-            --environment=production \
-            --token $VERCEL_TOKEN
-
-      - name: Vercel Build (Web)
-        run: |
-          npx vercel build \
-            --cwd apps/web \
-            --prod \
-            --token $VERCEL_TOKEN
-
-      - name: DEBUG - where is Web output?
-        run: |
-          BASE="$GITHUB_WORKSPACE/apps/web/.vercel"
-          echo "📂 $BASE:"
-          ls -al "$BASE" || true
-
-          OUT="$BASE/output"
-          echo "📂 $OUT:"
-          ls -al "$OUT" || true
-
-      - name: Vercel Deploy (Web)
+      - name: Vercel Deploy (Web – server‐side build)
         id: deploy-web
         run: |
-          OUTPUT_DIR="$GITHUB_WORKSPACE/apps/web/.vercel/output"
-          
-          echo "▶ Pre-deploy check: $OUTPUT_DIR"
-          ls -al "$OUTPUT_DIR" || true
-          echo "▶ Recursive file list:"
-          find "$OUTPUT_DIR" -maxdepth 2 -type f | sed 's|^|   - |'
-          
-          echo "▶ Deploying from $OUTPUT_DIR"
+          echo "▶ Deploying apps/web via Vercel server-side build"
           url=$(
-            npx vercel deploy \
-              "$OUTPUT_DIR" \
-              --prebuilt \
+            npx vercel deploy apps/web \
               --prod \
+              --yes \
               --token $VERCEL_TOKEN
           )
           echo "url=$url" >> $GITHUB_OUTPUT
@@ -100,59 +63,34 @@ jobs:
             echo "✅ Health-check OK"
           fi
 
+  # ────────────────────────── ADMIN ────────────────────────────
   deploy-admin:
     if: github.event.inputs.target == 'all' || github.event.inputs.target == 'admin'
     runs-on: ubuntu-latest
     concurrency: admin-prod
     env:
-      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_TOKEN:      ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_ORG_ID:     ${{ secrets.VERCEL_ORG_ID }}
       VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_ADMIN }}
-      PROD_ALIAS: "admin.dddorok.vercel.app"
-      HEALTH_PATH: "/health"
-
+      PROD_ALIAS:        "admin.dddorok.vercel.app"
+      HEALTH_PATH:       "/health"
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-      - uses: pnpm/action-setup@v3
-        with: { version: 10 }
+      - name: (Optional) Install deps for lint/type-check
+        run: pnpm install --frozen-lockfile
 
-      - run: pnpm install --frozen-lockfile
-
-      - name: Clean up old .vercel for Admin
-        run: rm -rf apps/admin/.vercel
-
-      - name: Vercel Pull (Admin)
-        run: |
-          npx vercel pull \
-            --cwd apps/admin \
-            --yes \
-            --environment=production \
-            --token $VERCEL_TOKEN
-
-      - name: Vercel Build (Admin)
-        run: |
-          npx vercel build \
-            --cwd apps/admin \
-            --prod \
-            --token $VERCEL_TOKEN
-
-      - name: DEBUG – where is Admin output?
-        run: |
-          echo "📂 apps/admin/.vercel:"
-          ls -al apps/admin/.vercel || true
-          echo "📂 apps/admin/.vercel/output:"
-          ls -al apps/admin/.vercel/output || true
-
-      - name: Vercel Deploy (Admin)
+      - name: Vercel Deploy (Admin – server‐side build)
         id: deploy-admin
         run: |
-          url=$(npx vercel deploy \
-            --cwd apps/admin \
-            .vercel/output \
-            --prebuilt \
-            --prod \
-            --token $VERCEL_TOKEN)
+          echo "▶ Deploying apps/admin via Vercel server-side build"
+          url=$(
+            npx vercel deploy apps/admin \
+              --prod \
+              --yes \
+              --token $VERCEL_TOKEN
+          )
           echo "url=$url" >> $GITHUB_OUTPUT
 
       - name: Install jq
@@ -161,6 +99,7 @@ jobs:
       - name: Smoke test & auto-rollback (Admin)
         run: |
           target="${{ steps.deploy-admin.outputs.url }}$HEALTH_PATH"
+          echo "Health-check → $target"
           code=$(curl -s -o /dev/null -w "%{http_code}" "$target")
           if [ "$code" != "200" ]; then
             echo "❌ Health-check failed ($code) → rolling back"
