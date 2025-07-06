@@ -50,6 +50,8 @@ jobs:
           echo "PWD: $(pwd)"
           echo "Running: npx vercel pull $APP_DIR"
           npx vercel pull "$APP_DIR" \
+            --org "$VERCEL_ORG_ID" \
+            --project "$VERCEL_PROJECT_ID" \
             --yes \
             --environment=production \
             --token "$VERCEL_TOKEN"
@@ -60,7 +62,11 @@ jobs:
         run: |
           echo "PWD: $(pwd)"
           echo "Running: npx vercel build $APP_DIR"
-          npx vercel build "$APP_DIR" --prod --token "$VERCEL_TOKEN"
+          npx vercel build "$APP_DIR" \
+          --org "$VERCEL_ORG_ID" \
+          --project "$VERCEL_PROJECT_ID" \
+          --prod \
+          --token "$VERCEL_TOKEN"
           echo "Built to $APP_DIR/.vercel/output"
           ls -al "$APP_DIR/.vercel/output" || true
 
@@ -70,6 +76,8 @@ jobs:
           echo "PWD: $(pwd)"
           echo "Running: npx vercel deploy $APP_DIR/.vercel/output"
           npx vercel deploy "$APP_DIR/.vercel/output" \
+            --org "$VERCEL_ORG_ID" \
+            --project "$VERCEL_PROJECT_ID" \
             --prebuilt \
             --prod \
             --token "$VERCEL_TOKEN"
