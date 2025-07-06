@@ -63,12 +63,12 @@ jobs:
         run: |
           OUTPUT_DIR="$GITHUB_WORKSPACE/apps/web/.vercel/output"
           echo "Deploying from $OUTPUT_DIR"
-
           url=$(
-            npx vercel deploy "$OUTPUT_DIR" \
+            npx vercel deploy \
               --prebuilt \
               --prod \
-              --token $VERCEL_TOKEN
+              --token $VERCEL_TOKEN \
+              "$OUTPUT_DIR"
           )
           echo "url=$url" >> $GITHUB_OUTPUT
 
