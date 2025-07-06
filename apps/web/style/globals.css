@@ -225,3 +225,7 @@ a {
     @apply bg-background text-foreground;
   }
 } */
+
+[data-sonner-toast][data-y-position="top"] {
+  top: 100px !important;
+}

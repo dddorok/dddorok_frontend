@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -19,6 +20,7 @@ export function TemporaryOverlay() {
   const [isOpenConfirm, setIsOpenConfirm] = useState(false);
 
   const onSubmit = () => {
+    toast("게이지 등록 완료", { duration: Infinity });
     setIsOpenConfirm(false);
   };
 
