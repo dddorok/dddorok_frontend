@@ -1,127 +1,166 @@
-name: Deploy Web & Admin to Vercel (manual-selectable)
+name: Deploy Web & Admin to Vercel
 
 on:
+  # 수동 실행
   workflow_dispatch:
     inputs:
       target:
-        description: '배포할 앱 선택'
+        description: "배포할 앱 선택"
         required: true
-        default: 'all'
+        default: "all"
         type: choice
-        options:
-          - all     # web + admin
-          - web
-          - admin
+        options: [all, web, admin]
+
+  # development 브랜치 자동
+  push:
+    branches: [development]
 
 jobs:
-  # ──────────────────────────── WEB ────────────────────────────
+  # ───────── 변경 파일 필터 ─────────
+  filter:
+    if: github.event_name == 'push'          # push 일 때만 필요
+    runs-on: ubuntu-latest
+    outputs:
+      web:   ${{ steps.paths.outputs.web }}
+      admin: ${{ steps.paths.outputs.admin }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: paths
+        uses: dorny/paths-filter@v2
+        with:
+          filters: |
+            web:
+              - 'apps/web/**'
+            admin:
+              - 'apps/admin/**'
+
+  # ───────── WEB ─────────
   deploy-web:
-    if: github.event.inputs.target == 'all' || github.event.inputs.target == 'web'
+    needs: [filter]
+    if: |
+      (github.event_name == 'workflow_dispatch' && 
+       (github.event.inputs.target == 'all' || github.event.inputs.target == 'web')) ||
+      (github.event_name == 'push' && needs.filter.outputs.web == 'true')
     runs-on: ubuntu-latest
     concurrency: web-prod
     env:
-      VERCEL_TOKEN:        ${{ secrets.VERCEL_TOKEN }}
-      VERCEL_ORG_ID:       ${{ secrets.VERCEL_ORG_ID }}
-      VERCEL_PROJECT_ID:   ${{ secrets.VERCEL_PROJECT_ID_WEB }}
-      PROD_ALIAS:          "web.dddorok.vercel.app"
-      HEALTH_PATH:         "/health"
-    defaults:
-      run:
-        working-directory: apps/web
+      APP_DIR: ${{ github.workspace }}
+      VERCEL_TOKEN:      ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_WEB }}
+      PROD_ALIAS:        "web.dddorok.vercel.app"
+
     steps:
       - uses: actions/checkout@v4
-
       - uses: pnpm/action-setup@v3
-        with: { version: 10 }
-
+        with: { version: 9 }
       - run: pnpm install --frozen-lockfile
 
-      - name: Vercel Pull
-        run: npx vercel pull --yes --environment=production --token $VERCEL_TOKEN
+      # Prebuilt 과정(루트 기준)
+      - run: npx vercel pull --yes --environment=production --token="$VERCEL_TOKEN"
+      - run: |
+          npx vercel build --prod --token="$VERCEL_TOKEN"
+          ls -al .vercel/output
 
-      - name: Vercel Build
-        run: npx vercel build --prod --token $VERCEL_TOKEN
-
-      - name: Vercel Deploy
-        id: deploy
+      # Deploy
+      - id: deploy
         run: |
-          url=$(npx vercel deploy .vercel/output --prod --token $VERCEL_TOKEN)
-          echo "url=$url" >> $GITHUB_OUTPUT
+          DEPLOY_URL=$(npx vercel deploy . --prebuilt --prod --yes --token="$VERCEL_TOKEN" | tail -1)
+          echo "url=$DEPLOY_URL" >> "$GITHUB_OUTPUT"
 
-      - name: Install jq
-        run: sudo apt-get update && sudo apt-get install -y jq
-
-      - name: Smoke test & auto-rollback
+      # Slack
+      - name: Slack Notify Success
+        if: success()
         run: |
-          target="${{ steps.deploy.outputs.url }}$HEALTH_PATH"
-          echo "Health-check → $target"
-          code=$(curl -s -o /dev/null -w "%{http_code}" "$target")
-          if [ "$code" != "200" ]; then
-            echo "❌ Health-check failed ($code) → rolling back"
-            prev=$(curl -s -H "Authorization: Bearer $VERCEL_TOKEN" \
-              "https://api.vercel.com/v6/deployments?projectId=$VERCEL_PROJECT_ID&limit=2&state=READY" \
-              | jq -r '.deployments[1].uid')
-            curl -s -X POST -H "Authorization: Bearer $VERCEL_TOKEN" \
-              -H "Content-Type: application/json" \
-              "https://api.vercel.com/v2/aliases" \
-              -d "{\"deploymentId\":\"$prev\",\"alias\":\"$PROD_ALIAS\"}"
-            exit 1
-          else
-            echo "✅ Health-check OK"
-          fi
+          COMMIT_MSG=$(git log -1 --pretty=%B)
+          curl -X POST -H 'Content-type: application/json' \
+               --data "$(jq -n \
+                 --arg t   "✅ *배포 성공 - dddorok-frontend-web* 🚀" \
+                 --arg msg "${{ github.event.head_commit.message }}" \
+                 --arg repo "${{ github.repository }}" \
+                 --arg sha  "${{ github.sha }}" \
+                 --arg run  "${{ github.run_id }}" \
+                 '{text: ($t + "\n\n*커밋 메시지:*\n" + $msg
+                   + "\n\n*커밋 링크:* <https://github.com/" + $repo + "/commit/" + $sha + "|🔗 확인하기>"
+                   + "\n*워크플로우:* <https://github.com/" + $repo + "/actions/runs/" + $run + "|🛠 Action 확인하기>\n\n<@U08KFMBSXB9>")}')" \
+               ${{ secrets.SLACK_WEBHOOK_URL }}
 
-  # ────────────────────────── ADMIN ────────────────────────────
+      - name: Slack Notify Failure
+        if: failure()
+        run: |
+          COMMIT_MSG=$(git log -1 --pretty=%B || echo '')
+          curl -X POST -H 'Content-type: application/json' \
+               --data "$(jq -n \
+                 --arg t   "🚨 *배포 실패 - dddorok-frontend-web* 🚨" \
+                 --arg msg "${{ github.event.head_commit.message }}" \
+                 --arg repo "${{ github.repository }}" \
+                 --arg sha  "${{ github.sha }}" \
+                 --arg run  "${{ github.run_id }}" \
+                 '{text: ($t + "\n\n*커밋 메시지:*\n" + $msg
+                   + "\n\n*커밋 링크:* <https://github.com/" + $repo + "/commit/" + $sha + "|🔗 확인하기>"
+                   + "\n*워크플로우:* <https://github.com/" + $repo + "/actions/runs/" + $run + "|🛠 Action 확인하기>\n\n🔴 즉시 확인 및 조치 요망! <@U08KFMBSXB9>")}')" \
+               ${{ secrets.SLACK_WEBHOOK_URL }}
+
+  # ───────── ADMIN ─────────
   deploy-admin:
-    if: github.event.inputs.target == 'all' || github.event.inputs.target == 'admin'
+    needs: [filter]
+    if: |
+      (github.event_name == 'workflow_dispatch' && 
+       (github.event.inputs.target == 'all' || github.event.inputs.target == 'admin')) ||
+      (github.event_name == 'push' && needs.filter.outputs.admin == 'true')
     runs-on: ubuntu-latest
     concurrency: admin-prod
     env:
-      VERCEL_TOKEN:        ${{ secrets.VERCEL_TOKEN }}
-      VERCEL_ORG_ID:       ${{ secrets.VERCEL_ORG_ID }}
-      VERCEL_PROJECT_ID:   ${{ secrets.VERCEL_PROJECT_ID_ADMIN }}
-      PROD_ALIAS:          "admin.dddorok.vercel.app"
-      HEALTH_PATH:         "/health"
-    defaults:
-      run:
-        working-directory: apps/admin
+      APP_DIR: ${{ github.workspace }}
+      VERCEL_TOKEN:      ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_ADMIN }}
+      PROD_ALIAS:        "admin.dddorok.vercel.app"
+
     steps:
       - uses: actions/checkout@v4
-
       - uses: pnpm/action-setup@v3
-        with: { version: 10 }
-
+        with: { version: 9 }
       - run: pnpm install --frozen-lockfile
 
-      - name: Vercel Pull
-        run: npx vercel pull --yes --environment=production --token $VERCEL_TOKEN
+      - run: npx vercel pull --yes --environment=production --token="$VERCEL_TOKEN"
+      - run: |
+          npx vercel build --prod --token="$VERCEL_TOKEN"
+          ls -al .vercel/output
 
-      - name: Vercel Build
-        run: npx vercel build --prod --token $VERCEL_TOKEN
-
-      - name: Vercel Deploy
-        id: deploy
+      - id: deploy
         run: |
-          url=$(npx vercel deploy .vercel/output --prod --token $VERCEL_TOKEN)
-          echo "url=$url" >> $GITHUB_OUTPUT
+          DEPLOY_URL=$(npx vercel deploy . --prebuilt --prod --yes --token="$VERCEL_TOKEN" | tail -1)
+          echo "url=$DEPLOY_URL" >> "$GITHUB_OUTPUT"
 
-      - name: Install jq
-        run: sudo apt-get update && sudo apt-get install -y jq
-
-      - name: Smoke test & auto-rollback
+      # Slack(성공/실패 동일 패턴)
+      - name: Slack Notify Success
+        if: success()
         run: |
-          target="${{ steps.deploy.outputs.url }}$HEALTH_PATH"
-          echo "Health-check → $target"
-          code=$(curl -s -o /dev/null -w "%{http_code}" "$target")
-          if [ "$code" != "200" ]; then
-            echo "❌ Health-check failed ($code) → rolling back"
-            prev=$(curl -s -H "Authorization: Bearer $VERCEL_TOKEN" \
-              "https://api.vercel.com/v6/deployments?projectId=$VERCEL_PROJECT_ID&limit=2&state=READY" \
-              | jq -r '.deployments[1].uid')
-            curl -s -X POST -H "Authorization: Bearer $VERCEL_TOKEN" \
-              -H "Content-Type: application/json" \
-              "https://api.vercel.com/v2/aliases" \
-              -d "{\"deploymentId\":\"$prev\",\"alias\":\"$PROD_ALIAS\"}"
-            exit 1
-          else
-            echo "✅ Health-check OK"
-          fi
+          COMMIT_MSG=$(git log -1 --pretty=%B)
+          curl -X POST -H 'Content-type: application/json' \
+               --data "$(jq -n \
+                 --arg t   "✅ *배포 성공 - dddorok-frontend-admin* 🚀" \
+                 --arg msg "${{ github.event.head_commit.message }}" \
+                 --arg repo "${{ github.repository }}" \
+                 --arg sha  "${{ github.sha }}" \
+                 --arg run  "${{ github.run_id }}" \
+                 '{text: ($t + "\n\n*커밋 메시지:*\n" + $msg
+                   + "\n\n*커밋 링크:* <https://github.com/" + $repo + "/commit/" + $sha + "|🔗 확인하기>"
+                   + "\n*워크플로우:* <https://github.com/" + $repo + "/actions/runs/" + $run + "|🛠 Action 확인하기>\n\n<@U08KFMBSXB9>")}')" \
+               ${{ secrets.SLACK_WEBHOOK_URL }}
+
+      - name: Slack Notify Failure
+        if: failure()
+        run: |
+          COMMIT_MSG=$(git log -1 --pretty=%B || echo '')
+          curl -X POST -H 'Content-type: application/json' \
+               --data "$(jq -n \
+                 --arg t   "🚨 *배포 실패 - dddorok-frontend-admin* 🚨" \
+                 --arg msg "${{ github.event.head_commit.message }}" \
+                 --arg repo "${{ github.repository }}" \
+                 --arg sha  "${{ github.sha }}" \
+                 --arg run  "${{ github.run_id }}" \
+                 '{text: ($t + "\n\n*커밋 메시지:*\n" + $msg
+                   + "\n\n*커밋 링크:* <https://github.com/" + $repo + "/commit/" + $sha + "|🔗 확인하기>"
+                   + "\n*워크플로우:* <https://github.com/" + $repo + "/actions/runs/" + $run + "|🛠 Action 확인하기>\n\n🔴 즉시 확인 및 조치 요망! <@U08KFMBSXB9>")}')" \
+               ${{ secrets.SLACK_WEBHOOK_URL }}
+      
