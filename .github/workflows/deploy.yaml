@@ -61,15 +61,20 @@ jobs:
       - name: Vercel Deploy (Web)
         id: deploy-web
         run: |
-          # 프로젝트 루트 인자
-          PROJECT_ROOT="$GITHUB_WORKSPACE/apps/web"
-          echo "Deploying project at $PROJECT_ROOT"
+          OUTPUT_DIR="$GITHUB_WORKSPACE/apps/web/.vercel/output"
+          
+          echo "▶ Pre-deploy check: $OUTPUT_DIR"
+          ls -al "$OUTPUT_DIR" || true
+          echo "▶ Recursive file list:"
+          find "$OUTPUT_DIR" -maxdepth 2 -type f | sed 's|^|   - |'
+          
+          echo "▶ Deploying from $OUTPUT_DIR"
           url=$(
-          npx vercel deploy \
-            --prebuilt \
-            --prod \
-            --token $VERCEL_TOKEN \
-            "$GITHUB_WORKSPACE"
+            npx vercel deploy \
+              "$OUTPUT_DIR" \
+              --prebuilt \
+              --prod \
+              --token $VERCEL_TOKEN
           )
           echo "url=$url" >> $GITHUB_OUTPUT
 
