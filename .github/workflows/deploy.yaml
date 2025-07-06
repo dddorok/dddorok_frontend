@@ -26,27 +26,27 @@ jobs:
       - uses: actions/checkout@v4
 
       - uses: pnpm/action-setup@v3
-        with: { version: 10 }
+        with:
+          version: 10
 
       - run: pnpm install --frozen-lockfile
 
-      - name: Vercel Pull
+      - name: Clean up root vercel config
+        run: rm -rf .vercel
+
+      - name: Vercel Pull (in apps/web)
+        working-directory: apps/web
         run: npx vercel pull --yes --environment=production --token $VERCEL_TOKEN
 
-      - name: Vercel Build
+      - name: Vercel Build (in apps/web)
+        working-directory: apps/web
         run: npx vercel build --prod --token $VERCEL_TOKEN
 
-      - name: DEBUG – where is output?
-        run: |
-          echo "ls apps/web/.vercel/output:"
-          ls -al apps/web/.vercel/output || true
-          echo "ls .vercel/output in repo root:"
-          ls -al .vercel/output || true
-
-      - name: Vercel Deploy
+      - name: Vercel Deploy (in apps/web)
         id: deploy
+        working-directory: apps/web
         run: |
-          url=$(npx vercel deploy apps/web/.vercel/output --prebuilt --prod --token $VERCEL_TOKEN)
+          url=$(npx vercel deploy .vercel/output --prebuilt --prod --token $VERCEL_TOKEN)
           echo "url=$url" >> $GITHUB_OUTPUT
 
       - name: Install jq
@@ -86,20 +86,27 @@ jobs:
       - uses: actions/checkout@v4
 
       - uses: pnpm/action-setup@v3
-        with: { version: 10 }
+        with:
+          version: 10
 
       - run: pnpm install --frozen-lockfile
 
-      - name: Vercel Pull
+      - name: Clean up root vercel config
+        run: rm -rf .vercel
+
+      - name: Vercel Pull (in apps/admin)
+        working-directory: apps/admin
         run: npx vercel pull --yes --environment=production --token $VERCEL_TOKEN
 
-      - name: Vercel Build
+      - name: Vercel Build (in apps/admin)
+        working-directory: apps/admin
         run: npx vercel build --prod --token $VERCEL_TOKEN
 
-      - name: Vercel Deploy
+      - name: Vercel Deploy (in apps/admin)
         id: deploy
+        working-directory: apps/admin
         run: |
-          url=$(npx vercel deploy apps/admin/.vercel/output --prebuilt --prod --token $VERCEL_TOKEN)
+          url=$(npx vercel deploy .vercel/output --prebuilt --prod --token $VERCEL_TOKEN)
           echo "url=$url" >> $GITHUB_OUTPUT
 
       - name: Install jq
