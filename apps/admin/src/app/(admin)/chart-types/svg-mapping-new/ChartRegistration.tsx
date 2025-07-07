@@ -4,25 +4,20 @@ import { getPathDefs } from "@dddorok/utils/chart/svg-path";
 import { useRouter } from "next/navigation";
 import React, { useState, useEffect } from "react";
 
-import { AutoMappingTable } from "./_components/AutoMappingTable";
-import { ManualMappingTable } from "./_components/ManualMappingTable";
-import { SvgPreview } from "./_components/SvgPreview";
-import { useSvgContent } from "./hooks/useSvgContent";
-import { SliderControlModal, SliderControlRowType } from "./SliderControlModal";
-import { previewH, previewW } from "./utils/etc";
+import { AutoMappingTable } from "../new/_components/AutoMappingTable";
+import { ManualMappingTable } from "../new/_components/ManualMappingTable";
+import { SvgPreview } from "../new/_components/SvgPreview";
+import { useSvgContent } from "../new/hooks/useSvgContent";
+import {
+  SliderControlModal,
+  SliderControlRowType,
+} from "../new/SliderControlModal";
+import { previewH, previewW } from "../new/utils/etc";
 
 import { DownloadButton } from "@/components/DownloadButton";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-  DialogClose,
-} from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { toast, useToast } from "@/hooks/use-toast";
 import { getChartType } from "@/services/chart-type";
@@ -58,15 +53,6 @@ const ChartRegistration: React.FC<{
 }> = ({ data, id }) => {
   const [hoveredPathId, setHoveredPathId] = useState<string | null>(null);
   const [isControlModalOpen, setIsControlModalOpen] = useState(false);
-  const [controlRows, setControlRows] = useState<
-    Array<{
-      code: string;
-      label: string;
-      control: string;
-      originalControl: string;
-      value_type: "WIDTH" | "LENGTH";
-    }>
-  >([]);
 
   const { toast } = useToast();
   const router = useRouter();
@@ -99,44 +85,6 @@ const ChartRegistration: React.FC<{
       return getPathDefs(path, points);
     })
     .filter((item) => item !== null);
-
-  const generateControlString = (
-    startPointId: string,
-    endPointId: string,
-    valueType: "WIDTH" | "LENGTH"
-  ): string => {
-    if (valueType === "WIDTH") {
-      const startNum = startPointId.match(/\d+/)?.[0] || "";
-      const endNum = endPointId.match(/\d+/)?.[0] || "";
-      return `${startNum}-${endNum}`;
-    } else {
-      const startChar = startPointId.charAt(0);
-      const endChar = endPointId.charAt(0);
-      return `${startChar}-${endChar}`;
-    }
-  };
-
-  // 인접한 control 조합만 반환
-  const getControlDropdownPairs = (valueType: "WIDTH" | "LENGTH") => {
-    if (!points) return [];
-    let ids: string[] = [];
-    if (valueType === "WIDTH") {
-      ids = points
-        .map((p: any) => p.id)
-        .filter((id: string) => /^\d+$/.test(id))
-        .sort((a, b) => Number(a) - Number(b));
-    } else {
-      ids = points
-        .map((p: any) => p.id)
-        .filter((id: string) => /^[a-zA-Z]$/.test(id))
-        .sort();
-    }
-    const pairs: string[] = [];
-    for (let i = 0; i < ids.length - 1; i++) {
-      pairs.push(`${ids[i]}-${ids[i + 1]}`);
-    }
-    return pairs;
-  };
 
   const handleApiRequest = async (controlRows: Array<SliderControlRowType>) => {
     // API 요청 데이터 구성
