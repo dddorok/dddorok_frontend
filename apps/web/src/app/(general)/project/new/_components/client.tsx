@@ -29,7 +29,7 @@ export default function NewProjectClient({
     chest_width: 0,
     gauge_tab: "gauge_manual",
   });
-  const [step, setStep] = useState(1);
+  const [step, setStep] = useState(2);
 
   const onSubmit = async (
     measurements: { code: string; value: number }[],

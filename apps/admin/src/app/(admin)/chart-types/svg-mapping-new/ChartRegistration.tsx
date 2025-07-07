@@ -1,32 +1,20 @@
 "use client";
 
 import { getPathDefs } from "@dddorok/utils/chart/svg-path";
-import { useRouter } from "next/navigation";
 import React, { useState, useEffect } from "react";
 
-import { AutoMappingTable } from "./_components/AutoMappingTable";
-import { ManualMappingTable } from "./_components/ManualMappingTable";
-import { SvgPreview } from "./_components/SvgPreview";
-import { useSvgContent } from "./hooks/useSvgContent";
-import { SliderControlModal, SliderControlRowType } from "./SliderControlModal";
-import { previewH, previewW } from "./utils/etc";
+import { ManualMappingTable } from "./ManualMappingTable";
+import { SvgPreview } from "./SvgPreview";
+import { AutoMappingTable } from "../new/_components/AutoMappingTable";
+import { useSvgContent } from "../new/hooks/useSvgContent";
+import { previewH, previewW } from "../new/utils/etc";
 
 import { DownloadButton } from "@/components/DownloadButton";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-  DialogClose,
-} from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { toast, useToast } from "@/hooks/use-toast";
+import { toast } from "@/hooks/use-toast";
 import { getChartType } from "@/services/chart-type";
-import { updateChartTypeSvgMapping } from "@/services/chart-type/new";
 
 export interface MeasurementItem {
   id: string;
@@ -57,29 +45,7 @@ const ChartRegistration: React.FC<{
   id: string;
 }> = ({ data, id }) => {
   const [hoveredPathId, setHoveredPathId] = useState<string | null>(null);
-  const [isControlModalOpen, setIsControlModalOpen] = useState(false);
-  const [controlRows, setControlRows] = useState<
-    Array<{
-      code: string;
-      label: string;
-      control: string;
-      originalControl: string;
-      value_type: "WIDTH" | "LENGTH";
-    }>
-  >([]);
-
-  const { toast } = useToast();
-  const router = useRouter();
-
-  const {
-    handleStartMapping,
-    handleStopSelecting,
-    handleMappingPointClick,
-    mappingPathId,
-    selectedPointIndex,
-    measurementItems,
-    handleAdjustableChange,
-  } = useManualMapping({
+  const { handleMappingPointClick, measurementItems } = useManualMapping({
     manual_mapped_path_id: data.manual_mapped_path_id,
     chartTypeId: id,
   });
@@ -88,8 +54,31 @@ const ChartRegistration: React.FC<{
     svg_url: data.svg_url,
   });
 
+  const [xIntervals, setXIntervals] = useState<number[]>([]);
+  const [yIntervals, setYIntervals] = useState<number[]>([]);
+
+  useEffect(() => {
+    if (points.length > 0) {
+      const xs = Array.from(new Set(points.map((p) => p.x))).sort(
+        (a, b) => a - b
+      );
+      const ys = Array.from(new Set(points.map((p) => p.y))).sort(
+        (a, b) => a - b
+      );
+      setXIntervals(Array(xs.length - 1).fill(1));
+      setYIntervals(Array(ys.length - 1).fill(1));
+    }
+  }, [points]);
+
+  const handleXIntervalChange = (idx: number, value: number) => {
+    setXIntervals((prev) => prev.map((v, i) => (i === idx ? value : v)));
+  };
+  const handleYIntervalChange = (idx: number, value: number) => {
+    setYIntervals((prev) => prev.map((v, i) => (i === idx ? value : v)));
+  };
+
   const autoMappingItems = data.mapped_path_id
-    .map((mappedPath, i) => {
+    .map((mappedPath) => {
       const path = paths.find((p) => p.id === mappedPath.code);
 
       if (!path) {
@@ -99,116 +88,6 @@ const ChartRegistration: React.FC<{
       return getPathDefs(path, points);
     })
     .filter((item) => item !== null);
-
-  const generateControlString = (
-    startPointId: string,
-    endPointId: string,
-    valueType: "WIDTH" | "LENGTH"
-  ): string => {
-    if (valueType === "WIDTH") {
-      const startNum = startPointId.match(/\d+/)?.[0] || "";
-      const endNum = endPointId.match(/\d+/)?.[0] || "";
-      return `${startNum}-${endNum}`;
-    } else {
-      const startChar = startPointId.charAt(0);
-      const endChar = endPointId.charAt(0);
-      return `${startChar}-${endChar}`;
-    }
-  };
-
-  // 인접한 control 조합만 반환
-  const getControlDropdownPairs = (valueType: "WIDTH" | "LENGTH") => {
-    if (!points) return [];
-    let ids: string[] = [];
-    if (valueType === "WIDTH") {
-      ids = points
-        .map((p: any) => p.id)
-        .filter((id: string) => /^\d+$/.test(id))
-        .sort((a, b) => Number(a) - Number(b));
-    } else {
-      ids = points
-        .map((p: any) => p.id)
-        .filter((id: string) => /^[a-zA-Z]$/.test(id))
-        .sort();
-    }
-    const pairs: string[] = [];
-    for (let i = 0; i < ids.length - 1; i++) {
-      pairs.push(`${ids[i]}-${ids[i + 1]}`);
-    }
-    return pairs;
-  };
-
-  const handleApiRequest = async (controlRows: Array<SliderControlRowType>) => {
-    // API 요청 데이터 구성
-    const requestData = {
-      name: data.svg_name, // TODO: 실제 이름으로 변경
-      svgFileUrl: data.svg_url, // TODO: 실제 S3 URL로 변경
-      points: points,
-      mappings: {
-        auto: autoMappingItems.map((item) => ({
-          measurement_code: item.id,
-          start_point_id: item.points[0],
-          end_point_id: item.points[1],
-          slider_default:
-            data.mapped_path_id.find((p) => p.code === item.id)
-              ?.slider_default ?? false,
-          control_points: item.controlPoints,
-        })),
-        manual: measurementItems.map((item) => ({
-          measurement_code: item.id,
-          start_point_id: item.startPoint,
-          end_point_id: item.endPoint,
-          slider_default: item.adjustable,
-        })),
-        control: controlRows,
-      },
-    };
-
-    await updateChartTypeSvgMapping(id, requestData);
-
-    toast({
-      title: "성공",
-      description: "차트 타입이 수정되었습니다.",
-    });
-
-    router.push("/chart-types");
-  };
-
-  // 모달 오픈 함수
-  const openControlModal = () => {
-    setIsControlModalOpen(true);
-  };
-
-  // 저장 콜백
-  const handleSliderControlSave = (rows: Array<SliderControlRowType>) => {
-    console.log("rows: ", rows);
-    handleApiRequest(rows);
-  };
-
-  const handleSubmit = async () => {
-    try {
-      const unmappedItems = measurementItems.filter(
-        (item) => !item.startPoint || !item.endPoint
-      );
-
-      if (unmappedItems.length > 0) {
-        toast({
-          title: "경고",
-          variant: "destructive",
-          description: "모든 측정 항목의 매핑을 완료해주세요.",
-        });
-        return;
-      }
-
-      openControlModal();
-    } catch (error) {
-      toast({
-        title: "오류",
-        variant: "destructive",
-        description: "차트 타입 수정에 실패했습니다.",
-      });
-    }
-  };
 
   return (
     <div className="container mx-auto py-8 space-y-4">
@@ -245,7 +124,7 @@ const ChartRegistration: React.FC<{
             </div>
 
             {svgContent && (
-              <div className="flex items-center gap-8">
+              <div className="flex items-start gap-8">
                 <div
                   className="border-2 border-dashed rounded-lg p-4 flex items-center justify-center"
                   style={{
@@ -261,7 +140,60 @@ const ChartRegistration: React.FC<{
                     onPointClick={handleMappingPointClick}
                     highlightedPathId={hoveredPathId}
                     svgDimensions={svgDimensions}
+                    xIntervals={xIntervals}
+                    yIntervals={yIntervals}
                   />
+                </div>
+                <div className="flex flex-col gap-6 min-w-[220px]">
+                  <div>
+                    <div className="font-semibold mb-2">X축 구간별 비율</div>
+                    <div className="flex flex-col gap-2">
+                      {xIntervals.map((val, i) => (
+                        <div key={i} className="flex items-center gap-2">
+                          <span className="w-8 text-right text-xs text-gray-500">
+                            {i + 1}~{i + 2}
+                          </span>
+                          <input
+                            type="range"
+                            min={0.2}
+                            max={2}
+                            step={0.01}
+                            value={val}
+                            onChange={(e) =>
+                              handleXIntervalChange(i, Number(e.target.value))
+                            }
+                            className="flex-1"
+                          />
+                          <span className="w-8 text-xs">{val.toFixed(2)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="font-semibold mb-2">Y축 구간별 비율</div>
+                    <div className="flex flex-col gap-2">
+                      {yIntervals.map((val, i) => (
+                        <div key={i} className="flex items-center gap-2">
+                          <span className="w-8 text-right text-xs text-gray-500">
+                            {String.fromCharCode(97 + i)}~
+                            {String.fromCharCode(97 + i + 1)}
+                          </span>
+                          <input
+                            type="range"
+                            min={0.2}
+                            max={2}
+                            step={0.01}
+                            value={val}
+                            onChange={(e) =>
+                              handleYIntervalChange(i, Number(e.target.value))
+                            }
+                            className="flex-1"
+                          />
+                          <span className="w-8 text-xs">{val.toFixed(2)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               </div>
             )}
@@ -294,28 +226,9 @@ const ChartRegistration: React.FC<{
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <ManualMappingTable
-            measurementItems={measurementItems}
-            selectedPathId={mappingPathId}
-            selectedPointIndex={selectedPointIndex}
-            handlePathIdClick={handleStartMapping}
-            onAdjustableChange={handleAdjustableChange}
-            onStopSelecting={handleStopSelecting}
-          />
+          <ManualMappingTable measurementItems={measurementItems} />
         </CardContent>
       </Card>
-
-      <div className="flex justify-end gap-2">
-        <Button variant="outline">취소</Button>
-        <Button onClick={handleSubmit}>저장</Button>
-      </div>
-      <SliderControlModal
-        open={isControlModalOpen}
-        onOpenChange={setIsControlModalOpen}
-        measurementItems={measurementItems}
-        points={points}
-        onSave={handleSliderControlSave}
-      />
     </div>
   );
 };

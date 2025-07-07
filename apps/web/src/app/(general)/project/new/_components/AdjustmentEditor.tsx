@@ -21,7 +21,7 @@ import { CalculationResult, getSnapValues } from "./range.utils";
 
 import { cn } from "@/lib/utils";
 
-const isDev = false as const;
+const isDev = true as const;
 interface AdjustedPath extends PathDefinition {
   start: Point;
   end: Point;
