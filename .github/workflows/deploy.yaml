@@ -17,15 +17,19 @@ on:
 
 jobs:
   # ───────── 변경 파일 필터 ─────────
+  # ───────── 변경 파일 필터 ─────────
   filter:
-    if: github.event_name == 'push'          # push 일 때만 필요
     runs-on: ubuntu-latest
     outputs:
-      web:   ${{ steps.paths.outputs.web }}
-      admin: ${{ steps.paths.outputs.admin }}
+      web:   ${{ steps.set.outputs.web }}
+      admin: ${{ steps.set.outputs.admin }}
+
     steps:
       - uses: actions/checkout@v4
+
+      # A. push 이벤트용: 변경 경로 계산
       - id: paths
+        if: github.event_name == 'push'
         uses: dorny/paths-filter@v2
         with:
           filters: |
@@ -33,6 +37,21 @@ jobs:
               - 'apps/web/**'
             admin:
               - 'apps/admin/**'
+
+      # B. 결과값 통합
+      - id: set
+        run: |
+          if [ "${{ github.event_name }}" = "push" ]; then
+            echo "web=${{ steps.paths.outputs.web }}"   >> "$GITHUB_OUTPUT"
+            echo "admin=${{ steps.paths.outputs.admin }}" >> "$GITHUB_OUTPUT"
+          else
+            # workflow_dispatch → 사용자가 고른 타깃으로 출력값 강제 true/false
+            case "${{ github.event.inputs.target }}" in
+              web)   echo "web=true"  >> "$GITHUB_OUTPUT"; echo "admin=false" >> "$GITHUB_OUTPUT" ;;
+              admin) echo "web=false" >> "$GITHUB_OUTPUT"; echo "admin=true"  >> "$GITHUB_OUTPUT" ;;
+              all|*) echo "web=true"  >> "$GITHUB_OUTPUT"; echo "admin=true"  >> "$GITHUB_OUTPUT" ;;
+            esac
+          fi
 
   # ───────── WEB ─────────
   deploy-web:
@@ -47,6 +66,7 @@ jobs:
       APP_DIR: ${{ github.workspace }}
       VERCEL_TOKEN:      ${{ secrets.VERCEL_TOKEN }}
       VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_WEB }}
+      VERCEL_ORG_ID:     ${{ secrets.VERCEL_ORG_ID }}
       PROD_ALIAS:        "web.dddorok.vercel.app"
 
     steps:
@@ -113,6 +133,7 @@ jobs:
       APP_DIR: ${{ github.workspace }}
       VERCEL_TOKEN:      ${{ secrets.VERCEL_TOKEN }}
       VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_ADMIN }}
+      VERCEL_ORG_ID:     ${{ secrets.VERCEL_ORG_ID }}
       PROD_ALIAS:        "admin.dddorok.vercel.app"
 
     steps:
