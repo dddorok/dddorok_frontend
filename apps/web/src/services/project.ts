@@ -99,3 +99,8 @@ export const updateProject = async (
     .json();
   return response;
 };
+
+export const deleteProject = async (id: string) => {
+  const response = await privateInstance.delete(`project/${id}`).json();
+  return response;
+};

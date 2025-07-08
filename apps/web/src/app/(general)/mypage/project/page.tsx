@@ -1,13 +1,14 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Trash2, TrashIcon } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { ROUTE } from "@/constants/route";
-import { projectQueries } from "@/queries/project";
+import { projectQueries, projectQueryKey } from "@/queries/project";
+import { deleteProject } from "@/services/project";
 
 export default function MyPage() {
   const { data: myProjectList } = useQuery({
@@ -39,35 +40,48 @@ export default function MyPage() {
 
       <div className="grid gap-x-[30px] gap-y-16 container py-3 grid-cols-3 lg:grid-cols-4 ">
         {myProjectList?.map((project) => (
-          <Link
-            href={ROUTE.PROJECT.EDIT(project.id)}
-            key={project.id}
-            className="w-full"
-          >
-            <TemplateItem name={project.name} />
-          </Link>
+          <TemplateItem key={project.id} name={project.name} id={project.id} />
         ))}
       </div>
     </div>
   );
 }
-function TemplateItem({ name }: { name: string }) {
+function TemplateItem({ name, id }: { name: string; id: string }) {
+  const queryClient = useQueryClient();
+
+  const { mutate: deleteProjectMutation, isPending } = useMutation({
+    mutationFn: () => deleteProject(id),
+    onSuccess: () => {
+      toast.success("프로젝트가 삭제되었습니다.");
+      queryClient.invalidateQueries({
+        queryKey: [projectQueryKey],
+      });
+    },
+    onError: () => {
+      toast.error("프로젝트 삭제에 실패했습니다.");
+    },
+  });
+
   return (
     <div>
-      <div className="bg-primary-PR100 border border-neutralAlpha-NA05 rounded-lg h-[216px] overflow-hidden flex justify-center items-center">
-        {/* {template.thumbnail_url && (
+      <Link href={ROUTE.PROJECT.EDIT(id)} className="w-full">
+        <div className="bg-primary-PR100 border border-neutralAlpha-NA05 rounded-lg h-[216px] overflow-hidden flex justify-center items-center">
+          {/* {template.thumbnail_url && (
           <img alt={name} className="w-full h-full object-cover" />
         )} */}
-        <img
-          src="/assets/logo/preview-logo.svg"
-          alt="preview-logo"
-          className="w-[64px] h-auto object-cover"
-          width={64}
-        />
-      </div>
+          <img
+            src="/assets/logo/preview-logo.svg"
+            alt="preview-logo"
+            className="w-[64px] h-auto object-cover"
+            width={64}
+          />
+        </div>{" "}
+      </Link>
       <div className="flex justify-between items-center mt-[9px]">
         <p className="text-medium text-neutral-N800 truncate">{name}</p>
-        <Trash2 className="w-6 h-6 text-primary-PR" />
+        <button onClick={() => deleteProjectMutation()} disabled={isPending}>
+          <Trash2 className="w-6 h-6 text-primary-PR" />
+        </button>
       </div>
     </div>
   );
