@@ -50,13 +50,26 @@ export function ChartList({ project }: { project: GetProjectResponse }) {
 }
 
 function Chart({ id }: { id: string }) {
-  const { data: chart } = useQuery({
+  const { data: chart, isLoading } = useQuery({
     ...projectQueries.chart(id),
   });
 
-  if (!chart) {
-    return <div>Loading...</div>;
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-40 bg-neutral-N0 rounded-2xl text-neutral-N500 text-h3 font-medium">
+        차트 로딩중입니다... 잠시만 기다려주세요
+      </div>
+    );
   }
+
+  if (!chart) {
+    return (
+      <div className="flex justify-center items-center h-40  bg-neutral-N0 rounded-2xl text-neutral-N500 text-h3 font-medium">
+        차트 불러오기에 실패했습니다. 잠시 후 다시 시도해주세요.
+      </div>
+    );
+  }
+  console.log("chart: ", chart);
 
   return (
     <div

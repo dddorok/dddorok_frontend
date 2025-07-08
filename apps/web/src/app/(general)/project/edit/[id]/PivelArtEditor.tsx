@@ -10,6 +10,8 @@ import {
 import { KNITTING_SYMBOLS } from "./Shape.constants";
 import { DottingRef } from "./useDotting";
 
+const MAX_GRID_SIZE = 1000;
+
 const PixelArtEditor = ({
   initialCells,
   grid_col,
@@ -24,6 +26,14 @@ const PixelArtEditor = ({
   dottingRef: React.RefObject<DottingRef>;
 }) => {
   const { brushTool, selectedShape } = usePixelArtEditorContext();
+
+  if (grid_col >= MAX_GRID_SIZE || grid_row >= MAX_GRID_SIZE) {
+    return (
+      <div className="flex justify-center items-center h-40 bg-neutral-N0 rounded-2xl text-neutral-N500 text-h3 font-medium">
+        차트가 너무 커서 렌더링 할 수 없습니다. 관리자에게 문의 부탁드립니다
+      </div>
+    );
+  }
 
   return (
     <div className="w-fit">

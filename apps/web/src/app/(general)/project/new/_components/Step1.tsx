@@ -16,14 +16,6 @@ import {
 } from "@/components/ui/select";
 import { projectQueries } from "@/queries/project";
 
-const DEV_DUMMY_DATA = {
-  name: "test",
-  gauge_ko: 20,
-  gauge_dan: 28,
-  chest_width: 85,
-  gauge_tab: "gauge_manual",
-} as const;
-
 const INITIAL_DATA = {
   name: "",
   gauge_ko: undefined,

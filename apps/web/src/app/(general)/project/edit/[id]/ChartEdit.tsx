@@ -1,6 +1,6 @@
 import { Cell } from "./chart.types";
 import PixelArtEditor from "./PivelArtEditor";
-import { KNITTING_SYMBOL_OBJ, KNITTING_SYMBOLS } from "./Shape.constants";
+import { KNITTING_SYMBOL_OBJ } from "./Shape.constants";
 
 import { OriginalCell } from "@/services/project";
 
@@ -16,8 +16,12 @@ export default function ChartEdit({
   const { initialCells } = convertCellsData(cells);
   const disabledCells = getDisabledCells(grid_row, grid_col, initialCells);
 
-  if (!initialCells || initialCells.length === 0) {
-    return <div>Loading...</div>;
+  if (!initialCells) {
+    return (
+      <div className="flex justify-center items-center h-40 bg-neutral-N0 rounded-2xl text-neutral-N500 text-h3 font-medium">
+        cell 로드에 실패했습니다.
+      </div>
+    );
   }
 
   return (
