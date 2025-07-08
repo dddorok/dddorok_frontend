@@ -222,7 +222,7 @@ export const SliderSection = ({
 
       <div className="relative">
         {/* 현재 값 표시 (슬라이더 위에) */}
-        <div className="relative mb-2">
+        <div className="relative mb-10">
           <div
             className={cn(
               "absolute transform -translate-x-1/2  px-[6px] py-[2px] rounded text-sm font-medium top-[-38px]",
