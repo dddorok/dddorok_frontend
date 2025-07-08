@@ -25,8 +25,7 @@ import {
   ChartValueType,
 } from "@/constants/chart.constants";
 import { cn } from "@/lib/utils";
-
-const isDev = true as const;
+import { useIsDebug } from "@/stores/debug";
 
 interface AdjustedPath extends PathDefinition {
   start: Point;
@@ -154,6 +153,7 @@ const SVGPointEditor = ({
 };
 
 function GridCoordinatePlane() {
+  const isDev = useIsDebug();
   const { adjustedPoints, adjustedPaths } = useAdjustmentContext();
   const { adjustingKey } = useAdjustmentProgressingContext();
 
