@@ -98,53 +98,49 @@ const SVGPointEditor = ({
   const sliders = sliderData.filter((s) => s.value_type === selectedValueType);
 
   return (
-    <div className="w-full max-w-7xl mx-auto p-6 bg-white">
-      <div className="grid grid-cols-[280px_1fr] gap-16 items-start">
-        <div className="border border-neutral-N300 rounded-lg py-5 px-10">
-          <GridCoordinatePlane />
+    <div className="grid grid-cols-[280px_1fr] gap-16 items-start">
+      <div className="border border-neutral-N300 rounded-lg py-5 px-10">
+        <GridCoordinatePlane />
+      </div>
+
+      <div className="bg-neutral-N100 border border-neutral-N200 p-4 px-[18px] rounded-lg">
+        <div className="flex gap-4 mb-[14px] justify-center">
+          {CHART_VALUE_TYPES.map((valueType) => (
+            <button
+              key={valueType}
+              onClick={() => setSelectedValueType(valueType)}
+              className={cn(
+                "h-9 px-4 text-medium-r border-neutral-N400 border text-neutral-N500 rounded-md ",
+                selectedValueType === valueType &&
+                  "bg-primary-PR text-[#FFFFFF] text-medium-b border-primary-PR"
+              )}
+            >
+              {CHART_VALUE_TYPE_OBJ[valueType].label}
+            </button>
+          ))}
         </div>
 
-        <div className="bg-neutral-N100 border border-neutral-N200 p-4 px-[18px] rounded-lg">
-          <div className="flex gap-4 mb-[14px] justify-center">
-            {CHART_VALUE_TYPES.map((valueType) => (
-              <button
-                key={valueType}
-                onClick={() => setSelectedValueType(valueType)}
-                className={cn(
-                  "h-9 px-4 text-medium-r border-neutral-N400 border text-neutral-N500 rounded-md ",
-                  selectedValueType === valueType &&
-                    "bg-primary-PR text-[#FFFFFF] text-medium-b border-primary-PR"
-                )}
-              >
-                {CHART_VALUE_TYPE_OBJ[valueType].label}
-              </button>
+        <div className="space-y-6">
+          <div>
+            {sliders.map((slider) => (
+              <SliderSection
+                key={slider.control}
+                label={slider.label}
+                min={slider.min}
+                max={slider.max}
+                snapValues={getSnapValues(slider.min, slider.max)}
+                getDisplayValue={(value: number) => value + slider.gapValue}
+                initialValue={gridAdjustments[slider.control] ?? slider.average}
+                average={slider.average}
+                code={slider.control}
+                onValueChange={(value) => {
+                  handleGridAdjustment(slider.control, value.toString());
+                  onChange({ code: slider.code, value: value });
+                }}
+                onAdjustStart={() => handleAdjustStart(slider.control)}
+                onAdjustEnd={handleAdjustEnd}
+              />
             ))}
-          </div>
-
-          <div className="space-y-6">
-            <div>
-              {sliders.map((slider) => (
-                <SliderSection
-                  key={slider.control}
-                  label={slider.label}
-                  min={slider.min}
-                  max={slider.max}
-                  snapValues={getSnapValues(slider.min, slider.max)}
-                  getDisplayValue={(value: number) => value + slider.gapValue}
-                  initialValue={
-                    gridAdjustments[slider.control] ?? slider.average
-                  }
-                  average={slider.average}
-                  code={slider.control}
-                  onValueChange={(value) => {
-                    handleGridAdjustment(slider.control, value.toString());
-                    onChange({ code: slider.code, value: value });
-                  }}
-                  onAdjustStart={() => handleAdjustStart(slider.control)}
-                  onAdjustEnd={handleAdjustEnd}
-                />
-              ))}
-            </div>
           </div>
         </div>
       </div>

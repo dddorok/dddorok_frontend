@@ -6,6 +6,7 @@ import { AdjustmentEditor } from "./AdjustmentEditor";
 import { CalculationResult, getRangeData } from "./range.utils";
 
 import { Button } from "@/components/ui/button";
+import { CHART_SECTION_OBJ } from "@/constants/chart.constants";
 import { templateQueries } from "@/queries/template";
 
 export default function Step2({
@@ -114,7 +115,7 @@ export default function Step2({
           return (
             <ChartSection
               key={chart.svg_mapping.chart_type_id}
-              label={chart.svg_mapping.name}
+              label={CHART_SECTION_OBJ[chart.section].label}
               svgContent={svgContent}
               data={sliderData}
               onChange={handleMeasurementsChange}
@@ -159,8 +160,8 @@ function ChartSection({
   return (
     <section className="mb-8">
       <h4 className="text-[21px] font-semibold text-neutral-N500 mb-4">
-        <strong className="text-neutral-N900 font-semibold">{label}</strong>를
-        조정해주세요
+        <strong className="text-neutral-N900 font-semibold">{label} </strong>
+        치수를 조정해주세요
       </h4>
       <AdjustmentEditor
         svgContent={svgContent}

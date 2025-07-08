@@ -108,6 +108,7 @@ export interface GetTemplateChartListResponse {
       svg_file_url: string;
       updated_date: string;
     };
+    section: "SLEEVE" | "BODY";
   }[];
   measurements: [string, MeasurementItemType][];
 }
