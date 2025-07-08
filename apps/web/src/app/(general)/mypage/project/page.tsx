@@ -1,10 +1,12 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Trash2, TrashIcon } from "lucide-react";
+import { Trash2 } from "lucide-react";
 import Link from "next/link";
+import { overlay } from "overlay-kit";
 import { toast } from "sonner";
 
+import { AlertDialog } from "@/components/common/Dialog/AlertDialog";
 import { Button } from "@/components/ui/button";
 import { ROUTE } from "@/constants/route";
 import { projectQueries, projectQueryKey } from "@/queries/project";
@@ -52,15 +54,30 @@ function TemplateItem({ name, id }: { name: string; id: string }) {
   const { mutate: deleteProjectMutation, isPending } = useMutation({
     mutationFn: () => deleteProject(id),
     onSuccess: () => {
-      toast.success("프로젝트가 삭제되었습니다.");
+      toast("프로젝트가 삭제되었습니다.");
       queryClient.invalidateQueries({
         queryKey: [projectQueryKey],
       });
     },
     onError: () => {
-      toast.error("프로젝트 삭제에 실패했습니다.");
+      toast("프로젝트 삭제에 실패했습니다.");
     },
   });
+
+  const onDelete = () => {
+    overlay.open(({ isOpen, close }) => (
+      <AlertDialog
+        open={isOpen}
+        onOpenChange={close}
+        onAction={async () => {
+          await deleteProjectMutation();
+          close();
+        }}
+        title={`‘${name}’ 프로젝트를 삭제하시겠습니까?`}
+        actionText="삭제"
+      />
+    ));
+  };
 
   return (
     <div>
@@ -79,7 +96,7 @@ function TemplateItem({ name, id }: { name: string; id: string }) {
       </Link>
       <div className="flex justify-between items-center mt-[9px]">
         <p className="text-medium text-neutral-N800 truncate">{name}</p>
-        <button onClick={() => deleteProjectMutation()} disabled={isPending}>
+        <button onClick={() => onDelete()} disabled={isPending}>
           <Trash2 className="w-6 h-6 text-primary-PR" />
         </button>
       </div>

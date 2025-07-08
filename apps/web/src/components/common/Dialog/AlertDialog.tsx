@@ -11,8 +11,8 @@ import { DialogDefaultProps } from "@/components/ui/dialog";
 
 interface AlertDialogProps extends DialogDefaultProps {
   title: string | React.ReactNode;
-  description: string | React.ReactNode;
-  onAction: () => void;
+  description?: string | React.ReactNode;
+  onAction: () => Promise<void> | void;
   actionVariant?: ButtonProps["color"];
   actionText?: string;
 }
@@ -31,7 +31,7 @@ export function AlertDialog({
       <DialogContent isCloseable={false}>
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
-          <DialogDescription>{description}</DialogDescription>
+          {description && <DialogDescription>{description}</DialogDescription>}
         </DialogHeader>
         <DialogFooter className="grid grid-cols-2 gap-2">
           <Button color="trans" onClick={() => onOpenChange(false)}>
