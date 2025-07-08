@@ -1,3 +1,4 @@
+import { ChartValueType } from "@/constants/chart.constants";
 import { SvgMappingControlType } from "@/services/template";
 
 interface MeasurementItemType {
@@ -7,7 +8,7 @@ interface MeasurementItemType {
   min: number;
   max: number;
   range_toggle: boolean;
-  value_type: "WIDTH" | "LENGTH";
+  value_type: ChartValueType;
 }
 
 export interface CalculationResult {
@@ -19,7 +20,7 @@ export interface CalculationResult {
   initialValue: number;
   max: number;
   min: number;
-  value_type: "WIDTH" | "LENGTH";
+  value_type: ChartValueType;
   isPartialControl: boolean;
   originalValue: number;
   originalAverage: number;
@@ -28,9 +29,6 @@ export interface CalculationResult {
   originalMax: number;
   baseMinRange: number;
   baseMaxRange: number;
-  // overlappingControls: string[];
-  // rangeSize: number;
-  // originalRangeSize: number;
   gapValue: number;
 }
 

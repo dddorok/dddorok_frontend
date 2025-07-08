@@ -86,7 +86,7 @@ export default function NewProjectClient({
       {step === 2 && (
         <div className="w-full">
           <h3 className="text-h3 text-primary-PR py-[10px] mb-4 text-center">
-            Step 2. 가슴둘레/게이지 입력
+            Step 2. 세부 치수 조정
           </h3>
           <ProgressDot current={2} total={2} />
           <div className="py-4 px-5 w-full">

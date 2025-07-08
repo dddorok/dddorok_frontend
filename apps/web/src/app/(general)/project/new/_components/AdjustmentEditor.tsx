@@ -19,9 +19,15 @@ import {
 import { SliderSection } from "./korean-slider-component";
 import { CalculationResult, getSnapValues } from "./range.utils";
 
+import {
+  CHART_VALUE_TYPE_OBJ,
+  CHART_VALUE_TYPES,
+  ChartValueType,
+} from "@/constants/chart.constants";
 import { cn } from "@/lib/utils";
 
 const isDev = true as const;
+
 interface AdjustedPath extends PathDefinition {
   start: Point;
   end: Point;
@@ -86,7 +92,9 @@ const SVGPointEditor = ({
   const { handleAdjustStart, handleAdjustEnd } =
     useAdjustmentProgressingContext();
 
-  const [selectedValueType, setSelectedValueType] = useState<string>("WIDTH");
+  const [selectedValueType, setSelectedValueType] = useState<ChartValueType>(
+    CHART_VALUE_TYPES[0]
+  );
 
   const sliders = sliderData.filter((s) => s.value_type === selectedValueType);
 
@@ -99,7 +107,7 @@ const SVGPointEditor = ({
 
         <div className="bg-neutral-N100 border border-neutral-N200 p-4 px-[18px] rounded-lg">
           <div className="flex gap-4 mb-[14px] justify-center">
-            {["WIDTH", "LENGTH"].map((valueType) => (
+            {CHART_VALUE_TYPES.map((valueType) => (
               <button
                 key={valueType}
                 onClick={() => setSelectedValueType(valueType)}
@@ -109,7 +117,7 @@ const SVGPointEditor = ({
                     "bg-primary-PR text-[#FFFFFF] text-medium-b border-primary-PR"
                 )}
               >
-                {valueType === "WIDTH" ? "길이" : "너비"}
+                {CHART_VALUE_TYPE_OBJ[valueType].label}
               </button>
             ))}
           </div>

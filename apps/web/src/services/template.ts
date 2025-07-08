@@ -1,5 +1,7 @@
 import { privateInstance } from "./instance";
 
+import { ChartValueType } from "@/constants/chart.constants";
+
 export interface TemplateType {
   id: string;
   name: string;
@@ -47,7 +49,7 @@ export interface MeasurementItemType {
   value: number;
   min: number;
   max: number;
-  value_type: "WIDTH" | "LENGTH";
+  value_type: ChartValueType;
   range_toggle: boolean;
 }
 
@@ -59,7 +61,7 @@ export type MeasurementType = [
     value: number;
     min: number;
     max: number;
-    value_type: "WIDTH" | "LENGTH";
+    value_type: ChartValueType;
   },
 ];
 
@@ -87,7 +89,7 @@ export interface SvgMappingControlType {
   control_start: string;
   control_end: string;
   original_control: string;
-  value_type: "WIDTH" | "LENGTH";
+  value_type: ChartValueType;
   control: string;
 }
 
