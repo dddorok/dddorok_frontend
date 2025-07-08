@@ -69,7 +69,6 @@ function Chart({ id }: { id: string }) {
       </div>
     );
   }
-  console.log("chart: ", chart);
 
   return (
     <div
