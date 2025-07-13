@@ -113,12 +113,22 @@ export default function Step1({
           <Select
             value={data.chest_width?.toString()}
             onValueChange={(value) => handleChange("chest_width", value)}
+            defaultValue={"85"}
           >
             <SelectTrigger>
-              <SelectValue
-                placeholder="가슴둘레를 선택해주세요."
-                className="data-[placeholder]:text-neutral-N400 aaaaa"
-              />
+              {data.chest_width ? (
+                <div className="text-neutral-N900">
+                  {
+                    CHEST_WIDTH_OPTIONS.find(
+                      (option) => option.value == data.chest_width
+                    )?.label
+                  }
+                </div>
+              ) : (
+                <div className="text-neutral-N400">
+                  가슴둘레를 선택해주세요.
+                </div>
+              )}
             </SelectTrigger>
             <SelectContent>
               {CHEST_WIDTH_OPTIONS.map((option) => (
@@ -215,18 +225,18 @@ export default function Step1({
 const CHEST_WIDTH_OPTIONS = [
   { value: 50, label: "50-53 cm" },
   { value: 54, label: "54-57 cm" },
-  { value: 58, label: "58-61 cm" },
-  { value: 62, label: "62-65 cm" },
-  { value: 66, label: "66-69 cm" },
+  { value: 58, label: "58-61 cm (5세)" },
+  { value: 62, label: "62-65 cm (7세)" },
+  { value: 66, label: "66-69 cm (9세)" },
   { value: 70, label: "70-73 cm" },
   { value: 74, label: "74-79 cm" },
   { value: 80, label: "80-84 cm" },
-  { value: 85, label: "85-89 cm" },
-  { value: 90, label: "90-94 cm" },
-  { value: 95, label: "95-99 cm" },
-  { value: 100, label: "100-104 cm" },
-  { value: 105, label: "105-109 cm" },
-  { value: 110, label: "110-114 cm" },
-  { value: 115, label: "115-119 cm" },
+  { value: 85, label: "85-89 cm (여 XS)" },
+  { value: 90, label: "90-94 cm (여 S)" },
+  { value: 95, label: "95-99 cm (여 M)" },
+  { value: 100, label: "100-104 cm (여 L)" },
+  { value: 105, label: "105-109 cm (여 XL)" },
+  { value: 110, label: "110-114 cm (여 XXL)" },
+  { value: 115, label: "115-119 cm " },
   { value: 120, label: "120-124 cm" },
 ];
