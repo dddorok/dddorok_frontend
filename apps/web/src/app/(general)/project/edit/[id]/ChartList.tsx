@@ -24,7 +24,7 @@ export function ChartList({ project }: { project: GetProjectResponse }) {
   return (
     <>
       <div className="bg-neutral-N200 min-h-[calc(100vh-100px)]">
-        <div className="container">
+        <div className="container-layout">
           <div className="flex gap-2 py-6">
             {project.chart_list.map((chart) => (
               <button
@@ -73,7 +73,7 @@ function Chart({ id }: { id: string }) {
   return (
     <div
       className={cn(
-        "w-[1204px] bg-neutral-N0 shadow-[0px_2px_20px_rgba(28,31,37,0.2)]",
+        "bg-neutral-N0 shadow-[0px_2px_20px_rgba(28,31,37,0.2)]",
         "p-8 min-h-fit overflow-auto"
       )}
     >

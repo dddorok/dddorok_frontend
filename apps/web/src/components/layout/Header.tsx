@@ -32,6 +32,7 @@ export default function Header({ className }: HeaderProps) {
     <>
       <div
         className={cn(
+          "container-layout",
           "border-b  w-full bg-neutral-N0 border-neutral-N100 shadow-[0px_4px_4px_0px_var(--Neutral-N100, #F5F7FA)]",
           "fixed top-0 left-0 right-0 z-50",
           "px-8",

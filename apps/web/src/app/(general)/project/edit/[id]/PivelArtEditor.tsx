@@ -1,3 +1,4 @@
+import { Redo, Redo2, Undo2 } from "lucide-react";
 import React, { useRef } from "react";
 
 import Toolbar from "./_components/Toolbar";
@@ -9,6 +10,9 @@ import {
 } from "./PixelArtEditorContext";
 import { KNITTING_SYMBOLS } from "./Shape.constants";
 import { DottingRef } from "./useDotting";
+
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 const MAX_GRID_SIZE = 1000;
 
@@ -39,6 +43,36 @@ const PixelArtEditor = ({
     <div className="w-fit">
       <Toolbar />
 
+      <div
+        className={cn(
+          "fixed top-0 right-[calc(var(--container-layout-padding-inline)+60px)] z-50 h-[100px]",
+          "flex gap-3 items-center"
+        )}
+      >
+        <div className="flex gap-[32px]">
+          <button
+            onClick={() => dottingRef.current?.undo()}
+            disabled={!dottingRef.current?.canUndo()}
+            className="text-neutral-N700 disabled:text-neutral-N400"
+          >
+            <Undo2 width={32} height={32} />
+          </button>
+          <button
+            onClick={() => dottingRef.current?.redo()}
+            disabled={!dottingRef.current?.canRedo()}
+            className="text-neutral-N700 disabled:text-neutral-N400"
+          >
+            <Redo2 width={32} height={32} />
+          </button>
+        </div>
+        <Button
+          color="fill"
+          className=""
+          onClick={() => alert("준비중입니다. ")}
+        >
+          저장하기
+        </Button>
+      </div>
       <Dotting
         ref={dottingRef}
         rows={grid_row}

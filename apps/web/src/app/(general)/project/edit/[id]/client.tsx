@@ -24,7 +24,7 @@ export function ProjectEditClient({ id }: { id: string }) {
   return (
     <>
       {project.is_temporary && <TemporaryOverlay project_id={project.id} />}
-      <div className="h-[100px] bg-neutral-N0 flex items-center justify-between fixed top-0 left-0 right-0 z-50">
+      <div className="h-[100px] bg-neutral-N0 flex items-center justify-between fixed top-0 left-0 right-0 z-50 container-layout">
         <div className="container">
           <div className="text-neutral-N800 text-h3-m">{project.name}</div>
         </div>
@@ -35,6 +35,7 @@ export function ProjectEditClient({ id }: { id: string }) {
         </div>
       </div>
       <div className="h-[100px]"></div>
+      <div></div>
       <ChartList project={project} />
     </>
   );

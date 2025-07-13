@@ -21,9 +21,26 @@ a {
   text-decoration: none;
 }
 
-.container {
-  max-width: 1204px;
-  margin: 0 auto;
+:root {
+  --container-layout-padding-inline: 260px;
+
+  @media (max-width: 1440px) {
+    --container-layout-padding-inline: 118px;
+  }
+  @media (max-width: 1280px) {
+    --container-layout-padding-inline: 5vw;
+  }
+}
+
+.container-layout {
+  /* | Viewport Width | 좌우 여백 (px) | 콘텐츠 영역 (px) | 구성 방식 / 비고                               |
+  | **1920**      | `260`     | `1400`     | 넓은 화면에 맞춰 콘텐츠를 약간 확장 (max-width 1400 추천) |
+  | **1440**       | `118`      | `1204`      | 기준 해상도                                   |
+  | **1280**       | `5vw ≒ 64` | `1152`      | 상대적 여백 사용 (더 좁아짐)                        | ----> 이거는 1440과 동일
+  | **1024**      | `5vw ≒ 51` | `922`      | 태블릿 가로          */
+
+  padding-inline: var(--container-layout-padding-inline);
+  width: 100%;
 }
 
 .imgDark {
@@ -216,15 +233,6 @@ a {
     --chart-5: 340 75% 55%;
   }
 }
-
-/* @layer base {
-  * {
-    @apply border-border;
-  }
-  body {
-    @apply bg-background text-foreground;
-  }
-} */
 
 [data-sonner-toast][data-y-position="top"] {
   top: 100px !important;
