@@ -17,6 +17,7 @@ import {
 } from "../PixelArtEditorContext";
 import { KNITTING_SYMBOLS, Shape } from "../Shape.constants";
 
+import BasicTooltip, { ShortcutTooltip } from "@/components/common/Tootip";
 import { cn } from "@/lib/utils";
 
 export default function Toolbar() {
@@ -76,32 +77,34 @@ function SymbolButton({ isOpenSubMenu }: { isOpenSubMenu: boolean }) {
 
   return (
     <div className="relative">
-      <button
-        onClick={() => {
-          setIsOpen(!isOpen);
-          setBrushTool(BrushTool.DOT);
-        }}
-        className={cn("flex flex-col items-center")}
-      >
-        <div className={cn(menuStyle, isSelected && selectedMenuStyle)}>
-          <canvas
-            width={16}
-            height={16}
-            ref={(canvas) => {
-              if (canvas) {
-                const ctx = canvas.getContext("2d");
-                if (ctx) {
-                  ctx.clearRect(0, 0, 16, 16);
-                  selectedShape.render(ctx, 0, 0, 16, selectedShape.color);
+      <ShortcutTooltip content={<div>기호도구</div>} shortcut="Q">
+        <button
+          onClick={() => {
+            setIsOpen(!isOpen);
+            setBrushTool(BrushTool.DOT);
+          }}
+          className={cn("flex flex-col items-center")}
+        >
+          <div className={cn(menuStyle, isSelected && selectedMenuStyle)}>
+            <canvas
+              width={16}
+              height={16}
+              ref={(canvas) => {
+                if (canvas) {
+                  const ctx = canvas.getContext("2d");
+                  if (ctx) {
+                    ctx.clearRect(0, 0, 16, 16);
+                    selectedShape.render(ctx, 0, 0, 16, selectedShape.color);
+                  }
                 }
-              }
-            }}
-          />
-        </div>
-        {!isOpenSubMenu && (
-          <p className={menuTextStyle(brushTool === BrushTool.DOT)}>기호</p>
-        )}
-      </button>
+              }}
+            />
+          </div>
+          {!isOpenSubMenu && (
+            <p className={menuTextStyle(brushTool === BrushTool.DOT)}>기호</p>
+          )}
+        </button>
+      </ShortcutTooltip>
 
       {isSelected && (
         <div
