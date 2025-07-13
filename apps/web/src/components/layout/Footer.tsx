@@ -17,16 +17,15 @@ export default function Footer(props: { className?: string }) {
         </div>
         <div className="text-medium text-neutral-N600 mt-8">
           <div className="flex gap-2 items-center">
-            대표: 바인드오프(Bindoff) <span className={dividerStyle}>|</span>
-            사업자등록번호: 000-00-00000 <span className={dividerStyle}>|</span>
-            통신판매번호: 000-서울성동-000호{" "}
-            <a href="#" className="text-primary-PR text-small underline">
+            대표: 김수지 <span className={dividerStyle}>|</span>
+            사업자등록번호: 178-65-00786 <span className={dividerStyle}>|</span>
+            통신판매번호: 수정예정{" "}
+            {/* <a href="#" className="text-primary-PR text-small underline">
               사업자번호조회
-            </a>
+            </a> */}
           </div>
           <div className="flex gap-2 items-center">
             이메일: help@dddorok.com <span className={dividerStyle}>|</span>
-            고객센터: 0000-0000 <span className={dividerStyle}>|</span>
             서울시 성동구 살곶이길 50 8층
           </div>
           <div>©2025 DDDOROK • All rights reserved.</div>
