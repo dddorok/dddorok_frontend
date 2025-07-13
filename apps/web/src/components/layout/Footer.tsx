@@ -25,8 +25,8 @@ export default function Footer(props: { className?: string }) {
             </a> */}
           </div>
           <div className="flex gap-2 items-center">
-            이메일: help@dddorok.com <span className={dividerStyle}>|</span>
-            서울시 성동구 살곶이길 50 8층
+            이메일: admin@dddorok.com <span className={dividerStyle}>|</span>
+            서울 성동구 살곶이길 50 110동 801호
           </div>
           <div>©2025 DDDOROK • All rights reserved.</div>
         </div>
