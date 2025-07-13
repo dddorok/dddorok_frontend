@@ -1,3 +1,9 @@
+import { useRouter } from "next/navigation";
+
+import { Button } from "@/components/ui/button";
+import { createSession, createTestSession } from "@/lib/auth";
+import { apiInstance } from "@/services/instance";
+
 /* eslint-disable @next/next/no-img-element */
 export function LoginForm(props: {
   onClick?: (url: string) => void;
@@ -32,8 +38,38 @@ export function LoginForm(props: {
             : AUTH_PROVIDERS.KAKAO.loginText
         }
       />
+      <TestLoginButton />
     </div>
   );
+}
+
+function TestLoginButton() {
+  const router = useRouter();
+  const onLogin = async () => {
+    const data = await apiInstance
+      .get<{
+        data: {
+          access_token: string;
+          refresh_token: string;
+        };
+      }>("auth/test-token")
+      .json();
+
+    console.log(data);
+
+    // await createTestSession();
+    await createSession({
+      accessToken: data.data.access_token,
+      refreshToken: data.data.refresh_token,
+    });
+
+    console.log("redirecting to /");
+    router.replace("/");
+  };
+  if (process.env.NEXT_PUBLIC_ENV_MODE === "dev") {
+    return <Button onClick={onLogin}>Test Login</Button>;
+  }
+  return null;
 }
 
 function LoginButton({
