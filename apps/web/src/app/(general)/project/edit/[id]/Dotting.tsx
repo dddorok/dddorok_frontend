@@ -529,6 +529,13 @@ export const Dotting = forwardRef<DottingRef, DottingProps>(
     const [lastDrawnPos, setLastDrawnPos] = useState<GridPosition | null>(null);
     const [copiedArea, setCopiedArea] = useState<CopiedArea | null>(null);
 
+    // brushTool이 변경될 때 선택 영역 초기화
+    useEffect(() => {
+      if (brushTool !== BrushTool.SELECT) {
+        setSelectedArea(null);
+      }
+    }, [brushTool]);
+
     // shape ID로 실제 shape 객체를 찾는 함수
     const getShapeById = useCallback(
       (shapeId: string | null): Shape | null => {
