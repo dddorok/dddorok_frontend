@@ -23,7 +23,7 @@ export function flipPixelsHorizontal(
         if (mirrorPixel) {
           baseRow[col] = {
             ...mirrorPixel,
-            columnIndex: col,
+            columnIndex: mirrorCol,
           };
         } else {
           baseRow[col] = null;

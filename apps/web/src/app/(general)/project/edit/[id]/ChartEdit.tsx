@@ -16,8 +16,26 @@ export default function ChartEdit({
   onSubmit: (cells: OriginalCell[]) => void;
 }) {
   const { initialCells } = convertCellsData(cells);
-  const disabledCells = getDisabledCells(grid_row, grid_col, initialCells);
+  // const disabledCells = getDisabledCells(grid_row, grid_col, initialCells);
 
+  const disabledCells = [
+    {
+      row: 1,
+      col: 19,
+    },
+    {
+      row: 0,
+      col: 19,
+    },
+    {
+      row: 1,
+      col: 18,
+    },
+    {
+      row: 0,
+      col: 18,
+    },
+  ];
   if (!initialCells) {
     return (
       <div className="flex justify-center items-center h-40 bg-neutral-N0 rounded-2xl text-neutral-N500 text-h3 font-medium">

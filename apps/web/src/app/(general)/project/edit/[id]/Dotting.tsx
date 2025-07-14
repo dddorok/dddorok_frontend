@@ -181,6 +181,8 @@ const interpolatePixels = (
   return pixels;
 };
 
+export { interpolatePixels };
+
 const drawLine = (
   startRow: number,
   startCol: number,
