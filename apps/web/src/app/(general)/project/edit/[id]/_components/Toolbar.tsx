@@ -1,4 +1,3 @@
-/* eslint-disable @next/next/no-img-element */
 import { useEffect, useRef, useState } from "react";
 
 import {
@@ -8,7 +7,7 @@ import {
   FlipHorizontalIcon,
   FlipVerticalIcon,
 } from "../_icons/Copy";
-import { PaletteIcon, SelectIcon } from "../_icons/Menu";
+import { EraserIcon, PaletteIcon, SelectIcon } from "../_icons/Menu";
 import { BrushTool, BrushToolType } from "../constant";
 import {
   usePixelArtEditorContext,
@@ -59,7 +58,13 @@ export default function Toolbar() {
           selectedIcon={<PaletteIcon color="#4B5162" />}
           unselectedIcon={<PaletteIcon color="#79829F" />}
         />
-        <EraserButton isOpenSubMenu={isOpenSubMenu} />
+        <MenuButton
+          brushTool={BrushTool.ERASER}
+          isOpenSubMenu={isOpenSubMenu}
+          label="지우개"
+          selectedIcon={<EraserIcon color="#1C1F25" />}
+          unselectedIcon={<EraserIcon color="#9EA5BD" />}
+        />
       </div>
     </div>
   );
@@ -147,62 +152,6 @@ function SymbolButton({ isOpenSubMenu }: { isOpenSubMenu: boolean }) {
         </div>
       )}
     </div>
-  );
-}
-
-function BrushButton({ isOpenSubMenu }: { isOpenSubMenu: boolean }) {
-  const { brushTool, setBrushTool } = usePixelArtEditorContext();
-
-  return (
-    <div>
-      <button
-        className={cn(
-          menuStyle,
-          brushTool === BrushTool.SELECT && selectedMenuStyle
-        )}
-        onClick={() => setBrushTool(BrushTool.SELECT)}
-      >
-        {isOpenSubMenu ? (
-          <SelectIcon />
-        ) : (
-          <img
-            src="/assets/icons/toolbar/select-icon.svg"
-            alt="브러시"
-            width={32}
-            height={32}
-          />
-        )}
-
-        {!isOpenSubMenu && (
-          <p className={menuTextStyle(brushTool === BrushTool.SELECT)}>
-            브러시
-          </p>
-        )}
-      </button>
-    </div>
-  );
-}
-
-function EraserButton({ isOpenSubMenu }: { isOpenSubMenu: boolean }) {
-  const { brushTool, setBrushTool } = usePixelArtEditorContext();
-
-  const isSelected = brushTool === BrushTool.ERASER;
-
-  return (
-    <button
-      className="flex flex-col items-center"
-      onClick={() => setBrushTool(BrushTool.ERASER)}
-    >
-      <img
-        src="/assets/icons/toolbar/eraser-icon.svg"
-        alt="지우개"
-        width={32}
-        height={32}
-      />
-      {!isOpenSubMenu && (
-        <p className={menuTextStyle(brushTool === BrushTool.ERASER)}>지우개</p>
-      )}
-    </button>
   );
 }
 
@@ -355,7 +304,7 @@ function MenuButton({
       <div
         className={cn(
           menuStyle,
-          brushTool === menuBrushTool && selectedMenuStyle
+          isOpenSubMenu && brushTool === menuBrushTool && selectedMenuStyle
         )}
       >
         {isOpenSubMenu ? selectedIcon : unselectedIcon}
