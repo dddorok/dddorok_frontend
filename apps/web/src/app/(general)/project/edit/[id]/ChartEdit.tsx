@@ -65,11 +65,7 @@ const convertCellsData = (
     };
   });
 
-  const initialCells = convertedCells?.filter(
-    (cell) => cell.shape !== undefined
-  );
-
-  return { initialCells };
+  return { initialCells: convertedCells };
 };
 
 const getDisabledCells = (
