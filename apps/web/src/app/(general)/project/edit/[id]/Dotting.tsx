@@ -1049,6 +1049,7 @@ export const Dotting = forwardRef<DottingRef, DottingProps>(
 
         switch (brushTool) {
           case BrushTool.DOT:
+          case BrushTool.PALETTE:
             setPixel(row, col, selectedShape || null);
             break;
           case BrushTool.ERASER:
@@ -1099,6 +1100,7 @@ export const Dotting = forwardRef<DottingRef, DottingProps>(
 
         switch (brushTool) {
           case BrushTool.DOT:
+          case BrushTool.PALETTE:
             if (
               lastDrawnPos &&
               (lastDrawnPos.row !== row || lastDrawnPos.col !== col)
