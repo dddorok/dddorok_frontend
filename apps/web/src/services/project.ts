@@ -14,7 +14,7 @@ interface CreateProjectRequest {
 
 export const createProject = async (request: CreateProjectRequest) => {
   const response = await privateInstance
-    .post("project", {
+    .post<{ data: { id: string } }>("project", {
       json: request,
     })
     .json();
