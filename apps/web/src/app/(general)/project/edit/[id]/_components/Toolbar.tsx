@@ -8,21 +8,21 @@ import {
   FlipHorizontalIcon,
   FlipVerticalIcon,
 } from "../_icons/Copy";
-import { SelectIcon } from "../_icons/Menu";
-import { BrushTool } from "../constant";
+import { PaletteIcon, SelectIcon } from "../_icons/Menu";
+import { BrushTool, BrushToolType } from "../constant";
 import {
   usePixelArtEditorContext,
   usePixelArtEditorCopyContext,
-  usePixelArtEditorHistoryContext,
 } from "../PixelArtEditorContext";
 import { KNITTING_SYMBOLS, Shape } from "../Shape.constants";
 
-import BasicTooltip, { ShortcutTooltip } from "@/components/common/Tootip";
+import { ShortcutTooltip } from "@/components/common/Tootip";
 import { cn } from "@/lib/utils";
 
 export default function Toolbar() {
-  const { brushTool, setBrushTool } = usePixelArtEditorContext();
-  const isOpenSubMenu = brushTool === BrushTool.SELECT;
+  const brushSubMenuList = useBrushSubMenuList();
+
+  const isOpenSubMenu = brushSubMenuList.length > 0;
 
   return (
     <div
@@ -35,7 +35,7 @@ export default function Toolbar() {
         "fixed bottom-6 left-0 right-0 mx-auto"
       )}
     >
-      {isOpenSubMenu && <BrushSubMenu />}
+      {isOpenSubMenu && <SubMenu list={brushSubMenuList} />}
 
       <div
         className={cn(
@@ -44,18 +44,21 @@ export default function Toolbar() {
         )}
       >
         <SymbolButton isOpenSubMenu={isOpenSubMenu} />
-        <BrushButton isOpenSubMenu={isOpenSubMenu} />
-        <div className="flex flex-col items-center">
-          <img
-            src="/assets/icons/toolbar/pallet-icon.svg"
-            alt="색상"
-            width={32}
-            height={32}
-          />
-          {!isOpenSubMenu && (
-            <p className="text-neutral-N500 text-[16px] mt-1">색상</p>
-          )}
-        </div>
+        {/* <BrushButton isOpenSubMenu={isOpenSubMenu} /> */}
+        <MenuButton
+          brushTool={BrushTool.SELECT}
+          isOpenSubMenu={isOpenSubMenu}
+          label="브러시"
+          selectedIcon={<SelectIcon size={19} color="#1C1F25" />}
+          unselectedIcon={<SelectIcon size={19} color="#79829F" />}
+        />
+        <MenuButton
+          brushTool={BrushTool.PALETTE}
+          isOpenSubMenu={isOpenSubMenu}
+          label="색상"
+          selectedIcon={<PaletteIcon color="#4B5162" />}
+          unselectedIcon={<PaletteIcon color="#79829F" />}
+        />
         <EraserButton isOpenSubMenu={isOpenSubMenu} />
       </div>
     </div>
@@ -203,57 +206,6 @@ function EraserButton({ isOpenSubMenu }: { isOpenSubMenu: boolean }) {
   );
 }
 
-function BrushSubMenu() {
-  const { copy, paste, cut, flipHorizontal, flipVertical } =
-    usePixelArtEditorCopyContext();
-  const list = [
-    {
-      Icon: PasteIcon,
-      name: "복사",
-      onClick: copy,
-    },
-    {
-      Icon: CopyIcon,
-      name: "붙여넣기",
-      onClick: paste,
-    },
-    {
-      Icon: CutIcon,
-      name: "잘라내기",
-      onClick: cut,
-    },
-    {
-      Icon: FlipVerticalIcon,
-      name: "좌우반전",
-      onClick: flipHorizontal,
-    },
-    {
-      Icon: FlipHorizontalIcon,
-      name: "상하반전",
-      onClick: flipVertical,
-    },
-  ];
-
-  return (
-    <div
-      className={cn(" flex flex-nowrap gap-3", "border-b border-neutral-N600")}
-    >
-      {list.map((item) => (
-        <button
-          key={item.name}
-          className="flex flex-col items-center py-1 px-3 disabled:opacity-50 disabled:pointer-events-none"
-          onClick={item.onClick}
-        >
-          <item.Icon />
-          <p className="text-neutral-N500 text-[16px] mt-1 whitespace-nowrap">
-            {item.name}
-          </p>
-        </button>
-      ))}
-    </div>
-  );
-}
-
 const menuStyle =
   "rounded-sm w-8 h-8 flex flex-col items-center justify-center";
 const selectedMenuStyle = "bg-[rgba(29,217,231,0.2)] border border-[#1DD9E7] ";
@@ -263,3 +215,155 @@ const menuTextStyle = (isSelected: boolean) =>
     "text-neutral-N500 text-[16px] mt-1 whitespace-nowrap",
     isSelected && "text-neutral-N800"
   );
+
+function SubMenu({
+  list,
+}: {
+  list: { content: React.ReactNode; name: string; onClick: () => void }[];
+}) {
+  return (
+    <div
+      className={cn(" flex flex-nowrap gap-3", "border-b border-neutral-N600")}
+    >
+      {list.map((item) => (
+        <button
+          key={item.name}
+          className="disabled:opacity-50 disabled:pointer-events-none"
+          onClick={item.onClick}
+        >
+          {item.content}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+const useBrushSubMenuList = () => {
+  const { brushTool, setBrushTool } = usePixelArtEditorContext();
+  const { copy, paste, cut, flipHorizontal, flipVertical } =
+    usePixelArtEditorCopyContext();
+
+  const selectSubMenuList = [
+    {
+      name: "복사",
+      onClick: copy,
+      content: (
+        <div className="flex flex-col items-center py-1 px-3">
+          <PasteIcon />
+          <p className="text-neutral-N500 text-[16px] mt-1 whitespace-nowrap">
+            복사
+          </p>
+        </div>
+      ),
+    },
+    {
+      name: "붙여넣기",
+      onClick: paste,
+      content: (
+        <div className="flex flex-col items-center py-1 px-3">
+          <CopyIcon />
+          <p className="text-neutral-N500 text-[16px] mt-1 whitespace-nowrap">
+            붙여넣기
+          </p>
+        </div>
+      ),
+    },
+    {
+      content: (
+        <div className="flex flex-col items-center py-1 px-3">
+          <CutIcon />
+          <p className="text-neutral-N500 text-[16px] mt-1 whitespace-nowrap">
+            잘라내기
+          </p>
+        </div>
+      ),
+      name: "잘라내기",
+      onClick: cut,
+    },
+    {
+      name: "좌우반전",
+      onClick: flipHorizontal,
+      content: (
+        <div className="flex flex-col items-center py-1 px-3">
+          <FlipVerticalIcon />
+          <p className="text-neutral-N500 text-[16px] mt-1 whitespace-nowrap">
+            좌우반전
+          </p>
+        </div>
+      ),
+    },
+    {
+      name: "상하반전",
+      onClick: flipVertical,
+      content: (
+        <div className="flex flex-col items-center py-1 px-3">
+          <FlipHorizontalIcon />
+          <p className="text-neutral-N500 text-[16px] mt-1 whitespace-nowrap">
+            상하반전
+          </p>
+        </div>
+      ),
+    },
+  ];
+
+  const paletteSubMenuList = [
+    {
+      name: "색상 선택",
+      onClick: () => setBrushTool(BrushTool.PALETTE),
+      content: <div>색상 선택</div>,
+    },
+  ];
+
+  const submenuList = (() => {
+    switch (brushTool) {
+      case BrushTool.SELECT:
+        return selectSubMenuList;
+      case BrushTool.PALETTE:
+        return paletteSubMenuList;
+      default:
+        return [];
+    }
+  })();
+
+  return submenuList;
+};
+
+function MenuButton({
+  brushTool: menuBrushTool,
+  onClick,
+  isOpenSubMenu,
+  label,
+  selectedIcon,
+  unselectedIcon,
+}: {
+  brushTool: BrushToolType;
+  onClick?: () => void;
+  isOpenSubMenu: boolean;
+  label: string;
+  selectedIcon: React.ReactNode;
+  unselectedIcon: React.ReactNode;
+}) {
+  const { brushTool, setBrushTool } = usePixelArtEditorContext();
+  return (
+    <button
+      onClick={() => {
+        setBrushTool(menuBrushTool);
+        onClick?.();
+      }}
+      className="flex flex-col items-center"
+    >
+      <div
+        className={cn(
+          menuStyle,
+          brushTool === menuBrushTool && selectedMenuStyle
+        )}
+      >
+        {isOpenSubMenu ? selectedIcon : unselectedIcon}
+      </div>
+
+      {!isOpenSubMenu && (
+        <p className={menuTextStyle(brushTool === menuBrushTool)}>{label}</p>
+      )}
+    </button>
+  );
+}

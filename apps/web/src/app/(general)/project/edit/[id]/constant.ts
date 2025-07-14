@@ -5,6 +5,7 @@ export const BrushTool = {
   ERASER: "ERASER",
   SELECT: "SELECT",
   LINE: "LINE",
+  PALETTE: "PALETTE",
 } as const;
 
 export type BrushToolType = (typeof BrushTool)[keyof typeof BrushTool];
