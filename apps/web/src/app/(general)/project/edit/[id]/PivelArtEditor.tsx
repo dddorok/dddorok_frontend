@@ -29,7 +29,8 @@ const PixelArtEditor = ({
   grid_row: number;
   dottingRef: React.RefObject<DottingRef>;
 }) => {
-  const { brushTool, selectedShape } = usePixelArtEditorContext();
+  const { brushTool, selectedShape, selectionBackgroundColor } =
+    usePixelArtEditorContext();
 
   if (grid_col >= MAX_GRID_SIZE || grid_row >= MAX_GRID_SIZE) {
     return (
@@ -87,6 +88,7 @@ const PixelArtEditor = ({
         // zoomSensitivity={0.1}
         initialCells={initialCells}
         disabledCells={disabledCells}
+        selectionBackgroundColor={selectionBackgroundColor}
       />
     </div>
   );

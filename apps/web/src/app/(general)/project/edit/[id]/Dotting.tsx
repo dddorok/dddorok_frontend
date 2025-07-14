@@ -9,7 +9,11 @@ import React, {
   CSSProperties,
 } from "react";
 
-import { BrushTool, BrushToolType } from "./constant";
+import {
+  BrushTool,
+  BrushToolType,
+  SelectionBackgroundColorType,
+} from "./constant";
 import { KNITTING_SYMBOLS, Shape } from "./Shape.constants";
 import { flipPixelsHorizontal, flipPixelsVertical } from "./utils/pixelFlip";
 
@@ -90,6 +94,7 @@ interface DottingProps {
   initialCells?: InitialCellData[]; // 초기 선택된 셀 데이터
   disabledCells?: { row: number; col: number }[]; // 초기 비활성화 셀 데이터
   disabledCellColor?: string; // 비활성화 셀 색상
+  selectionBackgroundColor?: SelectionBackgroundColorType; // 선택 영역 배경색
   onClick?: (e: React.MouseEvent<HTMLCanvasElement>) => void; // 클릭 이벤트 핸들러
   onCopy?: () => void; // 복사 완료 시 호출
   onPaste?: () => void; // 붙여넣기 완료 시 호출
@@ -284,7 +289,7 @@ const drawShape = (
   y: number,
   size: number
 ): void => {
-  shape.render(ctx, x, y, size, shape.color);
+  shape.render(ctx, x, y, size, shape.color, shape.bgColor);
 };
 
 // 초기 픽셀 데이터를 생성하는 함수
@@ -486,6 +491,7 @@ export const Dotting = forwardRef<DottingRef, DottingProps>(
       initialCells = [],
       disabledCells = [],
       disabledCellColor = "#C8CDD9",
+      selectionBackgroundColor = "#1DD9E7",
       onClick,
       onCopy,
       onPaste,
@@ -1248,6 +1254,7 @@ export const Dotting = forwardRef<DottingRef, DottingProps>(
       ]
     );
 
+    // 선택 영역 그리기 부분 수정
     const draw = useCallback(() => {
       const canvas = canvasRef.current;
       if (!canvas) return;
@@ -1255,59 +1262,31 @@ export const Dotting = forwardRef<DottingRef, DottingProps>(
       const ctx = canvas.getContext("2d");
       if (!ctx) return;
 
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-
       ctx.save();
-      ctx.translate(panOffset.x, panOffset.y);
-      ctx.scale(scale, scale);
+
+      // 캔버스 크기 설정
+      canvas.width = width;
+      canvas.height = height;
 
       // 배경 그리기
       ctx.fillStyle = backgroundColor;
       ctx.fillRect(0, 0, width, height);
 
-      // --- 상단(열 번호) 표시 ---
-      ctx.save();
-      ctx.fillStyle = "#000";
-      ctx.font = `${LABEL_FONT_SIZE}px sans-serif`;
-      ctx.textAlign = "center";
-      ctx.textBaseline = "bottom";
-      for (let col = 0; col < cols; col++) {
-        ctx.fillText(
-          (col + 1).toString(),
-          LABEL_MARGIN + col * gridSquareLength + gridSquareLength / 2,
-          LABEL_MARGIN * 0.7
-        );
-      }
-      ctx.restore();
+      // 패닝과 줌 적용
+      ctx.translate(panOffset.x, panOffset.y);
+      ctx.scale(scale, scale);
 
-      // --- 왼쪽(행 번호) 표시 ---
-      ctx.save();
-      ctx.fillStyle = "#000";
-      ctx.font = `${LABEL_FONT_SIZE}px sans-serif`;
-      ctx.textAlign = "right";
-      ctx.textBaseline = "middle";
+      // 비활성화 셀 그리기
       for (let row = 0; row < rows; row++) {
-        ctx.fillText(
-          (row + 1).toString(),
-          LABEL_MARGIN * 0.8,
-          LABEL_MARGIN + row * gridSquareLength + gridSquareLength / 2
-        );
-      }
-      ctx.restore();
-
-      // 비활성화 셀 먼저 그리기
-      for (const row of pixels) {
-        if (row) {
-          for (const pixel of row) {
-            if (pixel && pixel.disabled) {
-              ctx.fillStyle = disabledCellColor;
-              ctx.fillRect(
-                LABEL_MARGIN + pixel.columnIndex * gridSquareLength,
-                LABEL_MARGIN + pixel.rowIndex * gridSquareLength,
-                gridSquareLength,
-                gridSquareLength
-              );
-            }
+        for (let col = 0; col < cols; col++) {
+          if (isCellDisabled(row, col, pixels)) {
+            ctx.fillStyle = disabledCellColor;
+            ctx.fillRect(
+              LABEL_MARGIN + col * gridSquareLength,
+              LABEL_MARGIN + row * gridSquareLength,
+              gridSquareLength,
+              gridSquareLength
+            );
           }
         }
       }
@@ -1346,10 +1325,10 @@ export const Dotting = forwardRef<DottingRef, DottingProps>(
 
       // 선택 영역 그리기
       if (selectedArea) {
-        // 배경 채우기
+        // 배경 채우기 (동적 색상 사용)
         ctx.save();
-        ctx.globalAlpha = 1;
-        ctx.fillStyle = SELECTED_AREA_BG_COLOR;
+        ctx.globalAlpha = 0.2; // 투명도 조정
+        ctx.fillStyle = selectionBackgroundColor;
         ctx.fillRect(
           LABEL_MARGIN + selectedArea.startCol * gridSquareLength,
           LABEL_MARGIN + selectedArea.startRow * gridSquareLength,
@@ -1429,6 +1408,7 @@ export const Dotting = forwardRef<DottingRef, DottingProps>(
       rows,
       gridSquareLength,
       disabledCellColor,
+      selectionBackgroundColor, // 의존성 배열에 추가
       LABEL_MARGIN,
       GRID_MINOR_COLOR,
       GRID_MAJOR_COLOR,

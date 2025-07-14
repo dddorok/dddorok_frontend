@@ -1,6 +1,11 @@
 import React, { createContext, useContext, useState, ReactNode } from "react";
 
-import { BrushToolType, BrushTool } from "./constant";
+import {
+  BrushToolType,
+  BrushTool,
+  SELECTION_BACKGROUND_COLORS,
+  SelectionBackgroundColorType,
+} from "./constant";
 import { KNITTING_SYMBOL_OBJ, Shape } from "./Shape.constants";
 import { DottingRef, useDotting } from "./useDotting";
 
@@ -9,6 +14,8 @@ interface PixelArtEditorContextType {
   setBrushTool: (tool: BrushToolType) => void;
   selectedShape: Shape;
   setSelectedShape: (shape: Shape) => void;
+  selectionBackgroundColor: SelectionBackgroundColorType;
+  setSelectionBackgroundColor: (color: SelectionBackgroundColorType) => void;
 }
 
 interface PixelArtEditorHistoryContextType {
@@ -49,6 +56,8 @@ export const PixelArtEditorProvider = ({
   const [selectedShape, setSelectedShape] = useState<Shape>(
     KNITTING_SYMBOL_OBJ.verticalLine as Shape
   );
+  const [selectionBackgroundColor, setSelectionBackgroundColor] =
+    useState<SelectionBackgroundColorType>(SELECTION_BACKGROUND_COLORS.DEFAULT);
 
   const {
     clear,
@@ -100,6 +109,8 @@ export const PixelArtEditorProvider = ({
         setBrushTool,
         selectedShape,
         setSelectedShape,
+        selectionBackgroundColor,
+        setSelectionBackgroundColor,
       }}
     >
       <PixelArtEditorHistoryContext.Provider

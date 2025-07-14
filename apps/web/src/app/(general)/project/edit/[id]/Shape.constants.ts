@@ -2,12 +2,15 @@ export interface Shape {
   id: string;
   name: string;
   color: string;
+  bgColor: string;
+
   render: (
     ctx: CanvasRenderingContext2D,
     x: number,
     y: number,
     size: number,
-    color: string
+    color: string,
+    bgColor: string
   ) => void;
 }
 
@@ -16,7 +19,8 @@ const renderVerticalLine = (
   x: number,
   y: number,
   size: number,
-  color: string
+  color: string,
+  bgColor: string
 ) => {
   ctx.strokeStyle = color;
   ctx.lineWidth = size * 0.06;
@@ -29,6 +33,9 @@ const renderVerticalLine = (
   const startY = y + size - padding;
   const endY = y + padding;
 
+  ctx.fillStyle = bgColor;
+  ctx.fillRect(x, y, size, size);
+
   ctx.beginPath();
   ctx.moveTo(centerX, startY);
   ctx.lineTo(centerX, endY);
@@ -40,11 +47,15 @@ const renderDiagonalLine = (
   x: number,
   y: number,
   size: number,
-  color: string
+  color: string,
+  bgColor: string
 ) => {
   ctx.strokeStyle = color;
   ctx.lineWidth = size * 0.08;
   ctx.lineCap = "round";
+
+  ctx.fillStyle = bgColor;
+  ctx.fillRect(x, y, size, size);
 
   // SVG의 비율을 참고하여 기울어진 선 그리기
   // 원본 SVG는 18x24 비율이고 약 70도 정도 기울어짐
@@ -65,8 +76,12 @@ const renderDot = (
   x: number,
   y: number,
   size: number,
-  color: string
+  color: string,
+  bgColor: string
 ) => {
+  ctx.fillStyle = bgColor;
+  ctx.fillRect(x, y, size, size);
+
   ctx.fillStyle = color;
   const padding = size * 0.1;
   const radius = (size - 2 * padding) / 2;
@@ -84,8 +99,12 @@ const renderDiamond = (
   x: number,
   y: number,
   size: number,
-  color: string
+  color: string,
+  bgColor: string
 ) => {
+  ctx.fillStyle = bgColor;
+  ctx.fillRect(x, y, size, size);
+
   ctx.fillStyle = color;
   const centerX = x + size / 2;
   const centerY = y + size / 2;
@@ -105,24 +124,28 @@ export const KNITTING_SYMBOL_OBJ: Record<string, Shape> = {
     id: "verticalLine",
     name: "겉뜨기",
     color: "#000",
+    bgColor: "#fff",
     render: renderVerticalLine,
   },
   diagonalLine: {
     id: "diagonalLine",
     name: "x",
     color: "#343844",
+    bgColor: "#fff",
     render: renderDiagonalLine,
   },
   dot: {
     id: "dot",
     name: "점",
     color: "#000",
+    bgColor: "#fff",
     render: renderDot,
   },
   diamond: {
     id: "diamond",
     name: "다이아몬드",
     color: "#4ECDC4",
+    bgColor: "#fff",
     render: renderDiamond,
   },
 } as const;
