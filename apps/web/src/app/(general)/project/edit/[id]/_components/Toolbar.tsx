@@ -80,7 +80,6 @@ export default function Toolbar() {
           shortcutLabel="지우개"
           shortcutKey="E"
         />
-        <ColorSelectionButton isOpenSubMenu={isOpenSubMenu} />
       </div>
     </div>
   );
@@ -175,12 +174,17 @@ function SubMenu({
 }
 
 const useBrushSubMenuList = () => {
-  const {
-    brushTool,
-    setBrushTool,
-    selectionBackgroundColor,
-    setSelectionBackgroundColor,
-  } = usePixelArtEditorContext();
+  const { brushTool, setSelectionBackgroundColor } = usePixelArtEditorContext();
+  const { selectedShape, setSelectedShape } = usePixelArtEditorContext();
+
+  const onColorSelect = (color: SelectionBackgroundColorType) => {
+    setSelectionBackgroundColor(color);
+    setSelectedShape({
+      ...selectedShape,
+      bgColor: color,
+    });
+  };
+
   const { copy, paste, cut, flipHorizontal, flipVertical } =
     usePixelArtEditorCopyContext();
 
@@ -247,25 +251,20 @@ const useBrushSubMenuList = () => {
     },
   ];
 
-  const paletteSubMenuList = [
-    {
-      name: "색상 선택",
-      onClick: () => setBrushTool(BrushTool.PALETTE),
-      content: <div>색상 선택</div>,
-    },
-    {
-      name: "선택 배경색",
-      onClick: () => {},
+  const paletteSubMenuList = Object.entries(SELECTION_BACKGROUND_COLORS).map(
+    ([key, color]) => ({
+      name: key,
+      onClick: () => onColorSelect(color),
       content: (
         <div className="flex flex-col items-center py-1 px-3">
-          <ColorPaletteIcon size={20} />
-          <p className="text-neutral-N500 text-[16px] mt-1 whitespace-nowrap">
-            선택 배경색
-          </p>
+          <div
+            className="w-10 h-10 rounded-sm"
+            style={{ backgroundColor: color }}
+          />
         </div>
       ),
-    },
-  ];
+    })
+  );
 
   const submenuList = (() => {
     switch (brushTool) {
@@ -351,66 +350,5 @@ function RenderShapeIcon({
         }
       }}
     />
-  );
-}
-
-function ColorSelectionButton({ isOpenSubMenu }: { isOpenSubMenu: boolean }) {
-  const [isOpen, setIsOpen] = useState(false);
-  const { selectionBackgroundColor, setSelectionBackgroundColor } =
-    usePixelArtEditorContext();
-
-  const { selectedShape, setSelectedShape } = usePixelArtEditorContext();
-
-  const onColorSelect = (color: SelectionBackgroundColorType) => {
-    setSelectionBackgroundColor(color);
-    setIsOpen(false);
-    setSelectedShape({
-      ...selectedShape,
-      bgColor: color,
-    });
-  };
-
-  return (
-    <div className="relative">
-      <MenuButton
-        onClick={() => setIsOpen(!isOpen)}
-        brushTool={BrushTool.PALETTE}
-        isOpenSubMenu={isOpenSubMenu}
-        label="배경색"
-        selectedIcon={<ColorPaletteIcon size={20} color="#4B5162" />}
-        unselectedIcon={<ColorPaletteIcon size={20} color="#79829F" />}
-        shortcutLabel="배경색"
-        shortcutKey="B"
-      />
-
-      {isOpen && (
-        <div
-          className={cn(
-            "absolute bottom-[calc(100%+26px)] left-1/2 -translate-x-1/2 grid grid-cols-4 gap-2 py-3 px-4",
-            "bg-neutral-N100 border-neutral-N300",
-            "shadow-[0px_4px_16px_rgba(28,31,37,0.2)]",
-            "rounded-lg w-fit min-w-[216px]"
-          )}
-        >
-          {Object.entries(SELECTION_BACKGROUND_COLORS).map(([key, color]) => (
-            <button
-              key={key}
-              onClick={() =>
-                onColorSelect(color as SelectionBackgroundColorType)
-              }
-              className={cn(
-                "rounded-sm border-2 w-10 h-10",
-                selectionBackgroundColor === color
-                  ? "border-neutral-N800"
-                  : "border-neutral-N300",
-                "flex items-center justify-center"
-              )}
-              style={{ backgroundColor: color }}
-              title={key}
-            />
-          ))}
-        </div>
-      )}
-    </div>
   );
 }
