@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 
 import {
   PasteIcon,
@@ -43,13 +43,14 @@ export default function Toolbar() {
         )}
       >
         <SymbolButton isOpenSubMenu={isOpenSubMenu} />
-        {/* <BrushButton isOpenSubMenu={isOpenSubMenu} /> */}
         <MenuButton
           brushTool={BrushTool.SELECT}
           isOpenSubMenu={isOpenSubMenu}
           label="브러시"
           selectedIcon={<SelectIcon size={19} color="#1C1F25" />}
           unselectedIcon={<SelectIcon size={19} color="#79829F" />}
+          shortcutLabel="선택"
+          shortcutKey="S"
         />
         <MenuButton
           brushTool={BrushTool.PALETTE}
@@ -57,6 +58,8 @@ export default function Toolbar() {
           label="색상"
           selectedIcon={<PaletteIcon color="#4B5162" />}
           unselectedIcon={<PaletteIcon color="#79829F" />}
+          shortcutLabel="색상"
+          shortcutKey="P"
         />
         <MenuButton
           brushTool={BrushTool.ERASER}
@@ -64,6 +67,8 @@ export default function Toolbar() {
           label="지우개"
           selectedIcon={<EraserIcon color="#1C1F25" />}
           unselectedIcon={<EraserIcon color="#9EA5BD" />}
+          shortcutLabel="지우개"
+          shortcutKey="E"
         />
       </div>
     </div>
@@ -73,10 +78,10 @@ export default function Toolbar() {
 function SymbolButton({ isOpenSubMenu }: { isOpenSubMenu: boolean }) {
   const [isOpen, setIsOpen] = useState(false);
 
-  const { brushTool, setBrushTool } = usePixelArtEditorContext();
+  const { selectedShape, setSelectedShape } = usePixelArtEditorContext();
+  const { brushTool } = usePixelArtEditorContext();
 
   const isSelected = brushTool === BrushTool.DOT && isOpen;
-  const { selectedShape, setSelectedShape } = usePixelArtEditorContext();
 
   const onShapeSelect = (shape: Shape) => {
     setSelectedShape(shape);
@@ -85,34 +90,16 @@ function SymbolButton({ isOpenSubMenu }: { isOpenSubMenu: boolean }) {
 
   return (
     <div className="relative">
-      <ShortcutTooltip content={<div>기호도구</div>} shortcut="Q">
-        <button
-          onClick={() => {
-            setIsOpen(!isOpen);
-            setBrushTool(BrushTool.DOT);
-          }}
-          className={cn("flex flex-col items-center")}
-        >
-          <div className={cn(menuStyle, isSelected && selectedMenuStyle)}>
-            <canvas
-              width={16}
-              height={16}
-              ref={(canvas) => {
-                if (canvas) {
-                  const ctx = canvas.getContext("2d");
-                  if (ctx) {
-                    ctx.clearRect(0, 0, 16, 16);
-                    selectedShape.render(ctx, 0, 0, 16, selectedShape.color);
-                  }
-                }
-              }}
-            />
-          </div>
-          {!isOpenSubMenu && (
-            <p className={menuTextStyle(brushTool === BrushTool.DOT)}>기호</p>
-          )}
-        </button>
-      </ShortcutTooltip>
+      <MenuButton
+        onClick={() => setIsOpen(!isOpen)}
+        brushTool={BrushTool.DOT}
+        isOpenSubMenu={isOpenSubMenu}
+        label="기호"
+        selectedIcon={<RenderShapeIcon shape={selectedShape} size={16} />}
+        unselectedIcon={<RenderShapeIcon shape={selectedShape} size={16} />}
+        shortcutLabel="기호도구"
+        shortcutKey="Q"
+      />
 
       {isSelected && (
         <div
@@ -134,19 +121,7 @@ function SymbolButton({ isOpenSubMenu }: { isOpenSubMenu: boolean }) {
               )}
               title={shape.name}
             >
-              <canvas
-                width={28}
-                height={28}
-                ref={(canvas) => {
-                  if (canvas) {
-                    const ctx = canvas.getContext("2d");
-                    if (ctx) {
-                      ctx.clearRect(0, 0, 28, 28);
-                      shape.render(ctx, 0, 0, 28, shape.color);
-                    }
-                  }
-                }}
-              />
+              <RenderShapeIcon shape={shape} />
             </button>
           ))}
         </div>
@@ -284,6 +259,8 @@ function MenuButton({
   label,
   selectedIcon,
   unselectedIcon,
+  shortcutLabel,
+  shortcutKey,
 }: {
   brushTool: BrushToolType;
   onClick?: () => void;
@@ -291,28 +268,59 @@ function MenuButton({
   label: string;
   selectedIcon: React.ReactNode;
   unselectedIcon: React.ReactNode;
+  shortcutLabel: string;
+  shortcutKey: string;
 }) {
   const { brushTool, setBrushTool } = usePixelArtEditorContext();
   return (
-    <button
-      onClick={() => {
-        setBrushTool(menuBrushTool);
-        onClick?.();
-      }}
-      className="flex flex-col items-center"
+    <ShortcutTooltip
+      content={<div>{shortcutLabel}</div>}
+      shortcut={shortcutKey}
     >
-      <div
-        className={cn(
-          menuStyle,
-          isOpenSubMenu && brushTool === menuBrushTool && selectedMenuStyle
-        )}
+      <button
+        onClick={() => {
+          setBrushTool(menuBrushTool);
+          onClick?.();
+        }}
+        className="flex flex-col items-center"
       >
-        {isOpenSubMenu ? selectedIcon : unselectedIcon}
-      </div>
+        <div
+          className={cn(
+            menuStyle,
+            isOpenSubMenu && brushTool === menuBrushTool && selectedMenuStyle
+          )}
+        >
+          {isOpenSubMenu ? selectedIcon : unselectedIcon}
+        </div>
 
-      {!isOpenSubMenu && (
-        <p className={menuTextStyle(brushTool === menuBrushTool)}>{label}</p>
-      )}
-    </button>
+        {!isOpenSubMenu && (
+          <p className={menuTextStyle(brushTool === menuBrushTool)}>{label}</p>
+        )}
+      </button>
+    </ShortcutTooltip>
+  );
+}
+
+function RenderShapeIcon({
+  shape,
+  size = 28,
+}: {
+  shape: Shape;
+  size?: number;
+}) {
+  return (
+    <canvas
+      width={size}
+      height={size}
+      ref={(canvas) => {
+        if (canvas) {
+          const ctx = canvas.getContext("2d");
+          if (ctx) {
+            ctx.clearRect(0, 0, size, size);
+            shape.render(ctx, 0, 0, size, shape.color);
+          }
+        }
+      }}
+    />
   );
 }
