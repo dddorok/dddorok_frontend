@@ -66,7 +66,7 @@ export default function TemplateListPage() {
 function TemplateItem({ template }: { template: TemplateType }) {
   return (
     <div>
-      <div className="bg-primary-PR100 border border-neutralAlpha-NA05 rounded-lg h-[216px] overflow-hidden flex justify-center items-center">
+      <div className="bg-primary-PR100 border border-neutralAlpha-NA05 rounded-lg overflow-hidden flex justify-center items-center aspect-[289/174]">
         {template.thumbnail_url ? (
           <img
             src={template.thumbnail_url}

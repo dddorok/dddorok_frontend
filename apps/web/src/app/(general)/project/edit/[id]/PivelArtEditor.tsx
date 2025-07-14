@@ -1,3 +1,4 @@
+import { gzipSync, strToU8 } from "fflate";
 import React, { useRef } from "react";
 
 import Toolbar from "./_components/Toolbar";
@@ -10,6 +11,8 @@ import {
 import { KNITTING_SYMBOLS } from "./Shape.constants";
 import { DottingRef } from "./useDotting";
 
+import { OriginalCell, updateChart } from "@/services/project";
+
 const MAX_GRID_SIZE = 1000;
 
 const PixelArtEditor = ({
@@ -18,14 +21,45 @@ const PixelArtEditor = ({
   disabledCells,
   grid_row,
   dottingRef,
+  onSubmit,
 }: {
   initialCells: Cell[];
   disabledCells: Cell[];
   grid_col: number;
   grid_row: number;
   dottingRef: React.RefObject<DottingRef>;
+  onSubmit: (cells: OriginalCell[]) => void;
 }) => {
   const { brushTool, selectedShape } = usePixelArtEditorContext();
+  const handleSubmit = async () => {
+    const pixels = dottingRef.current?.getPixels();
+    if (!pixels) return;
+    console.log("pixels: ", pixels);
+
+    const data = pixels
+      .map((row) =>
+        row
+          .filter((pixel) => pixel !== null)
+          .map((pixel) => ({
+            row: pixel.rowIndex,
+            col: pixel.columnIndex,
+            symbol: pixel.shape?.id,
+            color_code: pixel.shape?.color,
+          }))
+          .flat()
+      )
+      .flat();
+
+    console.log("data: ", data);
+
+    onSubmit(data);
+    // try {
+    //   await updateChart(id, { chart: base64 });
+    //   alert("저장되었습니다.");
+    // } catch (error) {
+    //   console.error(error);
+    // }
+  };
 
   if (grid_col >= MAX_GRID_SIZE || grid_row >= MAX_GRID_SIZE) {
     return (
@@ -38,6 +72,8 @@ const PixelArtEditor = ({
   return (
     <div className="w-fit">
       <Toolbar />
+
+      <button onClick={handleSubmit}>저장</button>
 
       <Dotting
         ref={dottingRef}

@@ -220,12 +220,12 @@ function BrushSubMenu() {
       onClick: cut,
     },
     {
-      Icon: FlipVerticalIcon,
+      Icon: FlipHorizontalIcon,
       name: "좌우반전",
       onClick: flipHorizontal,
     },
     {
-      Icon: FlipHorizontalIcon,
+      Icon: FlipVerticalIcon,
       name: "상하반전",
       onClick: flipVertical,
     },

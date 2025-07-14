@@ -17,6 +17,14 @@ export default function MyPage() {
     ...projectQueries.myProjectList(),
     refetchOnMount: true,
     refetchOnWindowFocus: true,
+    select: (data) => {
+      return data.sort((a, b) => {
+        return (
+          new Date(b.updated_date).getTime() -
+          new Date(a.updated_date).getTime()
+        );
+      });
+    },
   });
 
   return (

@@ -29,6 +29,7 @@
     "cookies-next": "^5.1.0",
     "dotting": "^2.1.13",
     "embla-carousel-react": "^8.6.0",
+    "fflate": "^0.8.2",
     "jose": "^6.0.10",
     "ky": "^1.8.0",
     "lucide-react": "^0.488.0",
