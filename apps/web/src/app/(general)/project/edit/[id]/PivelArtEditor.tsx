@@ -34,11 +34,11 @@ const PixelArtEditor = ({
   const handleSubmit = async () => {
     const pixels = dottingRef.current?.getPixels();
     if (!pixels) return;
-    console.log("pixels: ", pixels);
 
     const data = pixels
       .map((row) =>
         row
+          .filter((pixel) => pixel !== null && !pixel.disabled)
           .filter((pixel) => pixel !== null)
           .map((pixel) => ({
             row: pixel.rowIndex,
@@ -53,12 +53,6 @@ const PixelArtEditor = ({
     console.log("data: ", data);
 
     onSubmit(data);
-    // try {
-    //   await updateChart(id, { chart: base64 });
-    //   alert("저장되었습니다.");
-    // } catch (error) {
-    //   console.error(error);
-    // }
   };
 
   if (grid_col >= MAX_GRID_SIZE || grid_row >= MAX_GRID_SIZE) {
