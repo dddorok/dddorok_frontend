@@ -60,8 +60,8 @@ export const getProject = async (id: string) => {
 export interface OriginalCell {
   row: number;
   col: number;
-  symbol: string;
-  color_code: string;
+  symbol?: string;
+  color_code?: string;
 }
 
 export interface GetChartResponse {
@@ -79,6 +79,13 @@ export const getChart = async (id: string) => {
   const response = await privateInstance
     .get(`project/chart/${id}`)
     .json<GetChartResponse>();
+  return response;
+};
+
+export const updateChart = async (id: string, request: any) => {
+  const response = await privateInstance
+    .patch(`project/chart/${id}`, { json: request })
+    .json();
   return response;
 };
 
