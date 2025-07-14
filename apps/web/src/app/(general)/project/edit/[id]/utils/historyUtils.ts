@@ -7,7 +7,7 @@ export interface HistoryPixel {
   disabled?: boolean;
 }
 
-const convertPixelToHistory = (pixel: Pixel): HistoryPixel => ({
+export const convertPixelToHistory = (pixel: Pixel): HistoryPixel => ({
   rowIndex: pixel.rowIndex,
   columnIndex: pixel.columnIndex,
   shapeId: pixel.shape?.id || null,

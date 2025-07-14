@@ -1,4 +1,4 @@
-import type { Pixel, SelectedArea } from "../Dotting";
+import type { Pixel, SelectedArea } from "./pixelUtils";
 
 export function flipPixelsHorizontal(
   pixels: (Pixel | null)[][],
