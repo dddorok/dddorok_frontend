@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 
 import { flipPixelsHorizontal } from "./pixelFlip";
 
-import type { SelectedArea, Pixel } from "../Dotting";
+import type { SelectedArea, Pixel } from "./pixelUtils";
 
 describe("flipPixelsHorizontal", () => {
   it("선택 영역을 기준으로 픽셀을 좌우 반전한다", () => {
