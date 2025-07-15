@@ -132,4 +132,12 @@ export const fontSize: Record<
       lineHeight: "1.5em",
     },
   ],
+  "price-01": [
+    "24px",
+    {
+      fontWeight: "400",
+      lineHeight: "28px",
+      letterSpacing: "-0.256px",
+    },
+  ],
 };
