@@ -1,13 +1,19 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { gzipSync, strToU8 } from "fflate";
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 
 import ChartEdit from "./ChartEdit";
 
 import { cn } from "@/lib/utils";
-import { projectQueries } from "@/queries/project";
-import { GetProjectResponse } from "@/services/project";
+import { projectQueries, projectQueryKey } from "@/queries/project";
+import {
+  GetProjectResponse,
+  OriginalCell,
+  updateChart,
+} from "@/services/project";
 
 export function ChartList({ project }: { project: GetProjectResponse }) {
   const [selectedChart, setSelectedChart] = useState<string | null>(null);
@@ -50,9 +56,31 @@ export function ChartList({ project }: { project: GetProjectResponse }) {
 }
 
 function Chart({ id }: { id: string }) {
+  const queryClient = useQueryClient();
   const { data: chart, isLoading } = useQuery({
     ...projectQueries.chart(id),
   });
+
+  const onSubmit = async (cells: OriginalCell[]) => {
+    const data = { ...chart, cells };
+
+    const json = JSON.stringify(data);
+    const uint8 = strToU8(json);
+    const compressed = gzipSync(uint8);
+    const base64 = btoa(String.fromCharCode(...compressed));
+
+    try {
+      await updateChart(id, { chart: base64 });
+
+      toast.success("저장되었습니다.");
+
+      await queryClient.invalidateQueries({
+        queryKey: [projectQueryKey],
+      });
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -78,6 +106,7 @@ function Chart({ id }: { id: string }) {
       )}
     >
       <ChartEdit
+        onSubmit={onSubmit}
         grid_row={chart.grid_row}
         grid_col={chart.grid_col}
         cells={chart.cells}

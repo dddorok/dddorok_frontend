@@ -15,15 +15,28 @@ import {
   SelectionBackgroundColorType,
 } from "./constant";
 import { KNITTING_SYMBOLS, Shape } from "./Shape.constants";
+import {
+  initializeHistory,
+  createHistoryEntry,
+  addToHistory,
+  executeUndo,
+  executeRedo,
+  canUndoHistory,
+  canRedoHistory,
+} from "./utils/historyUtils";
 import { flipPixelsHorizontal, flipPixelsVertical } from "./utils/pixelFlip";
-
-// 픽셀 데이터 타입
-export interface Pixel {
-  rowIndex: number;
-  columnIndex: number;
-  shape: Shape | null;
-  disabled?: boolean; // 비활성화 셀 여부
-}
+import {
+  CopiedArea,
+  createInitialPixels,
+  createPixel,
+  GridPosition,
+  InitialCellData,
+  interpolatePixels,
+  MousePosition,
+  PanOffset,
+  Pixel,
+  SelectedArea,
+} from "./utils/pixelUtils";
 
 // 히스토리용 픽셀 데이터 타입 (shape를 ID로만 저장)
 interface HistoryPixel {
@@ -31,45 +44,6 @@ interface HistoryPixel {
   columnIndex: number;
   shapeId: string | null;
   disabled?: boolean; // 비활성화 셀 여부
-}
-
-// 초기 셀 데이터 타입
-interface InitialCellData {
-  row: number;
-  col: number;
-  shape?: Shape | null;
-  disabled?: boolean;
-}
-
-interface MousePosition {
-  x: number;
-  y: number;
-}
-
-interface GridPosition {
-  row: number;
-  col: number;
-}
-
-interface PanOffset {
-  x: number;
-  y: number;
-}
-
-export interface SelectedArea {
-  startRow: number;
-  startCol: number;
-  endRow: number;
-  endCol: number;
-}
-
-// 복사된 영역 데이터 타입
-interface CopiedArea {
-  pixels: (Pixel | null)[][];
-  width: number;
-  height: number;
-  startRow: number;
-  startCol: number;
 }
 
 interface DottingProps {
@@ -136,56 +110,6 @@ interface DottingRef {
   flipVertical: () => void;
 }
 
-const createPixel = (
-  rowIndex: number,
-  columnIndex: number,
-  shape: Shape | null = null,
-  disabled: boolean = false
-): Pixel => ({
-  rowIndex,
-  columnIndex,
-  shape,
-  disabled,
-});
-
-// 유틸리티 함수들
-const interpolatePixels = (
-  startRow: number,
-  startCol: number,
-  endRow: number,
-  endCol: number,
-  shape: Shape | null,
-  disabled: boolean = false
-): Pixel[] => {
-  const pixels: Pixel[] = [];
-  const dx = Math.abs(endCol - startCol);
-  const dy = Math.abs(endRow - startRow);
-  const sx = startCol < endCol ? 1 : -1;
-  const sy = startRow < endRow ? 1 : -1;
-  let err = dx - dy;
-
-  let x = startCol;
-  let y = startRow;
-
-  while (true) {
-    pixels.push(createPixel(y, x, shape, disabled));
-
-    if (x === endCol && y === endRow) break;
-
-    const e2 = 2 * err;
-    if (e2 > -dy) {
-      err -= dy;
-      x += sx;
-    }
-    if (e2 < dx) {
-      err += dx;
-      y += sy;
-    }
-  }
-
-  return pixels;
-};
-
 const drawLine = (
   startRow: number,
   startCol: number,
@@ -227,11 +151,11 @@ const canDrawOnCell = (
   const isDisabled = isCellDisabled(row, col, pixels);
   const canDraw = isValid && !isDisabled;
 
-  console.log(`canDrawOnCell [${row}][${col}]:`, {
-    isValid,
-    isDisabled,
-    canDraw,
-  });
+  // console.log(`canDrawOnCell [${row}][${col}]:`, {
+  //   isValid,
+  //   isDisabled,
+  //   canDraw,
+  // });
 
   return canDraw;
 };
@@ -255,11 +179,11 @@ const applyPixelWithDisabledCheck = (
   rows: number,
   cols: number
 ): void => {
-  console.log(`applyPixelWithDisabledCheck 호출: [${row}][${col}]`, {
-    shape,
-    rows,
-    cols,
-  });
+  // console.log(`applyPixelWithDisabledCheck 호출: [${row}][${col}]`, {
+  //   shape,
+  //   rows,
+  //   cols,
+  // });
 
   if (!canDrawOnCell(row, col, rows, cols, newPixels)) {
     console.log(`셀 [${row}][${col}]에 그릴 수 없음`);
@@ -276,7 +200,7 @@ const applyPixelWithDisabledCheck = (
         ? createPixel(row, col, null, true)
         : null;
 
-    console.log(`픽셀 설정: [${row}][${col}]`, newPixel);
+    // console.log(`픽셀 설정: [${row}][${col}]`, newPixel);
     targetRow[col] = newPixel;
   }
 };
@@ -290,153 +214,6 @@ const drawShape = (
   size: number
 ): void => {
   shape.render(ctx, x, y, size, shape.color, shape.bgColor);
-};
-
-// 초기 픽셀 데이터를 생성하는 함수
-const createInitialPixels = (
-  rows: number,
-  cols: number,
-  initialCells: InitialCellData[],
-  disabledCells: { row: number; col: number }[]
-): (Pixel | null)[][] => {
-  const pixels: (Pixel | null)[][] = Array(rows)
-    .fill(null)
-    .map(() => Array(cols).fill(null));
-
-  // 비활성화 셀 설정
-  disabledCells.forEach(({ row, col }) => {
-    if (row >= 0 && row < rows && col >= 0 && col < cols) {
-      pixels[row]![col] = createPixel(row, col, null, true);
-    }
-  });
-
-  // 초기 선택된 셀 설정
-  initialCells.forEach(({ row, col, shape, disabled }) => {
-    if (row >= 0 && row < rows && col >= 0 && col < cols) {
-      pixels[row]![col] = createPixel(
-        row,
-        col,
-        shape || null,
-        disabled || false
-      );
-    }
-  });
-
-  return pixels;
-};
-
-// 히스토리 관련 유틸리티 함수들
-const convertPixelToHistory = (pixel: Pixel): HistoryPixel => ({
-  rowIndex: pixel.rowIndex,
-  columnIndex: pixel.columnIndex,
-  shapeId: pixel.shape?.id || null,
-  disabled: pixel.disabled || false,
-});
-
-const convertHistoryToPixel = (
-  historyPixel: HistoryPixel,
-  getShapeById: (id: string | null) => Shape | null
-): Pixel => ({
-  rowIndex: historyPixel.rowIndex,
-  columnIndex: historyPixel.columnIndex,
-  shape: getShapeById(historyPixel.shapeId),
-  disabled: historyPixel.disabled || false,
-});
-
-const convertPixelsToHistory = (
-  pixels: (Pixel | null)[][]
-): (HistoryPixel | null)[][] => {
-  return pixels.map((row) =>
-    row ? row.map((pixel) => (pixel ? convertPixelToHistory(pixel) : null)) : []
-  );
-};
-
-const convertHistoryToPixels = (
-  historyPixels: (HistoryPixel | null)[][],
-  getShapeById: (id: string | null) => Shape | null
-): (Pixel | null)[][] => {
-  return historyPixels.map((row) =>
-    row
-      ? row.map((historyPixel) =>
-          historyPixel
-            ? convertHistoryToPixel(historyPixel, getShapeById)
-            : null
-        )
-      : []
-  );
-};
-
-const createHistoryEntry = (
-  pixels: (Pixel | null)[][]
-): (HistoryPixel | null)[][] => {
-  return convertPixelsToHistory(pixels);
-};
-
-const trimHistoryIfNeeded = (
-  history: (HistoryPixel | null)[][][],
-  maxSize: number = 50
-): { trimmedHistory: (HistoryPixel | null)[][][]; newIndex: number } => {
-  if (history.length <= maxSize) {
-    return { trimmedHistory: history, newIndex: history.length - 1 };
-  }
-
-  const trimmedHistory = history.slice(-maxSize);
-  return { trimmedHistory, newIndex: trimmedHistory.length - 1 };
-};
-
-const addToHistory = (
-  currentHistory: (HistoryPixel | null)[][][],
-  historyIndex: number,
-  newEntry: (HistoryPixel | null)[][]
-): { newHistory: (HistoryPixel | null)[][][]; newIndex: number } => {
-  // 현재 인덱스 이후의 히스토리 제거
-  const newHistory = currentHistory.slice(0, historyIndex + 1);
-  newHistory.push(newEntry);
-
-  // 히스토리 크기 제한
-  const { trimmedHistory, newIndex } = trimHistoryIfNeeded(newHistory);
-
-  return { newHistory: trimmedHistory, newIndex };
-};
-
-const initializeHistory = (
-  initialPixels: (Pixel | null)[][]
-): (HistoryPixel | null)[][][] => {
-  const initialHistoryData = createHistoryEntry(initialPixels);
-  return [initialHistoryData];
-};
-
-const canUndoHistory = (historyIndex: number): boolean => historyIndex > 0;
-
-const canRedoHistory = (historyIndex: number, historyLength: number): boolean =>
-  historyIndex < historyLength - 1;
-
-const executeUndo = (
-  history: (HistoryPixel | null)[][][],
-  historyIndex: number,
-  getShapeById: (id: string | null) => Shape | null
-): { pixels: (Pixel | null)[][]; newIndex: number } | null => {
-  if (!canUndoHistory(historyIndex)) return null;
-
-  const prevHistoryPixels = history[historyIndex - 1];
-  if (!prevHistoryPixels) return null;
-
-  const pixels = convertHistoryToPixels(prevHistoryPixels, getShapeById);
-  return { pixels, newIndex: historyIndex - 1 };
-};
-
-const executeRedo = (
-  history: (HistoryPixel | null)[][][],
-  historyIndex: number,
-  getShapeById: (id: string | null) => Shape | null
-): { pixels: (Pixel | null)[][]; newIndex: number } | null => {
-  if (!canRedoHistory(historyIndex, history.length)) return null;
-
-  const nextHistoryPixels = history[historyIndex + 1];
-  if (!nextHistoryPixels) return null;
-
-  const pixels = convertHistoryToPixels(nextHistoryPixels, getShapeById);
-  return { pixels, newIndex: historyIndex + 1 };
 };
 
 const LABEL_MARGIN_RATIO = 1.2; // 셀 크기의 1.2배만큼 여백

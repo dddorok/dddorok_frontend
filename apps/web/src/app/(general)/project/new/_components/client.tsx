@@ -36,7 +36,7 @@ export default function NewProjectClient({
     noControlData: { code: string; value: number }[]
   ) => {
     try {
-      await createProject({
+      const res = await createProject({
         name: formData.current.name,
         template_id: templateId,
         gauge_ko: formData.current.gauge_ko,
@@ -53,7 +53,8 @@ export default function NewProjectClient({
 
       toast.success("프로젝트 생성 완료");
 
-      await router.push(ROUTE.MYPAGE.PROJECT());
+      // await router.push(ROUTE.MYPAGE.PROJECT());
+      router.push(ROUTE.PROJECT.EDIT(res.data.id));
     } catch (error) {
       console.log(error);
     }

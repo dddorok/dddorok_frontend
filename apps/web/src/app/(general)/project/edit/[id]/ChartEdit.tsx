@@ -8,10 +8,12 @@ export default function ChartEdit({
   grid_row,
   grid_col,
   cells,
+  onSubmit,
 }: {
   grid_row: number;
   grid_col: number;
   cells: OriginalCell[];
+  onSubmit: (cells: OriginalCell[]) => void;
 }) {
   const { initialCells } = convertCellsData(cells);
   const disabledCells = getDisabledCells(grid_row, grid_col, initialCells);
@@ -26,6 +28,7 @@ export default function ChartEdit({
 
   return (
     <PixelArtEditor
+      onSubmit={onSubmit}
       initialCells={initialCells}
       disabledCells={disabledCells}
       grid_col={grid_col}
@@ -42,24 +45,27 @@ const convertCellsData = (
     return { initialCells: [] };
   }
 
-  const convertedCells = cellsData?.map((cell) => ({
-    row: cell.row,
-    col: cell.col,
-    shape:
-      cell.symbol === undefined
-        ? undefined
-        : cell.symbol === "●"
-          ? KNITTING_SYMBOL_OBJ.dot
-          : cell.symbol === "✦"
-            ? KNITTING_SYMBOL_OBJ.diagonalLine
-            : KNITTING_SYMBOL_OBJ.diamond,
-  }));
+  const convertedCells = cellsData?.map((cell) => {
+    if (cell.symbol === undefined) {
+      return {
+        row: cell.row,
+        col: cell.col,
+        shape: undefined,
+      };
+    }
 
-  const initialCells = convertedCells?.filter(
-    (cell) => cell.shape !== undefined
-  );
+    return {
+      row: cell.row,
+      col: cell.col,
+      shape: Object.keys(KNITTING_SYMBOL_OBJ).find(
+        (key) => KNITTING_SYMBOL_OBJ[key]?.id === cell.symbol
+      )
+        ? KNITTING_SYMBOL_OBJ[cell.symbol]
+        : undefined,
+    };
+  });
 
-  return { initialCells };
+  return { initialCells: convertedCells };
 };
 
 const getDisabledCells = (

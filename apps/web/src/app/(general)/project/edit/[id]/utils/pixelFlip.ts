@@ -1,4 +1,4 @@
-import type { Pixel, SelectedArea } from "../Dotting";
+import type { Pixel, SelectedArea } from "./pixelUtils";
 
 export function flipPixelsHorizontal(
   pixels: (Pixel | null)[][],
@@ -6,25 +6,27 @@ export function flipPixelsHorizontal(
 ): (Pixel | null)[][] {
   const newPixels = pixels.map((row) => [...row]);
   for (let row = area.startRow; row <= area.endRow; row++) {
+    if (!newPixels[row]) newPixels[row] = [];
     const baseRow = [...(newPixels[row] ?? [])];
-    const areaSlice = baseRow
-      .slice(area.startCol, area.endCol + 1)
-      .map((p, idx) => {
-        if (p === undefined || p === null) return null;
-        return {
-          ...p,
-          columnIndex: area.startCol + (area.endCol - area.startCol - idx),
-        };
-      });
-    for (let i = 0; i < areaSlice.length; i++) {
-      const col = area.startCol + i;
-      if (!baseRow[col]?.disabled) {
-        baseRow[col] = areaSlice[areaSlice.length - 1 - i] ?? null;
-        if (baseRow[col]) {
+    for (let col = area.startCol; col <= area.endCol; col++) {
+      const pixel = pixels[row]?.[col] ?? null;
+      const isDisabled = pixel?.disabled;
+      const mirrorCol = area.startCol + (area.endCol - col);
+      const mirrorPixel = pixels[row]?.[mirrorCol] ?? null;
+      const mirrorIsDisabled = mirrorPixel?.disabled;
+
+      if (isDisabled) {
+        baseRow[col] = pixel;
+      } else if (mirrorIsDisabled) {
+        baseRow[col] = null;
+      } else {
+        if (mirrorPixel) {
           baseRow[col] = {
-            ...baseRow[col],
-            columnIndex: col,
+            ...mirrorPixel,
+            columnIndex: mirrorCol,
           };
+        } else {
+          baseRow[col] = null;
         }
       }
     }
@@ -38,40 +40,31 @@ export function flipPixelsVertical(
   area: SelectedArea
 ): (Pixel | null)[][] {
   const newPixels = pixels.map((row) => [...row]);
-  const areaRows: (Pixel | null)[][] = [];
-  for (let row = area.startRow; row <= area.endRow; row++) {
-    const baseRow = [...(newPixels[row] ?? [])];
-    areaRows.push(
-      baseRow.slice(area.startCol, area.endCol + 1).map((p, idx) => {
-        if (p === undefined || p === null) return null;
-        return {
-          ...p,
-          rowIndex:
-            area.startRow +
-            (area.endRow - area.startRow - (row - area.startRow)),
-        };
-      })
-    );
-  }
-  for (let i = 0; i < areaRows.length; i++) {
-    const targetRow = area.startRow + i;
-    const sourceRow = areaRows.length - 1 - i;
-    const baseRow = [...(newPixels[targetRow] ?? [])];
-    for (let j = 0; j < (areaRows[sourceRow]?.length ?? 0); j++) {
-      const col = area.startCol + j;
-      if (!baseRow[col]?.disabled) {
-        const sourceRowArr = areaRows[sourceRow] ?? [];
-        baseRow[col] = sourceRowArr[j] ?? null;
-        if (baseRow[col]) {
-          baseRow[col] = {
-            ...baseRow[col],
-            rowIndex: targetRow,
+  for (let col = area.startCol; col <= area.endCol; col++) {
+    for (let row = area.startRow; row <= area.endRow; row++) {
+      if (!newPixels[row]) newPixels[row] = [];
+      const pixel = pixels[row]?.[col] ?? null;
+      const isDisabled = pixel?.disabled;
+      const mirrorRow = area.startRow + (area.endRow - row);
+      const mirrorPixel = pixels[mirrorRow]?.[col] ?? null;
+      const mirrorIsDisabled = mirrorPixel?.disabled;
+
+      if (isDisabled) {
+        (newPixels[row as number] as Pixel[])[col] = pixel;
+      } else if (mirrorIsDisabled) {
+        (newPixels[row as number] as (Pixel | null)[])[col] = null;
+      } else {
+        if (mirrorPixel) {
+          (newPixels[row as number] as (Pixel | null)[])[col] = {
+            ...mirrorPixel,
+            rowIndex: row,
             columnIndex: col,
           };
+        } else {
+          (newPixels[row as number] as (Pixel | null)[])[col] = null;
         }
       }
     }
-    newPixels[targetRow] = baseRow;
   }
   return newPixels;
 }

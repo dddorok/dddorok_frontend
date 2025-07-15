@@ -13,6 +13,7 @@ import { DottingRef } from "./useDotting";
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { OriginalCell, updateChart } from "@/services/project";
 
 const MAX_GRID_SIZE = 1000;
 
@@ -22,15 +23,40 @@ const PixelArtEditor = ({
   disabledCells,
   grid_row,
   dottingRef,
+  onSubmit,
 }: {
   initialCells: Cell[];
   disabledCells: Cell[];
   grid_col: number;
   grid_row: number;
   dottingRef: React.RefObject<DottingRef>;
+  onSubmit: (cells: OriginalCell[]) => void;
 }) => {
   const { brushTool, selectedShape, selectionBackgroundColor } =
     usePixelArtEditorContext();
+  const handleSubmit = async () => {
+    const pixels = dottingRef.current?.getPixels();
+    if (!pixels) return;
+
+    const data = pixels
+      .map((row) =>
+        row
+          .filter((pixel) => pixel !== null && !pixel.disabled)
+          .filter((pixel) => pixel !== null)
+          .map((pixel) => ({
+            row: pixel.rowIndex,
+            col: pixel.columnIndex,
+            symbol: pixel.shape?.id,
+            color_code: pixel.shape?.color,
+          }))
+          .flat()
+      )
+      .flat();
+
+    console.log("data: ", data);
+
+    onSubmit(data);
+  };
 
   if (grid_col >= MAX_GRID_SIZE || grid_row >= MAX_GRID_SIZE) {
     return (
@@ -66,11 +92,7 @@ const PixelArtEditor = ({
             <Redo2 width={32} height={32} />
           </button>
         </div>
-        <Button
-          color="fill"
-          className=""
-          onClick={() => alert("준비중입니다. ")}
-        >
+        <Button color="fill" className="" onClick={handleSubmit}>
           저장하기
         </Button>
       </div>

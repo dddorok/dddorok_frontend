@@ -16,6 +16,7 @@ export const SELECTION_BACKGROUND_COLORS = {
   YELLOW: "#FFC107",
   RED: "#F44336",
   ORANGE: "#FF9800",
+  DEFAULT: "#FFFFFF",
 } as const;
 
 export type SelectionBackgroundColorType =
