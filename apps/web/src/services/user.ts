@@ -12,11 +12,19 @@ export const userTestLogin = async () => {
   return response;
 };
 
+export enum UserStatus {
+  PENDING = "PENDING",
+  ACTIVE = "ACTIVE",
+  INACTIVE = "INACTIVE",
+  DELETED = "DELETED",
+}
+
 export interface UserType {
   id: string;
   username: string;
   subscribe: string;
   role: string;
+  user_status: UserStatus;
 }
 
 export interface MyInfoResponse {

@@ -1,5 +1,5 @@
 // /auth/login/{provider}
-import { apiInstance } from "./instance";
+import { apiInstance, privateInstance } from "./instance";
 
 export type LoginProvider = "naver" | "google" | "kakao";
 
@@ -36,4 +36,10 @@ export const refreshToken = async (
     .json();
 
   return response.data;
+};
+
+export const signUp = async () => {
+  const response = await privateInstance.post("auth/sign-up").json();
+
+  return response;
 };

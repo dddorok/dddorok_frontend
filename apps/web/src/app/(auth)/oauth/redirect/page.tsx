@@ -3,8 +3,6 @@ import { Suspense } from "react";
 
 import { LoginButton } from "./LoginButton";
 
-import { login } from "@/services/auth";
-
 export const dynamic = "force-dynamic";
 
 export default async function OAuthRedirect(props: {

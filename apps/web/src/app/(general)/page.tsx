@@ -1,6 +1,8 @@
 import Image from "next/image";
 import Link from "next/link";
 
+import { JoinTermDialog } from "./(home)/JoinTermDialog";
+
 import Body from "@/components/layout/Body";
 import Footer from "@/components/layout/Footer";
 import Header from "@/components/layout/Header";
@@ -43,6 +45,7 @@ export default function Home() {
             </div>
           </Body>
           <Footer className="bg-neutral-N100-50A" />
+          <JoinTermDialog />
         </div>
       </div>
     </>

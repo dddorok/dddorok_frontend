@@ -11,6 +11,7 @@ export function LoginForm(props: {
   type: "join" | "login";
 }) {
   const [origin, setOrigin] = useState<string | null>(null);
+  console.log("origin: ", origin);
 
   useEffect(() => {
     if (!window) return;
