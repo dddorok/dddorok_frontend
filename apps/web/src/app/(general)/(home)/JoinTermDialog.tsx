@@ -1,8 +1,10 @@
 "use client";
 
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
+import { AlertDialog } from "@/components/common/Dialog/AlertDialog";
 import { Button } from "@/components/ui/button";
 import { CheckboxWithLabel } from "@/components/ui/checkbox";
 import {
@@ -13,12 +15,17 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { queryClient } from "@/lib/react-query";
+import { ROUTE } from "@/constants/route";
+import { deleteSession } from "@/lib/auth";
 import { userQueries } from "@/queries/users";
 import { signUp } from "@/services/auth";
 
 export function JoinTermDialog() {
+  const queryClient = useQueryClient();
+  const router = useRouter();
+
   const { data: myInfo } = useQuery(userQueries.myInfo());
+  const [alertDialogOpen, setAlertDialogOpen] = useState(false);
 
   const { mutate: signUpMutation } = useMutation({
     mutationFn: signUp,
@@ -27,12 +34,37 @@ export function JoinTermDialog() {
     },
   });
 
+  const logout = async () => {
+    await deleteSession();
+    queryClient.removeQueries();
+    router.replace(ROUTE.HOME);
+  };
+
   return (
-    <TermsDialog
-      open={myInfo?.user.user_status === "PENDING"}
-      onOpenChange={() => {}}
-      onAgree={() => signUpMutation()}
-    />
+    <>
+      <TermsDialog
+        open={myInfo?.user.user_status === "PENDING"}
+        onOpenChange={async (open) => {
+          if (myInfo?.user.user_status === "PENDING") {
+            setAlertDialogOpen(true);
+          } else {
+            return;
+          }
+          console.log("open: ", open, myInfo?.user.user_status === "PENDING");
+        }}
+        onAgree={() => signUpMutation()}
+      />
+      <AlertDialog
+        title="이용약관에 동의하지 않겠습니까?"
+        description="동의 취소시 로그아웃이 됩니다. "
+        open={alertDialogOpen}
+        onOpenChange={setAlertDialogOpen}
+        onAction={() => {
+          setAlertDialogOpen(false);
+          logout();
+        }}
+      />
+    </>
   );
 }
 
