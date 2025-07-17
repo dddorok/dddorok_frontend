@@ -12,4 +12,8 @@ export const ROUTE = {
   MYPAGE: {
     PROJECT: () => "/mypage/project",
   },
+  POLICY: {
+    TERMS: "/policy/terms",
+    PRIVACY: "/policy/privacy",
+  },
 };

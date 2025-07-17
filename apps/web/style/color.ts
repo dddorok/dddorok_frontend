@@ -26,6 +26,7 @@ export const colors = {
     PR500: "#8CCAF0",
     PR600: "#7FC3EE",
     PR: "#75C0EF",
+    "PR-darker": "#32A7FF",
   },
 
   // 3. System Colors

@@ -1,5 +1,7 @@
 import Image from "next/image";
+import Link from "next/link";
 
+import { ROUTE } from "@/constants/route";
 import { cn } from "@/lib/utils";
 
 export default function Footer(props: { className?: string }) {
@@ -19,7 +21,7 @@ export default function Footer(props: { className?: string }) {
           <div className="flex gap-2 items-center">
             대표: 김수지 <span className={dividerStyle}>|</span>
             사업자등록번호: 178-65-00786 <span className={dividerStyle}>|</span>
-            통신판매번호: 수정예정{" "}
+            통신판매번호: 2025-서울성동-1127{" "}
             {/* <a href="#" className="text-primary-PR text-small underline">
               사업자번호조회
             </a> */}
@@ -30,13 +32,16 @@ export default function Footer(props: { className?: string }) {
           </div>
           <div>©2025 DDDOROK • All rights reserved.</div>
         </div>
-        <div className="mt-6">
+        {/* <div className="mt-6">
           <img src="/assets/icons/instagram.svg" alt="instagram" />
-        </div>
+        </div> */}
         <hr className="bg-neutral-N200 h-[1px] mt-9 border-none" />
         <div className="flex gap-2 items-center text-medium text-neutral-N900 h-[40px] mt-4 mb-6">
-          이용약관 <span className={dividerStyle}>|</span> 개인정보처리방침
-          <span className={dividerStyle}>|</span> 저작권 안내
+          <Link href={ROUTE.POLICY.TERMS}>이용약관</Link>
+          <span className={dividerStyle}>|</span>
+          <Link href={ROUTE.POLICY.PRIVACY}>개인정보처리방침</Link>
+          {/* <span className={dividerStyle}>|</span>
+          저작권 안내 */}
         </div>
       </div>
     </div>
