@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 
 export default function Footer(props: { className?: string }) {
   return (
-    <div className={cn(" w-full", props.className)}>
+    <div className={cn(" w-full bg-neutral-N0", props.className)}>
       <div className="container px-8  pt-16 pb-6 ">
         <div className="w-full flex items-center gap-5">
           <Image

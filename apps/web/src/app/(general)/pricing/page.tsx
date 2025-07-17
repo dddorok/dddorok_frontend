@@ -49,8 +49,8 @@ export default function PricingPage() {
               "기호 Kit 제한없이 이용",
             ]}
             buttonElement={
-              <Button color="fill" className="px-[46px]">
-                3개월 이용권 구매
+              <Button color="fill" className="px-[46px]" asChild>
+                <Link href={ROUTE.PAYMENT}>3개월 이용권 구매</Link>
               </Button>
             }
             highlight={true}

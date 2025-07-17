@@ -15,7 +15,8 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith("/oauth") ||
     pathname.startsWith("/api") ||
     pathname.includes("_next") ||
-    pathname.includes("favicon.ico")
+    pathname.includes("favicon.ico") ||
+    pathname.includes("/pricing")
   ) {
     return NextResponse.next();
   }

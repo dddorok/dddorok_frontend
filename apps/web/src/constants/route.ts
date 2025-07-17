@@ -9,6 +9,7 @@ export const ROUTE = {
     EDIT: (projectId: string) => `/project/edit/${projectId}`,
   },
   PRICING: "/pricing",
+  PAYMENT: "/payment",
   MYPAGE: {
     PROJECT: () => "/mypage/project",
   },
