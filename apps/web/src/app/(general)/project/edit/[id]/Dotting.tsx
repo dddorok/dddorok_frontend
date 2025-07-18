@@ -14,7 +14,11 @@ import {
   BrushToolType,
   SelectionBackgroundColorType,
 } from "./constant";
-import { KNITTING_SYMBOLS, Shape } from "./Shape.constants";
+import {
+  KNITTING_SYMBOL_FULL_OBJ,
+  KNITTING_SYMBOLS,
+  Shape,
+} from "./Shape.constants";
 import {
   initializeHistory,
   createHistoryEntry,
@@ -41,11 +45,12 @@ import {
 } from "./utils/pixelUtils";
 
 // 히스토리용 픽셀 데이터 타입 (shape를 ID로만 저장)
-interface HistoryPixel {
+export interface HistoryPixel {
   rowIndex: number;
   columnIndex: number;
   shapeId: string | null;
-  disabled?: boolean; // 비활성화 셀 여부
+  bgColor: string | null;
+  disabled: boolean;
 }
 
 interface DottingProps {
@@ -215,7 +220,10 @@ const drawShape = (
   y: number,
   size: number
 ): void => {
-  shape.render(ctx, x, y, size, shape.color, shape.bgColor);
+  const currentShape = KNITTING_SYMBOL_FULL_OBJ[shape.id];
+  if (currentShape) {
+    currentShape.render(ctx, x, y, size, currentShape.color, shape.bgColor);
+  }
 };
 
 const LABEL_MARGIN_RATIO = 1.2; // 셀 크기의 1.2배만큼 여백
@@ -325,7 +333,7 @@ export const Dotting = forwardRef<DottingRef, DottingProps>(
     const getShapeById = useCallback(
       (shapeId: string | null): Shape | null => {
         if (!shapeId) return null;
-        return shapes.find((shape) => shape.id === shapeId) || null;
+        return KNITTING_SYMBOL_FULL_OBJ[shapeId] || null;
       },
       [shapes]
     );
@@ -432,13 +440,7 @@ export const Dotting = forwardRef<DottingRef, DottingProps>(
 
         const copiedPixels = pixels
           .slice(startRow, endRow + 1)
-          .map((row, rowIdx) =>
-            row.slice(startCol, endCol + 1).map((pixel, colIdx) => {
-              // 복사 시 disabled 셀은 null로 저장
-              if (pixel?.disabled) return null;
-              return pixel;
-            })
-          );
+          .map((row) => row.slice(startCol, endCol + 1).map((pixel) => pixel));
 
         return {
           pixels: copiedPixels,
@@ -520,7 +522,7 @@ export const Dotting = forwardRef<DottingRef, DottingProps>(
             colIdx >= area.startCol &&
             colIdx <= area.endCol
           ) {
-            return pixel?.disabled ? pixel : null;
+            return pixel?.disabled ? pixel : { ...pixel, shape: null };
           }
           return pixel;
         })

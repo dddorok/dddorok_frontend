@@ -1,28 +1,39 @@
+import { Shape } from "../Shape.constants";
+
 import type { Pixel } from "./pixelUtils";
 
 export interface HistoryPixel {
   rowIndex: number;
   columnIndex: number;
   shapeId: string | null;
-  disabled: boolean; // optional에서 required로 변경
+  bgColor: string | null;
+  disabled: boolean;
 }
 
 export const convertPixelToHistory = (pixel: Pixel): HistoryPixel => ({
   rowIndex: pixel.rowIndex,
   columnIndex: pixel.columnIndex,
   shapeId: pixel.shape?.id || null,
+  bgColor: pixel.shape?.bgColor || null,
   disabled: pixel.disabled,
 });
 
 export const convertHistoryToPixel = (
   historyPixel: HistoryPixel,
-  getShapeById: (id: string | null) => any | null
-): Pixel => ({
-  rowIndex: historyPixel.rowIndex,
-  columnIndex: historyPixel.columnIndex,
-  shape: getShapeById(historyPixel.shapeId),
-  disabled: historyPixel.disabled,
-});
+  getShapeById: (id: string | null) => Shape | null
+): Pixel => {
+  const fullShape = getShapeById(historyPixel.shapeId);
+  // bgColor는 historyPixel에서 우선 적용
+  const shape = fullShape
+    ? { id: fullShape.id, bgColor: historyPixel.bgColor ?? fullShape.bgColor }
+    : null;
+  return {
+    rowIndex: historyPixel.rowIndex,
+    columnIndex: historyPixel.columnIndex,
+    shape,
+    disabled: historyPixel.disabled,
+  };
+};
 
 export const convertPixelsToHistory = (
   pixels: Pixel[][]

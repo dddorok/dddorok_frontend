@@ -23,7 +23,11 @@ import {
   usePixelArtEditorContext,
   usePixelArtEditorCopyContext,
 } from "../PixelArtEditorContext";
-import { KNITTING_SYMBOLS, Shape } from "../Shape.constants";
+import {
+  KNITTING_SYMBOL_FULL_OBJ,
+  KNITTING_SYMBOLS,
+  Shape,
+} from "../Shape.constants";
 
 import { ShortcutTooltip } from "@/components/common/Tootip";
 import { cn } from "@/lib/utils";
@@ -130,7 +134,7 @@ function SymbolButton({ isOpenSubMenu }: { isOpenSubMenu: boolean }) {
                 selectedShape.id === shape.id && "border-neutral-N500",
                 "flex items-center justify-center"
               )}
-              title={shape.name}
+              title={KNITTING_SYMBOL_FULL_OBJ[shape.id]?.name}
             >
               <RenderShapeIcon shape={shape} />
             </button>
@@ -345,7 +349,17 @@ function RenderShapeIcon({
           const ctx = canvas.getContext("2d");
           if (ctx) {
             ctx.clearRect(0, 0, size, size);
-            shape.render(ctx, 0, 0, size, shape.color, shape.bgColor);
+            const currentShape = KNITTING_SYMBOL_FULL_OBJ[shape.id];
+            if (currentShape) {
+              currentShape.render(
+                ctx,
+                0,
+                0,
+                size,
+                currentShape.color,
+                shape.bgColor
+              );
+            }
           }
         }
       }}

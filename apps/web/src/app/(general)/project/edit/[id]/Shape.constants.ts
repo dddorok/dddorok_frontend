@@ -1,8 +1,11 @@
 export interface Shape {
   id: string;
+  bgColor: string;
+}
+
+export interface FullShape extends Shape {
   name: string;
   color: string;
-  bgColor: string;
 
   render: (
     ctx: CanvasRenderingContext2D,
@@ -120,6 +123,25 @@ const renderDiamond = (
 };
 
 export const KNITTING_SYMBOL_OBJ: Record<string, Shape> = {
+  verticalLine: {
+    id: "verticalLine",
+    bgColor: "#fff",
+  },
+  diagonalLine: {
+    id: "diagonalLine",
+    bgColor: "#fff",
+  },
+  dot: {
+    id: "dot",
+    bgColor: "#fff",
+  },
+  diamond: {
+    id: "diamond",
+    bgColor: "#fff",
+  },
+} as const;
+
+export const KNITTING_SYMBOL_FULL_OBJ: Record<string, FullShape> = {
   verticalLine: {
     id: "verticalLine",
     name: "겉뜨기",
