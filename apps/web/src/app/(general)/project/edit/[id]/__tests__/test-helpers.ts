@@ -12,10 +12,7 @@ import type { Pixel, SelectedArea, CopiedArea } from "../utils/pixelUtils";
 export function createTestShape(props: Partial<Shape>): Shape {
   return {
     id: props.id ?? "test-shape",
-    name: props.name ?? "circle",
-    color: props.color ?? "#000000",
     bgColor: props.bgColor ?? "#ffffff",
-    render: props.render ?? (() => {}), // 테스트용 빈 함수
   };
 }
 
@@ -141,6 +138,7 @@ export function createTestHistoryPixel(
     columnIndex,
     shapeId,
     disabled,
+    bgColor: "#fff",
   };
 }
 
@@ -189,10 +187,10 @@ export function createTestHistoryPixels(
 
 // Mock Shape 객체들
 export const mockShapes = {
-  circle: createTestShape({ name: "circle" }),
-  square: createTestShape({ name: "square" }),
-  triangle: createTestShape({ name: "triangle" }),
-  star: createTestShape({ name: "star" }),
+  circle: createTestShape({ id: "circle" }),
+  square: createTestShape({ id: "square" }),
+  triangle: createTestShape({ id: "triangle" }),
+  star: createTestShape({ id: "star" }),
 };
 
 // Mock 함수들

@@ -8,6 +8,7 @@ import {
   createTestHistoryPixel,
   createTestHistoryPixels,
   mockGetShapeById,
+  mockShapes,
 } from "./test-helpers";
 import {
   convertPixelToHistory,
@@ -22,36 +23,46 @@ import {
 
 describe("historyUtils", () => {
   it("convertPixelToHistory와 convertHistoryToPixel이 상호 변환된다", () => {
-    const shape = createTestShape({ id: "shape1" });
+    const shape = mockShapes.square;
     const pixel = createTestPixel(0, 1, shape, false);
-    const history = convertPixelToHistory(pixel);
 
+    // Pixel → HistoryPixel
+    const history = convertPixelToHistory(pixel);
     expect(history).toMatchObject({
       rowIndex: 0,
       columnIndex: 1,
-      shapeId: "shape1",
+      shapeId: "square",
+      bgColor: "#ffffff",
       disabled: false,
     });
 
-    // TODO
-    // const pixel2 = convertHistoryToPixel(history, mockGetShapeById);
-    // expect(pixel2).toMatchObject({
-    //   rowIndex: 0,
-    //   columnIndex: 1,
-    //   shape,
-    //   disabled: false,
-    // });
+    // HistoryPixel → Pixel
+    const pixel2 = convertHistoryToPixel(history, mockGetShapeById);
+    expect(pixel2).toMatchObject({
+      rowIndex: 0,
+      columnIndex: 1,
+      shape: shape,
+      disabled: false,
+    });
   });
 
   it("addToHistory로 히스토리 추가 및 trim이 정상 동작한다", () => {
+    // 1. 첫 번째 entry: shape이 있는 상태
     const entry1 = createTestHistoryPixels(1, 1, "filled");
+    // 2. 두 번째 entry: shape이 없는 상태
     const entry2 = createTestHistoryPixels(1, 1, "empty");
 
-    // TODO
-    // const { newHistory, newIndex } = addToHistory([entry1], 0, entry2);
-    // expect(newHistory.length).toBe(2);
-    // expect(newIndex).toBe(1);
-    // expect(newHistory[1]?.[0]?.[0]?.shapeId).toBeNull();
+    // addToHistory로 두 번째 entry 추가
+    const { newHistory, newIndex } = addToHistory([entry1], 0, entry2);
+
+    // 두 개의 히스토리 entry가 쌓였는지 확인
+    expect(newHistory.length).toBe(2);
+    expect(newIndex).toBe(1);
+
+    // 첫 번째 entry는 shapeId가 있음
+    expect(safeGet3D(newHistory, 0, 0, 0)?.shapeId).not.toBeNull();
+    // 두 번째 entry는 shapeId가 없음
+    expect(safeGet3D(newHistory, 1, 0, 0)).toBeNull();
   });
 
   it("canUndoHistory, canRedoHistory가 올바르게 동작한다", () => {
@@ -62,27 +73,38 @@ describe("historyUtils", () => {
   });
 
   it("executeUndo/executeRedo가 올바르게 동작한다", () => {
-    const shape = createTestShape({ name: "square" });
-    const pixels1 = [[createTestPixel(0, 0, shape)]];
-
+    // 1. 최초 픽셀
+    const pixels1 = [[createTestPixel(0, 0, mockShapes.square)]];
     const historyArr = initializeHistory(pixels1);
-    console.log("historyArr: ", historyArr[0]?.[0]);
+
+    // 2. 두 번째 상태(빈 셀)
     const { newHistory } = addToHistory(historyArr, 0, [
-      [{ rowIndex: 0, columnIndex: 0, shapeId: null, disabled: false }],
+      [
+        {
+          rowIndex: 0,
+          columnIndex: 0,
+          shapeId: null,
+          bgColor: null,
+          disabled: false,
+        },
+      ],
     ]);
 
-    // TODO: 테스트 코드 수정
-    // Undo
-    // const undoResult = executeUndo(newHistory, 1, (id) => {
-    //   console.log("id: ", id);
-    //   return mockGetShapeById(id);
-    // });
-    // console.log("undoResult: ", undoResult?.pixels);
-    // expect(undoResult?.pixels?.[0]?.[0]?.shape).toEqual(shape);
+    // Undo (두 번째 상태 -> 첫 번째 상태)
+    const undoResult = executeUndo(newHistory, 1, mockGetShapeById);
+    expect(undoResult).not.toBeNull();
+    if (undoResult && undoResult.pixels[0] && undoResult.pixels[0][0]) {
+      expect(undoResult.pixels[0][0].shape).toEqual(mockShapes.square);
+      expect(undoResult.pixels[0][0].disabled).toBe(false);
+    }
 
-    // // Redo
-    // const redoResult = executeRedo(newHistory, 0, mockGetShapeById);
-    // expect(redoResult?.pixels?.[0]?.[0]?.shape).toBeNull();
+    // Redo (첫 번째 상태 -> 두 번째 상태)
+    const redoResult = executeRedo(newHistory, 0, mockGetShapeById);
+    expect(redoResult).not.toBeNull();
+    if (redoResult && redoResult.pixels[0] && redoResult.pixels[0][0]) {
+      expect(redoResult.pixels[0][0].shape).toBeNull();
+      expect(redoResult.pixels[0][0].disabled).toBe(false);
+    }
   });
 
   it("initializeHistory가 올바르게 동작한다", () => {

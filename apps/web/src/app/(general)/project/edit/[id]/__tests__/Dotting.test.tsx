@@ -236,7 +236,12 @@ describe("Dotting 통합 테스트", () => {
       // 영역 선택은 ref를 통해 직접 테스트
 
       // 복사 실행
-      const copiedArea = dottingRef.current?.copySelectedArea(0, 0, 2, 2);
+      const copiedArea = dottingRef.current?.copySelectedArea({
+        startRow: 0,
+        startCol: 0,
+        endRow: 2,
+        endCol: 2,
+      });
       expect(copiedArea).toBeDefined();
     });
 
@@ -355,7 +360,12 @@ describe("Dotting 통합 테스트", () => {
       );
 
       // 복사 실행 - 실제로는 선택 영역이 있어야 함
-      const copiedArea = dottingRef.current?.copySelectedArea(0, 0, 1, 1);
+      const copiedArea = dottingRef.current?.copySelectedArea({
+        startRow: 0,
+        startCol: 0,
+        endRow: 1,
+        endCol: 1,
+      });
       expect(copiedArea).toBeDefined();
     });
 

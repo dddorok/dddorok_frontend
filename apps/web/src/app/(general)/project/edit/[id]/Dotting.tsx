@@ -27,6 +27,7 @@ import {
   executeRedo,
   canUndoHistory,
   canRedoHistory,
+  HistoryPixel,
 } from "./utils/historyUtils";
 import { flipPixelsHorizontal, flipPixelsVertical } from "./utils/pixelFlip";
 import {
@@ -43,15 +44,6 @@ import {
   createDisabledPixel,
   createEmptyPixel,
 } from "./utils/pixelUtils";
-
-// 히스토리용 픽셀 데이터 타입 (shape를 ID로만 저장)
-export interface HistoryPixel {
-  rowIndex: number;
-  columnIndex: number;
-  shapeId: string | null;
-  bgColor: string | null;
-  disabled: boolean;
-}
 
 interface DottingProps {
   rows?: number;
@@ -90,12 +82,7 @@ interface DottingRef {
   redo: () => void;
   canUndo: () => boolean;
   canRedo: () => boolean;
-  copySelectedArea: (
-    startRow: number,
-    startCol: number,
-    endRow: number,
-    endCol: number
-  ) => CopiedArea | null;
+  copySelectedArea: (selectedArea: SelectedArea) => CopiedArea | null;
   pasteArea: (
     targetRow: number,
     targetCol: number,
@@ -400,12 +387,7 @@ export const Dotting = forwardRef<DottingRef, DottingProps>(
     // 복사 함수
     const copySelectedArea = useCallback(() => {
       if (selectedArea) {
-        const copied = copySelectedAreaInternal(
-          selectedArea.startRow,
-          selectedArea.startCol,
-          selectedArea.endRow,
-          selectedArea.endCol
-        );
+        const copied = copySelectedAreaInternal(selectedArea);
         if (copied) {
           setCopiedArea(copied);
           onCopy?.();
@@ -429,25 +411,29 @@ export const Dotting = forwardRef<DottingRef, DottingProps>(
 
     // 내부 복사 함수
     const copySelectedAreaInternal = useCallback(
-      (
-        startRow: number,
-        startCol: number,
-        endRow: number,
-        endCol: number
-      ): CopiedArea | null => {
-        if (startRow < 0 || startCol < 0 || endRow >= rows || endCol >= cols)
+      (selectedArea: SelectedArea): CopiedArea | null => {
+        if (
+          selectedArea.startRow < 0 ||
+          selectedArea.startCol < 0 ||
+          selectedArea.endRow >= rows ||
+          selectedArea.endCol >= cols
+        )
           return null;
 
         const copiedPixels = pixels
-          .slice(startRow, endRow + 1)
-          .map((row) => row.slice(startCol, endCol + 1).map((pixel) => pixel));
+          .slice(selectedArea.startRow, selectedArea.endRow + 1)
+          .map((row) =>
+            row
+              .slice(selectedArea.startCol, selectedArea.endCol + 1)
+              .map((pixel) => pixel)
+          );
 
         return {
           pixels: copiedPixels,
-          width: endCol - startCol + 1,
-          height: endRow - startRow + 1,
-          startRow,
-          startCol,
+          width: selectedArea.endCol - selectedArea.startCol + 1,
+          height: selectedArea.endRow - selectedArea.startRow + 1,
+          startRow: selectedArea.startRow,
+          startCol: selectedArea.startCol,
         };
       },
       [pixels, rows, cols]
@@ -561,29 +547,26 @@ export const Dotting = forwardRef<DottingRef, DottingProps>(
         redo,
         canUndo,
         canRedo,
-        copySelectedArea: (
-          startRow: number,
-          startCol: number,
-          endRow: number,
-          endCol: number
-        ) => {
-          if (startRow < 0 || startCol < 0 || endRow >= rows || endCol >= cols)
+        copySelectedArea: (selectedArea: SelectedArea) => {
+          if (
+            selectedArea.startRow < 0 ||
+            selectedArea.startCol < 0 ||
+            selectedArea.endRow >= rows ||
+            selectedArea.endCol >= cols
+          )
             return null;
-          const selectedArea: SelectedArea = {
-            startRow,
-            startCol,
-            endRow,
-            endCol,
-          };
+
           const copiedPixels = pixels
-            .slice(startRow, endRow + 1)
-            .map((row) => row.slice(startCol, endCol + 1));
+            .slice(selectedArea.startRow, selectedArea.endRow + 1)
+            .map((row) =>
+              row.slice(selectedArea.startCol, selectedArea.endCol + 1)
+            );
           const copiedArea: CopiedArea = {
             pixels: copiedPixels,
-            width: endCol - startCol + 1,
-            height: endRow - startRow + 1,
-            startRow,
-            startCol,
+            width: selectedArea.endCol - selectedArea.startCol + 1,
+            height: selectedArea.endRow - selectedArea.startRow + 1,
+            startRow: selectedArea.startRow,
+            startCol: selectedArea.startCol,
           };
           return copiedArea;
         },
@@ -668,12 +651,7 @@ export const Dotting = forwardRef<DottingRef, DottingProps>(
         cut: () => {
           if (!selectedArea) return;
           // 1. 복사
-          const copied = copySelectedAreaInternal(
-            selectedArea.startRow,
-            selectedArea.startCol,
-            selectedArea.endRow,
-            selectedArea.endCol
-          );
+          const copied = copySelectedAreaInternal(selectedArea);
           if (copied) {
             setCopiedArea(copied);
             onCopy?.();
