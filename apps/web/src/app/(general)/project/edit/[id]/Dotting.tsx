@@ -14,7 +14,11 @@ import {
   BrushToolType,
   SelectionBackgroundColorType,
 } from "./constant";
-import { KNITTING_SYMBOLS, Shape } from "./Shape.constants";
+import {
+  KNITTING_SYMBOL_FULL_OBJ,
+  KNITTING_SYMBOLS,
+  Shape,
+} from "./Shape.constants";
 import {
   initializeHistory,
   createHistoryEntry,
@@ -23,6 +27,7 @@ import {
   executeRedo,
   canUndoHistory,
   canRedoHistory,
+  HistoryPixel,
 } from "./utils/historyUtils";
 import { flipPixelsHorizontal, flipPixelsVertical } from "./utils/pixelFlip";
 import {
@@ -36,15 +41,9 @@ import {
   PanOffset,
   Pixel,
   SelectedArea,
+  createDisabledPixel,
+  createEmptyPixel,
 } from "./utils/pixelUtils";
-
-// 히스토리용 픽셀 데이터 타입 (shape를 ID로만 저장)
-interface HistoryPixel {
-  rowIndex: number;
-  columnIndex: number;
-  shapeId: string | null;
-  disabled?: boolean; // 비활성화 셀 여부
-}
 
 interface DottingProps {
   rows?: number;
@@ -76,19 +75,14 @@ interface DottingProps {
 
 interface DottingRef {
   clear: () => void;
-  getPixels: () => (Pixel | null)[][];
-  setPixels: (newPixels: (Pixel | null)[][]) => void;
+  getPixels: () => Pixel[][];
+  setPixels: (newPixels: Pixel[][]) => void;
   exportImage: () => string;
   undo: () => void;
   redo: () => void;
   canUndo: () => boolean;
   canRedo: () => boolean;
-  copySelectedArea: (
-    startRow: number,
-    startCol: number,
-    endRow: number,
-    endCol: number
-  ) => CopiedArea | null;
+  copySelectedArea: (selectedArea: SelectedArea) => CopiedArea | null;
   pasteArea: (
     targetRow: number,
     targetCol: number,
@@ -134,7 +128,7 @@ const isValidPosition = (
 const isCellDisabled = (
   row: number,
   col: number,
-  pixels: (Pixel | null)[][]
+  pixels: Pixel[][]
 ): boolean => {
   const existingPixel = pixels[row]?.[col];
   return existingPixel?.disabled || false;
@@ -145,7 +139,7 @@ const canDrawOnCell = (
   col: number,
   rows: number,
   cols: number,
-  pixels: (Pixel | null)[][]
+  pixels: Pixel[][]
 ): boolean => {
   const isValid = isValidPosition(row, col, rows, cols);
   const isDisabled = isCellDisabled(row, col, pixels);
@@ -164,7 +158,7 @@ const filterDrawablePixels = (
   pixelsToFilter: Pixel[],
   rows: number,
   cols: number,
-  currentPixels: (Pixel | null)[][]
+  currentPixels: Pixel[][]
 ): Pixel[] => {
   return pixelsToFilter.filter((pixel) =>
     canDrawOnCell(pixel.rowIndex, pixel.columnIndex, rows, cols, currentPixels)
@@ -172,7 +166,7 @@ const filterDrawablePixels = (
 };
 
 const applyPixelWithDisabledCheck = (
-  newPixels: (Pixel | null)[][],
+  newPixels: Pixel[][],
   row: number,
   col: number,
   shape: Shape | null,
@@ -197,8 +191,8 @@ const applyPixelWithDisabledCheck = (
     const newPixel = shape
       ? createPixel(row, col, shape, existingDisabled)
       : existingDisabled
-        ? createPixel(row, col, null, true)
-        : null;
+        ? createDisabledPixel(row, col)
+        : createEmptyPixel(row, col);
 
     // console.log(`픽셀 설정: [${row}][${col}]`, newPixel);
     targetRow[col] = newPixel;
@@ -213,7 +207,10 @@ const drawShape = (
   y: number,
   size: number
 ): void => {
-  shape.render(ctx, x, y, size, shape.color, shape.bgColor);
+  const currentShape = KNITTING_SYMBOL_FULL_OBJ[shape.id];
+  if (currentShape) {
+    currentShape.render(ctx, x, y, size, currentShape.color, shape.bgColor);
+  }
 };
 
 const LABEL_MARGIN_RATIO = 1.2; // 셀 크기의 1.2배만큼 여백
@@ -241,7 +238,8 @@ const CURSOR_GRAB = "grab";
 const CURSOR_GRABBING = "grabbing";
 
 // ===== 행/열 번호 폰트 및 영역 상수 =====
-const LABEL_FONT_SIZE = 14; // px
+const LABEL_FONT_SIZE = 11; // px
+const LABEL_COLOR = "#1C1F25"; // 번호 색상
 const LABEL_AREA_SIZE = 20; // px (행/열 번호가 차지하는 영역)
 
 export const Dotting = forwardRef<DottingRef, DottingProps>(
@@ -281,7 +279,7 @@ export const Dotting = forwardRef<DottingRef, DottingProps>(
     const height = rows * gridSquareLength + LABEL_MARGIN;
 
     const canvasRef = useRef<HTMLCanvasElement>(null);
-    const [pixels, setPixels] = useState<(Pixel | null)[][]>(() =>
+    const [pixels, setPixels] = useState<Pixel[][]>(() =>
       createInitialPixels(rows, cols, initialCells, disabledCells)
     );
 
@@ -323,14 +321,14 @@ export const Dotting = forwardRef<DottingRef, DottingProps>(
     const getShapeById = useCallback(
       (shapeId: string | null): Shape | null => {
         if (!shapeId) return null;
-        return shapes.find((shape) => shape.id === shapeId) || null;
+        return KNITTING_SYMBOL_FULL_OBJ[shapeId] || null;
       },
       [shapes]
     );
 
     // 픽셀 상태를 히스토리에 저장하는 함수 (개선된 유틸리티 사용)
     const saveToHistory = useCallback(
-      (newPixels: (Pixel | null)[][]) => {
+      (newPixels: Pixel[][]) => {
         if (isApplyingHistory) return;
 
         const historyEntry = createHistoryEntry(newPixels);
@@ -390,12 +388,7 @@ export const Dotting = forwardRef<DottingRef, DottingProps>(
     // 복사 함수
     const copySelectedArea = useCallback(() => {
       if (selectedArea) {
-        const copied = copySelectedAreaInternal(
-          selectedArea.startRow,
-          selectedArea.startCol,
-          selectedArea.endRow,
-          selectedArea.endCol
-        );
+        const copied = copySelectedAreaInternal(selectedArea);
         if (copied) {
           setCopiedArea(copied);
           onCopy?.();
@@ -419,31 +412,29 @@ export const Dotting = forwardRef<DottingRef, DottingProps>(
 
     // 내부 복사 함수
     const copySelectedAreaInternal = useCallback(
-      (
-        startRow: number,
-        startCol: number,
-        endRow: number,
-        endCol: number
-      ): CopiedArea | null => {
-        if (startRow < 0 || startCol < 0 || endRow >= rows || endCol >= cols)
+      (selectedArea: SelectedArea): CopiedArea | null => {
+        if (
+          selectedArea.startRow < 0 ||
+          selectedArea.startCol < 0 ||
+          selectedArea.endRow >= rows ||
+          selectedArea.endCol >= cols
+        )
           return null;
 
         const copiedPixels = pixels
-          .slice(startRow, endRow + 1)
-          .map((row, rowIdx) =>
-            row.slice(startCol, endCol + 1).map((pixel, colIdx) => {
-              // 복사 시 disabled 셀은 null로 저장
-              if (pixel?.disabled) return null;
-              return pixel;
-            })
+          .slice(selectedArea.startRow, selectedArea.endRow + 1)
+          .map((row) =>
+            row
+              .slice(selectedArea.startCol, selectedArea.endCol + 1)
+              .map((pixel) => pixel)
           );
 
         return {
           pixels: copiedPixels,
-          width: endCol - startCol + 1,
-          height: endRow - startRow + 1,
-          startRow,
-          startCol,
+          width: selectedArea.endCol - selectedArea.startCol + 1,
+          height: selectedArea.endRow - selectedArea.startRow + 1,
+          startRow: selectedArea.startRow,
+          startCol: selectedArea.startCol,
         };
       },
       [pixels, rows, cols]
@@ -507,9 +498,9 @@ export const Dotting = forwardRef<DottingRef, DottingProps>(
 
     // 선택 영역을 null로 만드는 공통 함수
     const clearSelectedAreaPixels = (
-      pixels: (Pixel | null)[][],
+      pixels: Pixel[][],
       area: SelectedArea
-    ): (Pixel | null)[][] => {
+    ): Pixel[][] => {
       return pixels.map((row, rowIdx) =>
         row.map((pixel, colIdx) => {
           if (
@@ -518,7 +509,7 @@ export const Dotting = forwardRef<DottingRef, DottingProps>(
             colIdx >= area.startCol &&
             colIdx <= area.endCol
           ) {
-            return pixel?.disabled ? pixel : null;
+            return pixel?.disabled ? pixel : { ...pixel, shape: null };
           }
           return pixel;
         })
@@ -530,12 +521,12 @@ export const Dotting = forwardRef<DottingRef, DottingProps>(
       ref,
       () => ({
         clear: () => {
-          const newPixels: (Pixel | null)[][] = [];
+          const newPixels: Pixel[][] = [];
           setPixels(newPixels);
           saveToHistory(newPixels);
         },
         getPixels: () => pixels,
-        setPixels: (newPixels: (Pixel | null)[][]) => {
+        setPixels: (newPixels: Pixel[][]) => {
           setPixels(newPixels);
           saveToHistory(newPixels);
         },
@@ -557,29 +548,26 @@ export const Dotting = forwardRef<DottingRef, DottingProps>(
         redo,
         canUndo,
         canRedo,
-        copySelectedArea: (
-          startRow: number,
-          startCol: number,
-          endRow: number,
-          endCol: number
-        ) => {
-          if (startRow < 0 || startCol < 0 || endRow >= rows || endCol >= cols)
+        copySelectedArea: (selectedArea: SelectedArea) => {
+          if (
+            selectedArea.startRow < 0 ||
+            selectedArea.startCol < 0 ||
+            selectedArea.endRow >= rows ||
+            selectedArea.endCol >= cols
+          )
             return null;
-          const selectedArea: SelectedArea = {
-            startRow,
-            startCol,
-            endRow,
-            endCol,
-          };
+
           const copiedPixels = pixels
-            .slice(startRow, endRow + 1)
-            .map((row) => row.slice(startCol, endCol + 1));
+            .slice(selectedArea.startRow, selectedArea.endRow + 1)
+            .map((row) =>
+              row.slice(selectedArea.startCol, selectedArea.endCol + 1)
+            );
           const copiedArea: CopiedArea = {
             pixels: copiedPixels,
-            width: endCol - startCol + 1,
-            height: endRow - startRow + 1,
-            startRow,
-            startCol,
+            width: selectedArea.endCol - selectedArea.startCol + 1,
+            height: selectedArea.endRow - selectedArea.startRow + 1,
+            startRow: selectedArea.startRow,
+            startCol: selectedArea.startCol,
           };
           return copiedArea;
         },
@@ -664,12 +652,7 @@ export const Dotting = forwardRef<DottingRef, DottingProps>(
         cut: () => {
           if (!selectedArea) return;
           // 1. 복사
-          const copied = copySelectedAreaInternal(
-            selectedArea.startRow,
-            selectedArea.startCol,
-            selectedArea.endRow,
-            selectedArea.endCol
-          );
+          const copied = copySelectedAreaInternal(selectedArea);
           if (copied) {
             setCopiedArea(copied);
             onCopy?.();
@@ -1055,6 +1038,30 @@ export const Dotting = forwardRef<DottingRef, DottingProps>(
       ctx.translate(panOffset.x, panOffset.y);
       ctx.scale(scale, scale);
 
+      // 여기에 그려줘
+
+      // ===== 행/열 번호(상단/좌측) 표시 =====
+      ctx.save();
+      ctx.font = `${LABEL_FONT_SIZE}px sans-serif`;
+      ctx.fillStyle = LABEL_COLOR; // 번호 색상(필요시 변경)
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+
+      // 상단(열 번호)
+      for (let col = 0; col < cols; col++) {
+        const x = LABEL_MARGIN + col * gridSquareLength + gridSquareLength / 2;
+        const y = LABEL_MARGIN / 2;
+        ctx.fillText(String(col + 1), x, y);
+      }
+
+      // 왼쪽(행 번호)
+      for (let row = 0; row < rows; row++) {
+        const x = LABEL_MARGIN / 2;
+        const y = LABEL_MARGIN + row * gridSquareLength + gridSquareLength / 2;
+        ctx.fillText(String(row + 1), x, y);
+      }
+      ctx.restore();
+
       // 비활성화 셀 그리기
       for (let row = 0; row < rows; row++) {
         for (let col = 0; col < cols; col++) {
@@ -1194,6 +1201,8 @@ export const Dotting = forwardRef<DottingRef, DottingProps>(
       GRID_MINOR_WIDTH,
       GRID_MAJOR_WIDTH,
       copiedArea,
+      LABEL_FONT_SIZE,
+      LABEL_AREA_SIZE,
     ]);
 
     useEffect(() => {

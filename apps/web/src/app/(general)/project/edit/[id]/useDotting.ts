@@ -1,6 +1,7 @@
 import React, { useState, useCallback } from "react";
 
 import { Shape } from "./constant";
+import { SelectedArea } from "./utils/pixelUtils";
 
 interface Pixel {
   rowIndex: number;
@@ -27,12 +28,7 @@ export interface DottingRef {
   redo: () => void;
   canUndo: () => boolean;
   canRedo: () => boolean;
-  copySelectedArea: (
-    startRow: number,
-    startCol: number,
-    endRow: number,
-    endCol: number
-  ) => CopiedArea | null;
+  copySelectedArea: (selectedArea: SelectedArea) => CopiedArea | null;
   pasteArea: (
     targetRow: number,
     targetCol: number,

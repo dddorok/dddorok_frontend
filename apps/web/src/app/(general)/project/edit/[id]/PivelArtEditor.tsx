@@ -97,7 +97,7 @@ const PixelArtEditor = ({
         </Button>
       </div>
       <Dotting
-        ref={dottingRef}
+        ref={dottingRef as any}
         rows={grid_row}
         cols={grid_col}
         gridSquareLength={20}
