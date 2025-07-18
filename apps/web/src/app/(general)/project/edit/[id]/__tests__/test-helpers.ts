@@ -9,18 +9,13 @@ import type { HistoryPixel } from "../utils/historyUtils";
 import type { Pixel, SelectedArea, CopiedArea } from "../utils/pixelUtils";
 
 // 기본 Shape 객체 생성
-export function createTestShape(
-  id = "test-shape",
-  name = "Test Shape",
-  color = "#000000",
-  bgColor = "#ffffff"
-): Shape {
+export function createTestShape(props: Partial<Shape>): Shape {
   return {
-    id,
-    name,
-    color,
-    bgColor,
-    render: () => {}, // 테스트용 빈 함수
+    id: props.id ?? "test-shape",
+    name: props.name ?? "circle",
+    color: props.color ?? "#000000",
+    bgColor: props.bgColor ?? "#ffffff",
+    render: props.render ?? (() => {}), // 테스트용 빈 함수
   };
 }
 
@@ -62,15 +57,21 @@ export function createTestPixels(
           rowArray[col] = createTestPixel(
             row,
             col,
-            createTestShape(`shape-${row}-${col}`)
+            createTestShape({ id: `shape-${row}-${col}` })
           );
           break;
         case "mixed":
+          /**
+           * 짝수 좌표에만 모양이 있음
+           * 예시:
+           * 0,0 0,2
+           * 2,0 2,2
+           */
           if ((row + col) % 2 === 0) {
             rowArray[col] = createTestPixel(
               row,
               col,
-              createTestShape(`shape-${row}-${col}`)
+              createTestShape({ id: `shape-${row}-${col}` })
             );
           } else {
             rowArray[col] = createEmptyPixel(row, col);
@@ -83,7 +84,7 @@ export function createTestPixels(
             rowArray[col] = createTestPixel(
               row,
               col,
-              createTestShape(`shape-${row}-${col}`)
+              createTestShape({ id: `shape-${row}-${col}` })
             );
           }
           break;
@@ -188,10 +189,10 @@ export function createTestHistoryPixels(
 
 // Mock Shape 객체들
 export const mockShapes = {
-  circle: createTestShape("circle", "#ff0000", "#ffffff"),
-  square: createTestShape("square", "#00ff00", "#ffffff"),
-  triangle: createTestShape("triangle", "#0000ff", "#ffffff"),
-  star: createTestShape("star", "#ffff00", "#ffffff"),
+  circle: createTestShape({ name: "circle" }),
+  square: createTestShape({ name: "square" }),
+  triangle: createTestShape({ name: "triangle" }),
+  star: createTestShape({ name: "star" }),
 };
 
 // Mock 함수들

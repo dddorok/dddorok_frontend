@@ -1,10 +1,6 @@
 import { describe, it, expect } from "vitest";
 
-import {
-  createTestPixels,
-  createTestShape,
-  TEST_CONSTANTS,
-} from "./test-helpers";
+import { createTestPixels, createTestShape } from "./test-helpers";
 import {
   interpolatePixels,
   canDrawOnCell,
@@ -49,8 +45,8 @@ describe("canDrawOnCell", () => {
 describe("createInitialPixels", () => {
   it("초기 셀과 비활성화 셀을 올바르게 생성한다", () => {
     const initialCells = [
-      { row: 0, col: 0, shape: createTestShape("A") },
-      { row: 1, col: 1, shape: createTestShape("B") },
+      { row: 0, col: 0, shape: createTestShape({ id: "A" }) },
+      { row: 1, col: 1, shape: createTestShape({ id: "B" }) },
     ];
     const disabledCells = [
       { row: 0, col: 1 },
