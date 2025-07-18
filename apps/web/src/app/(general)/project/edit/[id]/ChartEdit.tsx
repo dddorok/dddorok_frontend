@@ -1,6 +1,5 @@
 import { Cell } from "./chart.types";
 import PixelArtEditor from "./PivelArtEditor";
-import { KNITTING_SYMBOL_OBJ } from "./Shape.constants";
 
 import { OriginalCell } from "@/services/project";
 
@@ -57,11 +56,10 @@ const convertCellsData = (
     return {
       row: cell.row,
       col: cell.col,
-      shape: Object.keys(KNITTING_SYMBOL_OBJ).find(
-        (key) => KNITTING_SYMBOL_OBJ[key]?.id === cell.symbol
-      )
-        ? KNITTING_SYMBOL_OBJ[cell.symbol]
-        : undefined,
+      shape: {
+        id: cell.symbol,
+        bgColor: cell.color_code ?? "#fff",
+      },
     };
   });
 

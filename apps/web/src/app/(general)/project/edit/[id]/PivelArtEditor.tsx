@@ -4,12 +4,14 @@ import React, { useRef } from "react";
 import Toolbar from "./_components/Toolbar";
 import { Cell } from "./chart.types";
 import { Dotting } from "./Dotting";
+import { convertSubmitData } from "./PivelArtEditor.utils";
 import {
   usePixelArtEditorContext,
   PixelArtEditorProvider,
 } from "./PixelArtEditorContext";
 import { KNITTING_SYMBOLS } from "./Shape.constants";
 import { DottingRef } from "./useDotting";
+import { Pixel } from "./utils/pixelUtils";
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -38,24 +40,7 @@ const PixelArtEditor = ({
     const pixels = dottingRef.current?.getPixels();
     if (!pixels) return;
 
-    const data = pixels
-      .map((row) =>
-        row
-          .filter((pixel) => pixel !== null && !pixel.disabled)
-          .filter((pixel) => pixel !== null)
-          .map((pixel) => ({
-            row: pixel.rowIndex,
-            col: pixel.columnIndex,
-            symbol: pixel.shape?.id,
-            color_code: pixel.shape?.color,
-          }))
-          .flat()
-      )
-      .flat();
-
-    console.log("data: ", data);
-
-    onSubmit(data);
+    onSubmit(convertSubmitData(pixels as Pixel[][]));
   };
 
   if (grid_col >= MAX_GRID_SIZE || grid_row >= MAX_GRID_SIZE) {
