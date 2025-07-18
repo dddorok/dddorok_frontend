@@ -238,7 +238,8 @@ const CURSOR_GRAB = "grab";
 const CURSOR_GRABBING = "grabbing";
 
 // ===== 행/열 번호 폰트 및 영역 상수 =====
-const LABEL_FONT_SIZE = 14; // px
+const LABEL_FONT_SIZE = 11; // px
+const LABEL_COLOR = "#1C1F25"; // 번호 색상
 const LABEL_AREA_SIZE = 20; // px (행/열 번호가 차지하는 영역)
 
 export const Dotting = forwardRef<DottingRef, DottingProps>(
@@ -1037,6 +1038,30 @@ export const Dotting = forwardRef<DottingRef, DottingProps>(
       ctx.translate(panOffset.x, panOffset.y);
       ctx.scale(scale, scale);
 
+      // 여기에 그려줘
+
+      // ===== 행/열 번호(상단/좌측) 표시 =====
+      ctx.save();
+      ctx.font = `${LABEL_FONT_SIZE}px sans-serif`;
+      ctx.fillStyle = LABEL_COLOR; // 번호 색상(필요시 변경)
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+
+      // 상단(열 번호)
+      for (let col = 0; col < cols; col++) {
+        const x = LABEL_MARGIN + col * gridSquareLength + gridSquareLength / 2;
+        const y = LABEL_MARGIN / 2;
+        ctx.fillText(String(col + 1), x, y);
+      }
+
+      // 왼쪽(행 번호)
+      for (let row = 0; row < rows; row++) {
+        const x = LABEL_MARGIN / 2;
+        const y = LABEL_MARGIN + row * gridSquareLength + gridSquareLength / 2;
+        ctx.fillText(String(row + 1), x, y);
+      }
+      ctx.restore();
+
       // 비활성화 셀 그리기
       for (let row = 0; row < rows; row++) {
         for (let col = 0; col < cols; col++) {
@@ -1176,6 +1201,8 @@ export const Dotting = forwardRef<DottingRef, DottingProps>(
       GRID_MINOR_WIDTH,
       GRID_MAJOR_WIDTH,
       copiedArea,
+      LABEL_FONT_SIZE,
+      LABEL_AREA_SIZE,
     ]);
 
     useEffect(() => {
