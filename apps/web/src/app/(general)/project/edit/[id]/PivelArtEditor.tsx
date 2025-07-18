@@ -38,6 +38,7 @@ const PixelArtEditor = ({
     const pixels = dottingRef.current?.getPixels();
     if (!pixels) return;
 
+    console.log("pixels", pixels);
     const data = pixels
       .map((row) =>
         row

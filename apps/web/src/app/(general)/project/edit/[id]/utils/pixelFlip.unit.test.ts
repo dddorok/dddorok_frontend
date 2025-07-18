@@ -1,22 +1,24 @@
 import { describe, it, expect } from "vitest";
 
 import { flipPixelsHorizontal } from "./pixelFlip";
+import { createTestPixels } from "../__tests__/test-helpers";
 
 import type { SelectedArea, Pixel } from "./pixelUtils";
 
 describe("flipPixelsHorizontal", () => {
   it("선택 영역을 기준으로 픽셀을 좌우 반전한다", () => {
     // 2x2 영역, 0/1/2/3 값
-    const pixels: (Pixel | null)[][] = [
-      [
-        { rowIndex: 0, columnIndex: 0, shape: null },
-        { rowIndex: 0, columnIndex: 1, shape: null },
-      ],
-      [
-        { rowIndex: 1, columnIndex: 0, shape: null },
-        { rowIndex: 1, columnIndex: 1, shape: null },
-      ],
-    ];
+    const pixels = createTestPixels(2, 2, "empty");
+    // const pixels: (Pixel | null)[][] = [
+    //   [
+    //     { rowIndex: 0, columnIndex: 0, shape: null, disabled: false },
+    //     { rowIndex: 0, columnIndex: 1, shape: null, disabled: false },
+    //   ],
+    //   [
+    //     { rowIndex: 1, columnIndex: 0, shape: null, disabled: false },
+    //     { rowIndex: 1, columnIndex: 1, shape: null, disabled: false },
+    //   ],
+    // ];
     const area: SelectedArea = {
       startRow: 0,
       startCol: 0,

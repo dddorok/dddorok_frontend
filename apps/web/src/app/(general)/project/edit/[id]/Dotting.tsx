@@ -36,6 +36,8 @@ import {
   PanOffset,
   Pixel,
   SelectedArea,
+  createDisabledPixel,
+  createEmptyPixel,
 } from "./utils/pixelUtils";
 
 // 히스토리용 픽셀 데이터 타입 (shape를 ID로만 저장)
@@ -76,8 +78,8 @@ interface DottingProps {
 
 interface DottingRef {
   clear: () => void;
-  getPixels: () => (Pixel | null)[][];
-  setPixels: (newPixels: (Pixel | null)[][]) => void;
+  getPixels: () => Pixel[][];
+  setPixels: (newPixels: Pixel[][]) => void;
   exportImage: () => string;
   undo: () => void;
   redo: () => void;
@@ -134,7 +136,7 @@ const isValidPosition = (
 const isCellDisabled = (
   row: number,
   col: number,
-  pixels: (Pixel | null)[][]
+  pixels: Pixel[][]
 ): boolean => {
   const existingPixel = pixels[row]?.[col];
   return existingPixel?.disabled || false;
@@ -145,7 +147,7 @@ const canDrawOnCell = (
   col: number,
   rows: number,
   cols: number,
-  pixels: (Pixel | null)[][]
+  pixels: Pixel[][]
 ): boolean => {
   const isValid = isValidPosition(row, col, rows, cols);
   const isDisabled = isCellDisabled(row, col, pixels);
@@ -164,7 +166,7 @@ const filterDrawablePixels = (
   pixelsToFilter: Pixel[],
   rows: number,
   cols: number,
-  currentPixels: (Pixel | null)[][]
+  currentPixels: Pixel[][]
 ): Pixel[] => {
   return pixelsToFilter.filter((pixel) =>
     canDrawOnCell(pixel.rowIndex, pixel.columnIndex, rows, cols, currentPixels)
@@ -172,7 +174,7 @@ const filterDrawablePixels = (
 };
 
 const applyPixelWithDisabledCheck = (
-  newPixels: (Pixel | null)[][],
+  newPixels: Pixel[][],
   row: number,
   col: number,
   shape: Shape | null,
@@ -197,8 +199,8 @@ const applyPixelWithDisabledCheck = (
     const newPixel = shape
       ? createPixel(row, col, shape, existingDisabled)
       : existingDisabled
-        ? createPixel(row, col, null, true)
-        : null;
+        ? createDisabledPixel(row, col)
+        : createEmptyPixel(row, col);
 
     // console.log(`픽셀 설정: [${row}][${col}]`, newPixel);
     targetRow[col] = newPixel;
@@ -281,7 +283,7 @@ export const Dotting = forwardRef<DottingRef, DottingProps>(
     const height = rows * gridSquareLength + LABEL_MARGIN;
 
     const canvasRef = useRef<HTMLCanvasElement>(null);
-    const [pixels, setPixels] = useState<(Pixel | null)[][]>(() =>
+    const [pixels, setPixels] = useState<Pixel[][]>(() =>
       createInitialPixels(rows, cols, initialCells, disabledCells)
     );
 
@@ -330,7 +332,7 @@ export const Dotting = forwardRef<DottingRef, DottingProps>(
 
     // 픽셀 상태를 히스토리에 저장하는 함수 (개선된 유틸리티 사용)
     const saveToHistory = useCallback(
-      (newPixels: (Pixel | null)[][]) => {
+      (newPixels: Pixel[][]) => {
         if (isApplyingHistory) return;
 
         const historyEntry = createHistoryEntry(newPixels);
@@ -507,9 +509,9 @@ export const Dotting = forwardRef<DottingRef, DottingProps>(
 
     // 선택 영역을 null로 만드는 공통 함수
     const clearSelectedAreaPixels = (
-      pixels: (Pixel | null)[][],
+      pixels: Pixel[][],
       area: SelectedArea
-    ): (Pixel | null)[][] => {
+    ): Pixel[][] => {
       return pixels.map((row, rowIdx) =>
         row.map((pixel, colIdx) => {
           if (
@@ -530,12 +532,12 @@ export const Dotting = forwardRef<DottingRef, DottingProps>(
       ref,
       () => ({
         clear: () => {
-          const newPixels: (Pixel | null)[][] = [];
+          const newPixels: Pixel[][] = [];
           setPixels(newPixels);
           saveToHistory(newPixels);
         },
         getPixels: () => pixels,
-        setPixels: (newPixels: (Pixel | null)[][]) => {
+        setPixels: (newPixels: Pixel[][]) => {
           setPixels(newPixels);
           saveToHistory(newPixels);
         },

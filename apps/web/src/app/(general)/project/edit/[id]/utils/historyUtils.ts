@@ -4,14 +4,14 @@ export interface HistoryPixel {
   rowIndex: number;
   columnIndex: number;
   shapeId: string | null;
-  disabled?: boolean;
+  disabled: boolean; // optional에서 required로 변경
 }
 
 export const convertPixelToHistory = (pixel: Pixel): HistoryPixel => ({
   rowIndex: pixel.rowIndex,
   columnIndex: pixel.columnIndex,
   shapeId: pixel.shape?.id || null,
-  disabled: pixel.disabled || false,
+  disabled: pixel.disabled,
 });
 
 export const convertHistoryToPixel = (
@@ -21,34 +21,35 @@ export const convertHistoryToPixel = (
   rowIndex: historyPixel.rowIndex,
   columnIndex: historyPixel.columnIndex,
   shape: getShapeById(historyPixel.shapeId),
-  disabled: historyPixel.disabled || false,
+  disabled: historyPixel.disabled,
 });
 
 export const convertPixelsToHistory = (
-  pixels: (Pixel | null)[][]
+  pixels: Pixel[][]
 ): (HistoryPixel | null)[][] => {
   return pixels.map((row) =>
-    row ? row.map((pixel) => (pixel ? convertPixelToHistory(pixel) : null)) : []
+    row ? row.map((pixel) => convertPixelToHistory(pixel)) : []
   );
 };
 
 export const convertHistoryToPixels = (
   historyPixels: (HistoryPixel | null)[][],
   getShapeById: (id: string | null) => any | null
-): (Pixel | null)[][] => {
+): Pixel[][] => {
   return historyPixels.map((row) =>
     row
-      ? row.map((historyPixel) =>
-          historyPixel
-            ? convertHistoryToPixel(historyPixel, getShapeById)
-            : null
+      ? row.map(
+          (historyPixel) =>
+            historyPixel
+              ? convertHistoryToPixel(historyPixel, getShapeById)
+              : { rowIndex: 0, columnIndex: 0, shape: null, disabled: false } // 기본 픽셀
         )
       : []
   );
 };
 
 export const createHistoryEntry = (
-  pixels: (Pixel | null)[][]
+  pixels: Pixel[][]
 ): (HistoryPixel | null)[][] => {
   return convertPixelsToHistory(pixels);
 };
@@ -78,7 +79,7 @@ export const addToHistory = (
 };
 
 export const initializeHistory = (
-  initialPixels: (Pixel | null)[][]
+  initialPixels: Pixel[][]
 ): (HistoryPixel | null)[][][] => {
   const initialHistoryData = createHistoryEntry(initialPixels);
   return [initialHistoryData];
@@ -96,7 +97,7 @@ export const executeUndo = (
   history: (HistoryPixel | null)[][][],
   historyIndex: number,
   getShapeById: (id: string | null) => any | null
-): { pixels: (Pixel | null)[][]; newIndex: number } | null => {
+): { pixels: Pixel[][]; newIndex: number } | null => {
   if (!canUndoHistory(historyIndex)) return null;
   const prevHistoryPixels = history[historyIndex - 1];
   if (!prevHistoryPixels) return null;
@@ -108,7 +109,7 @@ export const executeRedo = (
   history: (HistoryPixel | null)[][][],
   historyIndex: number,
   getShapeById: (id: string | null) => any | null
-): { pixels: (Pixel | null)[][]; newIndex: number } | null => {
+): { pixels: Pixel[][]; newIndex: number } | null => {
   if (!canRedoHistory(historyIndex, history.length)) return null;
   const nextHistoryPixels = history[historyIndex + 1];
   if (!nextHistoryPixels) return null;
